@@ -8,3 +8,6 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Keep the WIZ Home page as a standalone route with section anchors until other pages are approved, so navigation never points to unfinished pages.
+- Keep illustrative service and gallery content in local arrays and label it as demo, so actual salon material can replace it without implying fabricated results.

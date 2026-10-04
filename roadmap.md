@@ -1,4 +1,5 @@
 # WIZ Roadmap
-- [x] Brand/design foundation from logo (shown on home page)
-- [ ] Build full site: Home, Services, About, Gallery, Booking, Contact — waiting on user approval of direction
-- [ ] Replace placeholders with real WIZ info/photos — waiting on client
+- [x] Brand/design foundation from logo
+- [x] Build Home page visual direction for review
+- [ ] Build Services, About, Gallery, Booking, Contact pages — waiting on Home page approval
+- [ ] Replace demo images and placeholders with real WIZ content — waiting on client

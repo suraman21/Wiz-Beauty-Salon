@@ -1,269 +1,119 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import { ArrowDown, ArrowRight, Menu, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import logo from "@/assets/wiz-logo.png.asset.json";
-import hero from "@/assets/hero-portrait.jpg";
-import space from "@/assets/salon-space.jpg";
+import hero from "@/assets/home-hero.jpg";
 import hair from "@/assets/hair-detail.jpg";
+import nails from "@/assets/nails-editorial.jpg";
+import makeup from "@/assets/makeup-editorial.jpg";
+import skin from "@/assets/skin-editorial.jpg";
+import portrait from "@/assets/hero-portrait.jpg";
+import space from "@/assets/salon-space.jpg";
+import before from "@/assets/transformation-before.jpg";
+import after from "@/assets/transformation-after.jpg";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "WIZ Beauty Salon — Brand & Design Foundation" },
-      { name: "description", content: "The visual identity for WIZ Beauty Salon: palette, typography, components and image language derived from the WIZ logo." },
-      { property: "og:title", content: "WIZ Beauty Salon — Brand & Design Foundation" },
-      { property: "og:description", content: "Palette, typography and interface language for WIZ Beauty Salon." },
+      { title: "WIZ Beauty Salon | Beauty, Your Way" },
+      { name: "description", content: "Explore the visual world of WIZ Beauty Salon: hair, nails, makeup and skin in a beauty experience made for you. Home page preview with demo imagery." },
+      { property: "og:title", content: "WIZ Beauty Salon | Beauty, Your Way" },
+      { property: "og:description", content: "Discover the beauty experience imagined for WIZ. Explore hair, nails, makeup and skin in our Home page preview." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: Foundation,
+  component: Home,
 });
 
-const NAV = ["Home", "Services", "About", "Gallery", "Contact"];
-
-const PALETTE = [
-  { name: "Ink", role: "Primary text · Primary CTA", cls: "bg-foreground", light: true, note: "From the logo's illustration" },
-  { name: "Aubergine", role: "Secondary brand · CTA hover", cls: "bg-plum", light: true, note: "Deepened logo ink" },
-  { name: "Lilac", role: "Signature tint · Highlights", cls: "bg-lilac", note: "The logo disc" },
-  { name: "Dusty Mauve", role: "Interactive states · Focus", cls: "bg-lilac-deep", light: true, note: "Lilac, muted" },
-  { name: "Bronze", role: "Accent · used sparingly", cls: "bg-bronze", light: true, note: "Warm counterpoint" },
-  { name: "Ivory", role: "Main background", cls: "bg-ivory border", note: "Warm, never stark white" },
-  { name: "Stone", role: "Secondary background", cls: "bg-stone", note: "Section rhythm" },
+const nav = [
+  { label: "Home", href: "#home" },
+  { label: "Services", href: "#services" },
+  { label: "About", href: "#about" },
+  { label: "Gallery", href: "#gallery" },
+  { label: "Contact", href: "#contact" },
 ];
 
-function Section({ n, title, children, className = "" }: { n: string; title: string; children: React.ReactNode; className?: string }) {
-  return (
-    <section className={`mx-auto max-w-[1320px] px-6 py-20 md:px-10 md:py-28 ${className}`}>
-      <div className="mb-12 flex items-baseline gap-6 border-t pt-6">
-        <span className="eyebrow text-muted-foreground">{n}</span>
-        <h2 className="text-h2">{title}</h2>
-      </div>
-      {children}
-    </section>
-  );
+const services = [
+  { name: "Hair", copy: "A little movement. A lot of feeling.", image: hair, alt: "Demo image of hair being styled", width: 1024, height: 1280, className: "service-hair" },
+  { name: "Nails", copy: "The detail that changes everything.", image: nails, alt: "Demo image of a manicure", width: 768, height: 1024, className: "service-nails" },
+  { name: "Makeup", copy: "Your features, beautifully expressed.", image: makeup, alt: "Demo beauty makeup portrait", width: 768, height: 1024, className: "service-makeup" },
+  { name: "Skin", copy: "A fresh way to feel like yourself.", image: skin, alt: "Demo skincare portrait", width: 768, height: 1024, className: "service-skin" },
+];
+
+function TextLink({ href, children, light = false }: { href: string; children: React.ReactNode; light?: boolean }) {
+  return <a href={href} className={`editorial-link ${light ? "editorial-link-light" : ""}`}>{children}<ArrowRight size={18} strokeWidth={1.5} aria-hidden="true" /></a>;
 }
 
-function Foundation() {
-  const [menu, setMenu] = useState(false);
+function Home() {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [comparison, setComparison] = useState(50);
+
   return (
-    <div className="min-h-screen overflow-x-hidden">
-      {/* Navigation */}
-      <header className="sticky top-0 z-50 border-b bg-background/85 backdrop-blur-md">
-        <div className="mx-auto flex h-20 max-w-[1320px] items-center justify-between px-6 md:px-10">
-          <a href="/" className="flex items-center gap-3">
-            <img src={logo.url} alt="WIZ Beauty Salon logo" className="h-11 w-11" />
-            <span className="font-display text-2xl tracking-[0.18em]">WIZ</span>
-          </a>
-          <nav className="hidden items-center gap-10 text-sm md:flex">
-            {NAV.map((l, i) => (
-              <a key={l} href="#" className={`link-underline pb-0.5 ${i === 0 ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}>{l}</a>
-            ))}
-          </nav>
-          <div className="flex items-center gap-3">
-            <a href="#" className="eyebrow rounded-sm bg-primary px-6 py-3.5 text-primary-foreground transition-colors duration-500 hover:bg-primary-hover">Book Now</a>
-            <button onClick={() => setMenu(!menu)} className="eyebrow md:hidden" aria-label="Menu">{menu ? "Close" : "Menu"}</button>
-          </div>
+    <div className="home-page" id="home">
+      <header className="site-header">
+        <a href="#home" aria-label="WIZ Beauty Salon home" className="brand-mark"><img src={logo.url} alt="" /><span>WIZ <small>BEAUTY SALON</small></span></a>
+        <nav className="desktop-nav" aria-label="Main navigation">{nav.map((item) => <a href={item.href} key={item.label}>{item.label}</a>)}</nav>
+        <div className="header-actions">
+          <Button asChild className="nav-book rounded-none bg-primary px-7 py-6 text-xs font-semibold uppercase tracking-widest text-primary-foreground shadow-none hover:bg-primary-hover"><a href="#booking">Book Now <ArrowRight size={15} /></a></Button>
+          <Button variant="ghost" size="icon" className="menu-button" aria-label={menuOpen ? "Close menu" : "Open menu"} aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}>{menuOpen ? <X /> : <Menu />}</Button>
         </div>
-        {menu && (
-          <nav className="reveal-up border-t bg-background px-6 py-8 md:hidden">
-            {NAV.map((l) => (
-              <a key={l} href="#" className="block py-3 font-display text-3xl">{l}</a>
-            ))}
-          </nav>
-        )}
+        {menuOpen && <nav className="mobile-nav" aria-label="Mobile navigation">{nav.map((item) => <a onClick={() => setMenuOpen(false)} href={item.href} key={item.label}>{item.label}<ArrowRight size={16}/></a>)}</nav>}
       </header>
 
-      {/* Hero — the direction itself */}
-      <section className="relative mx-auto grid max-w-[1320px] grid-cols-12 gap-6 px-6 pt-14 pb-24 md:px-10 md:pt-20">
-        <div className="lilac-disc pointer-events-none absolute -right-40 top-10 h-[560px] w-[560px] opacity-60" />
-        <div className="relative col-span-12 md:col-span-7 md:pt-16">
-          <p className="eyebrow reveal-up text-lilac-deep">WIZ Beauty Salon · Brand foundation</p>
-          <h1 className="text-display reveal-up mt-6" style={{ animationDelay: "120ms" }}>
-            Beauty,<br />in its own<br /><em className="text-plum">light.</em>
-          </h1>
-          <p className="reveal-up mt-8 max-w-[44ch] text-lg leading-relaxed text-muted-foreground" style={{ animationDelay: "240ms" }}>
-            A visual identity grown from the WIZ logo — the soft lilac disc, the confident black ink, the hair in motion. Quiet, warm, unmistakably feminine.
-          </p>
-          <div className="reveal-up mt-10 flex flex-wrap items-center gap-6" style={{ animationDelay: "360ms" }}>
-            <a href="#" className="eyebrow rounded-sm bg-primary px-8 py-4 text-primary-foreground transition-colors duration-500 hover:bg-primary-hover">Book an appointment</a>
-            <a href="#" className="link-underline text-sm">Explore services</a>
+      <main>
+        <section className="home-hero" aria-labelledby="hero-title">
+          <img className="home-hero-image" src={hero} alt="Editorial beauty portrait, temporary demo image" width={1536} height={1024} fetchPriority="high" />
+          <div className="home-hero-shade" />
+          <div className="hero-content">
+            <p className="overline hero-overline">A new expression of beauty</p>
+            <h1 id="hero-title"><span className="hero-name">WIZ Beauty Salon</span><span>Beauty,<br /><em>your way.</em></span></h1>
+            <p className="hero-copy">A moment to express yourself, feel beautiful, and make it entirely yours.</p>
+            <div className="hero-actions">
+              <Button asChild className="rounded-none bg-accent px-8 py-6 text-xs font-semibold uppercase tracking-widest text-accent-foreground shadow-none hover:bg-blush"><a href="#booking">Book an appointment <ArrowRight size={17}/></a></Button>
+              <a className="hero-secondary" href="#services">Explore services <ArrowRight size={17}/></a>
+            </div>
           </div>
-        </div>
-        <div className="relative col-span-12 md:col-span-5">
-          <div className="img-frame reveal relative aspect-[4/5]">
-            <img src={hero} alt="Editorial beauty portrait (placeholder image)" width={1024} height={1280} className="h-full w-full object-cover" />
-          </div>
-          <p className="eyebrow mt-3 text-muted-foreground">Placeholder imagery — to be replaced with WIZ photography</p>
-        </div>
-      </section>
+          <a className="hero-scroll" href="#about" aria-label="Scroll to introduction"><ArrowDown size={18}/><span>SCROLL TO DISCOVER</span></a>
+          <span className="hero-image-note">Editorial demo imagery</span>
+        </section>
 
-      {/* 01 Logo analysis */}
-      <div className="bg-secondary">
-        <Section n="01" title="From the logo">
-          <div className="grid grid-cols-12 gap-10">
-            <div className="col-span-12 flex items-center justify-center md:col-span-5">
-              <img src={logo.url} alt="WIZ Beauty Salon original logo" className="w-full max-w-[360px]" />
-            </div>
-            <div className="col-span-12 grid gap-8 sm:grid-cols-2 md:col-span-7">
-              {[
-                ["Dominant", "A pale, cool lilac with a soft watercolour edge — calm and feminine, never loud."],
-                ["Contrast", "Pure black ink line-work. It gives the mark its confidence; we keep it as the primary text and CTA colour."],
-                ["Personality", "Hair in motion, eyes closed — serene, sensual, self-assured. Movement becomes our animation language."],
-                ["Typography", "A condensed bold sans in the wordmark. We balance it with a refined serif for warmth and editorial voice."],
-              ].map(([t, d]) => (
-                <div key={t}>
-                  <p className="eyebrow text-lilac-deep">{t}</p>
-                  <p className="mt-3 leading-relaxed text-muted-foreground">{d}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </Section>
-      </div>
+        <section id="about" className="intro-section section-wrap">
+          <div className="intro-aside"><span className="overline">01 / The WIZ feeling</span><div className="intro-line" /></div>
+          <div className="intro-main"><h2>Beauty is personal.<br /><em>Make it yours.</em></h2><div className="intro-bottom"><p>WIZ is a space for your own expression of beauty — from the smallest detail to a whole new look. Come as you are; leave feeling more like you.</p><TextLink href="#booking">Discover our story</TextLink></div></div>
+        </section>
 
-      {/* 02 Palette */}
-      <Section n="02" title="Colour, with restraint">
-        <div className="grid grid-cols-2 gap-px border bg-border md:grid-cols-7">
-          {PALETTE.map((c) => (
-            <div key={c.name} className="bg-background">
-              <div className={`h-40 md:h-56 ${c.cls}`} />
-              <div className="p-4">
-                <p className="font-display text-xl">{c.name}</p>
-                <p className="mt-1 text-xs text-muted-foreground">{c.role}</p>
-                <p className="mt-3 text-[11px] italic text-muted-foreground">{c.note}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-        <p className="mt-6 max-w-[60ch] text-sm text-muted-foreground">
-          Lilac is a tint, not a flood: roughly 70% ivory &amp; stone, 20% ink, 8% lilac, 2% bronze.
-        </p>
-      </Section>
-
-      {/* 03 Typography */}
-      <div className="bg-foreground text-background">
-        <section className="mx-auto max-w-[1320px] px-6 py-20 md:px-10 md:py-28">
-          <div className="mb-12 flex items-baseline gap-6 border-t border-background/20 pt-6">
-            <span className="eyebrow opacity-60">03</span>
-            <h2 className="text-h2">Typography</h2>
-          </div>
-          <div className="grid grid-cols-12 gap-10">
-            <div className="col-span-12 md:col-span-7">
-              <p className="eyebrow opacity-60">Display — Cormorant Garamond</p>
-              <p className="text-display mt-4">Aa Wiz</p>
-              <div className="mt-10 space-y-5 border-t border-background/20 pt-8">
-                <p className="text-h1">Heading one, editorial</p>
-                <p className="text-h2">Heading two, considered</p>
-                <p className="font-display text-2xl">Heading three, quietly refined</p>
-              </div>
-            </div>
-            <div className="col-span-12 md:col-span-5">
-              <p className="eyebrow opacity-60">Text &amp; interface — Manrope</p>
-              <p className="mt-6 text-lg leading-relaxed opacity-90">
-                Body copy is set in a clean contemporary sans for effortless reading on any screen. Generous line height, short measures, calm rhythm.
-              </p>
-              <p className="mt-4 text-sm leading-relaxed opacity-60">Small text and captions keep their clarity at every size.</p>
-              <p className="eyebrow mt-8 text-lilac">Eyebrow · labels · navigation</p>
-            </div>
+        <section id="services" className="services-section">
+          <div className="section-wrap services-inner">
+            <div className="section-heading"><div><span className="overline">02 / What we imagine for WIZ</span><h2>Every detail,<br /><em>beautifully you.</em></h2></div><p>Four ways to make a moment your own.</p></div>
+            <div className="services-grid">{services.map((service, i) => <article className={`service-item ${service.className}`} key={service.name}><div className="service-image img-frame"><img src={service.image} alt={service.alt} width={service.width} height={service.height} loading="lazy" /></div><div className="service-caption"><span className="service-index">0{i + 1}</span><div><h3>{service.name}</h3><p>{service.copy}</p></div><ArrowRight size={22} strokeWidth={1.3}/></div></article>)}</div>
+            <div className="service-end"><span className="demo-note">Imagery and categories are for visual preview only.</span><TextLink href="#booking">View all services</TextLink></div>
           </div>
         </section>
-      </div>
 
-      {/* 04 Components */}
-      <Section n="04" title="Interface language">
-        <div className="grid grid-cols-12 gap-10">
-          <div className="col-span-12 space-y-10 md:col-span-5">
-            <div>
-              <p className="eyebrow mb-5 text-muted-foreground">Buttons</p>
-              <div className="flex flex-wrap items-center gap-4">
-                <button className="eyebrow rounded-sm bg-primary px-8 py-4 text-primary-foreground transition-colors duration-500 hover:bg-primary-hover">Book Now</button>
-                <button className="eyebrow rounded-sm border border-foreground px-8 py-4 transition-colors duration-500 hover:bg-foreground hover:text-background">WhatsApp us</button>
-                <button className="link-underline text-sm">View all services →</button>
-              </div>
-            </div>
-            <div>
-              <p className="eyebrow mb-5 text-muted-foreground">Form fields</p>
-              <div className="space-y-6">
-                {["Full name", "Phone or WhatsApp"].map((l) => (
-                  <label key={l} className="block">
-                    <span className="eyebrow text-muted-foreground">{l}</span>
-                    <input placeholder={l === "Full name" ? "Your name" : "+000 000 000"} className="mt-2 w-full border-0 border-b border-input bg-transparent py-3 text-base outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-lilac-deep" />
-                  </label>
-                ))}
-                <label className="block">
-                  <span className="eyebrow text-muted-foreground">Service</span>
-                  <select className="mt-2 w-full border-0 border-b border-input bg-transparent py-3 text-base outline-none focus:border-lilac-deep">
-                    <option>Select a service</option>
-                    <option>Hair (placeholder)</option>
-                    <option>Skin (placeholder)</option>
-                  </select>
-                </label>
-              </div>
-            </div>
+        <section id="gallery" className="gallery-section section-wrap">
+          <div className="section-heading gallery-heading"><div><span className="overline">03 / A visual mood</span><h2>A little beauty,<br /><em>everywhere.</em></h2></div><p>Images here show the creative direction, not WIZ's actual work.</p></div>
+          <div className="gallery-composition">
+            <figure className="gallery-one img-frame"><img src={portrait} alt="Demo editorial beauty portrait" width={1024} height={1280} loading="lazy" /></figure>
+            <figure className="gallery-two img-frame"><img src={space} alt="Demo salon-inspired interior, not the WIZ location" width={1280} height={896} loading="lazy" /></figure>
+            <figure className="gallery-three img-frame"><img src={nails} alt="Demo manicure detail" width={768} height={1024} loading="lazy" /></figure>
+            <span className="gallery-word" aria-hidden="true">WIZ</span>
           </div>
+          <div className="gallery-end"><span className="demo-note">Temporary editorial images · Replace with WIZ photography</span><TextLink href="#transformation">View gallery</TextLink></div>
+        </section>
 
-          <div className="col-span-12 md:col-span-7">
-            <p className="eyebrow mb-5 text-muted-foreground">Service presentation — editorial, not boxed</p>
-            <div className="divide-y border-y">
-              {["Hair", "Skin", "Nails", "Makeup"].map((s, i) => (
-                <a key={s} href="#" className="group flex items-center justify-between py-6 transition-colors duration-500 hover:bg-secondary/60 md:px-4">
-                  <div className="flex items-baseline gap-6">
-                    <span className="eyebrow text-muted-foreground">0{i + 1}</span>
-                    <span className="font-display text-3xl md:text-4xl">{s}</span>
-                  </div>
-                  <span className="text-sm text-muted-foreground transition-transform duration-500 group-hover:translate-x-1">
-                    [Price placeholder] →
-                  </span>
-                </a>
-              ))}
-            </div>
-            <p className="mt-4 text-xs text-muted-foreground">Service categories shown as examples only — final list from WIZ.</p>
+        <section id="transformation" className="transformation-section">
+          <div className="section-wrap transformation-inner">
+            <div className="transformation-copy"><span className="overline">04 / The transformation</span><h2>See the<br /><em>difference.</em></h2><p>Sometimes a change in the mirror changes everything. Move the slider to explore a sample transformation.</p><span className="demo-note">Illustrative demo only — not a WIZ client result.</span><TextLink href="#booking" light>See more transformations</TextLink></div>
+            <div className="comparison-wrap"><div className="comparison" aria-label="Illustrative before and after hair comparison"><img src={after} alt="Demo styled hair after" width={1024} height={768} loading="lazy" /><div className="comparison-before" style={{ width: `${comparison}%` }}><img src={before} alt="Demo hair before styling" width={1024} height={768} loading="lazy" /></div><span className="comparison-label comparison-label-before">BEFORE</span><span className="comparison-label comparison-label-after">AFTER</span><div className="comparison-handle" style={{ left: `${comparison}%` }} aria-hidden="true"><span>‹ &nbsp; ›</span></div><input type="range" min="0" max="100" value={comparison} onChange={(event) => setComparison(Number(event.target.value))} aria-label="Reveal before and after demo transformation" /></div></div>
           </div>
-        </div>
-      </Section>
+        </section>
 
-      {/* 05 Imagery */}
-      <div className="bg-secondary">
-        <Section n="05" title="Image & motion">
-          <div className="grid grid-cols-12 items-end gap-6">
-            <figure className="img-frame col-span-12 aspect-[16/11] md:col-span-7">
-              <img src={space} alt="Salon interior (placeholder image)" loading="lazy" width={1280} height={896} className="h-full w-full object-cover" />
-            </figure>
-            <div className="col-span-12 md:col-span-5">
-              <figure className="img-frame aspect-[4/5] md:-mb-24 md:ml-10">
-                <img src={hair} alt="Stylist at work (placeholder image)" loading="lazy" width={896} height={1120} className="h-full w-full object-cover" />
-              </figure>
-            </div>
-          </div>
-          <div className="mt-16 grid gap-8 sm:grid-cols-3 md:mt-32">
-            {[
-              ["Images", "Warm natural light, varied proportions, intentional overlaps. Sharp corners — the frame is the photograph."],
-              ["Motion", "Slow reveals and a 1.4s zoom on hover. Like hair settling after it moves. Nothing bounces."],
-              ["Space", "An 8px rhythm with generous section breathing room. Whitespace is part of the luxury."],
-            ].map(([t, d]) => (
-              <div key={t}>
-                <p className="eyebrow text-lilac-deep">{t}</p>
-                <p className="mt-3 leading-relaxed text-muted-foreground">{d}</p>
-              </div>
-            ))}
-          </div>
-        </Section>
-      </div>
+        <section id="booking" className="booking-section"><div className="section-wrap booking-inner"><span className="overline">Your moment awaits</span><h2>Ready for your<br /><em>WIZ moment?</em></h2><p>Something beautiful starts with a little time for yourself.</p><Button asChild className="rounded-none bg-primary px-10 py-7 text-xs font-semibold uppercase tracking-widest text-primary-foreground shadow-none hover:bg-primary-hover"><a href="mailto:hello@example.com?subject=WIZ%20appointment%20enquiry">Book an appointment <ArrowRight size={18}/></a></Button><span className="demo-note">Booking is a preview. Contact and appointment details will be added after WIZ confirms them.</span></div></section>
+      </main>
 
-      {/* Closing CTA */}
-      <section className="relative overflow-hidden">
-        <div className="mx-auto max-w-[1320px] px-6 py-28 text-center md:px-10">
-          <div className="lilac-disc mx-auto mb-10 h-24 w-24" />
-          <h2 className="text-h1 mx-auto max-w-[16ch]">Ready to experience WIZ?</h2>
-          <a href="#" className="eyebrow mt-10 inline-block rounded-sm bg-primary px-10 py-4 text-primary-foreground transition-colors duration-500 hover:bg-primary-hover">Book an appointment</a>
-        </div>
-      </section>
-
-      <footer className="border-t">
-        <div className="mx-auto flex max-w-[1320px] flex-col gap-4 px-6 py-10 text-sm text-muted-foreground md:flex-row md:items-center md:justify-between md:px-10">
-          <span className="font-display text-xl tracking-[0.18em] text-foreground">WIZ</span>
-          <span>[Address placeholder] · [Hours placeholder] · [Phone placeholder]</span>
-          <span>[Instagram] · [TikTok] · [WhatsApp]</span>
-        </div>
-      </footer>
+      <footer id="contact" className="site-footer"><div className="section-wrap"><div className="footer-top"><div><span className="overline">WIZ Beauty Salon</span><p>Beauty, <em>your way.</em></p></div><a href="#home" className="footer-back">Back to top ↑</a></div><div className="footer-bottom"><nav aria-label="Footer navigation">{nav.map((item) => <a href={item.href} key={item.label}>{item.label}</a>)}</nav><div className="footer-contact"><span>Contact details · Coming from WIZ</span><span>Location & hours · Coming from WIZ</span><span>Social links · Coming from WIZ</span></div></div><div className="footer-last"><span>© WIZ Beauty Salon · Home page concept</span><span>Demo imagery and copy are replaceable</span></div></div></footer>
     </div>
   );
 }
