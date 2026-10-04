@@ -568,3 +568,5 @@
  .btn { white-space: normal; }
 }
 @media (prefers-reduced-motion: reduce) { .btn, .masonry-item, .step-body, .lightbox { animation: none; transition: none; } }
+@media (max-width: 900px) { .booking-page { min-height: 0; align-content: start; } }
+@media (max-width: 600px) { .nav-book { white-space: nowrap; padding: 12px 14px; gap: 6px; } }

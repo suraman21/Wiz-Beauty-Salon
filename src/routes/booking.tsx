@@ -58,6 +58,7 @@ function Booking() {
     setCancelled(false);
     setRescheduling(false);
     setStep(5);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
   const restart = () => {
     setConfirmed(null); setCancelled(false); setRescheduling(false);
