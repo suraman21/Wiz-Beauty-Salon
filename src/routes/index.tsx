@@ -81,7 +81,7 @@ function Home() {
 
         <section id="about" className="intro-section section-wrap">
           <div className="intro-aside"><span className="overline">01 / The WIZ feeling</span><div className="intro-line" /></div>
-          <div className="intro-main"><h2>Beauty is personal.<br /><em>Make it yours.</em></h2><div className="intro-bottom"><p>WIZ is a space for your own expression of beauty — from the smallest detail to a whole new look. Come as you are; leave feeling more like you.</p><TextLink href="#booking">Discover our story</TextLink></div></div>
+          <div className="intro-main"><h2>Beauty is personal.<br /><em>Make it yours.</em></h2><div className="intro-bottom"><p>Imagine a space for your own expression of beauty — from the smallest detail to a whole new look. Come as you are; leave feeling more like you.</p><TextLink href="#about">Discover our story</TextLink></div></div>
         </section>
 
         <section id="services" className="services-section">
@@ -110,7 +110,7 @@ function Home() {
           </div>
         </section>
 
-        <section id="booking" className="booking-section"><div className="section-wrap booking-inner"><span className="overline">Your moment awaits</span><h2>Ready for your<br /><em>WIZ moment?</em></h2><p>Something beautiful starts with a little time for yourself.</p><Button asChild className="rounded-none bg-primary px-10 py-7 text-xs font-semibold uppercase tracking-widest text-primary-foreground shadow-none hover:bg-primary-hover"><a href="mailto:hello@example.com?subject=WIZ%20appointment%20enquiry">Book an appointment <ArrowRight size={18}/></a></Button><span className="demo-note">Booking is a preview. Contact and appointment details will be added after WIZ confirms them.</span></div></section>
+        <section id="booking" className="booking-section"><div className="section-wrap booking-inner"><span className="overline">Your moment awaits</span><h2>Ready for your<br /><em>WIZ moment?</em></h2><p>Something beautiful starts with a little time for yourself.</p><Button asChild className="rounded-none bg-primary px-10 py-7 text-xs font-semibold uppercase tracking-widest text-primary-foreground shadow-none hover:bg-primary-hover"><a href="#contact">Book an appointment <ArrowRight size={18}/></a></Button><span className="demo-note">Booking is a preview. Contact and appointment details will be added after WIZ confirms them.</span></div></section>
       </main>
 
       <footer id="contact" className="site-footer"><div className="section-wrap"><div className="footer-top"><div><span className="overline">WIZ Beauty Salon</span><p>Beauty, <em>your way.</em></p></div><a href="#home" className="footer-back">Back to top ↑</a></div><div className="footer-bottom"><nav aria-label="Footer navigation">{nav.map((item) => <a href={item.href} key={item.label}>{item.label}</a>)}</nav><div className="footer-contact"><span>Contact details · Coming from WIZ</span><span>Location & hours · Coming from WIZ</span><span>Social links · Coming from WIZ</span></div></div><div className="footer-last"><span>© WIZ Beauty Salon · Home page concept</span><span>Demo imagery and copy are replaceable</span></div></div></footer>
