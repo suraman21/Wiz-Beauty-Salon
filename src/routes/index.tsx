@@ -42,8 +42,8 @@ const services = [
   { name: "Skin", copy: "A fresh way to feel like yourself.", image: skin, alt: "Demo skincare portrait", width: 768, height: 1024, className: "service-skin" },
 ];
 
-function TextLink({ href, children, light = false }: { href: string; children: React.ReactNode; light?: boolean }) {
-  return <a href={href} className={`editorial-link ${light ? "editorial-link-light" : ""}`}>{children}<ArrowRight size={18} strokeWidth={1.5} aria-hidden="true" /></a>;
+function TextLink({ children, light = false }: { children: React.ReactNode; light?: boolean }) {
+  return <span aria-disabled="true" title="Available when the full website is built" className={`editorial-link editorial-link-pending ${light ? "editorial-link-light" : ""}`}>{children}<ArrowRight size={18} strokeWidth={1.5} aria-hidden="true" /></span>;
 }
 
 function Home() {
@@ -81,14 +81,14 @@ function Home() {
 
         <section id="about" className="intro-section section-wrap">
           <div className="intro-aside"><span className="overline">01 / The WIZ feeling</span><div className="intro-line" /></div>
-          <div className="intro-main"><h2>Beauty is personal.<br /><em>Make it yours.</em></h2><div className="intro-bottom"><p>Imagine a space for your own expression of beauty — from the smallest detail to a whole new look. Come as you are; leave feeling more like you.</p><TextLink href="#about">Discover our story</TextLink></div></div>
+          <div className="intro-main"><h2>Beauty is personal.<br /><em>Make it yours.</em></h2><div className="intro-bottom"><p>Imagine a space for your own expression of beauty — from the smallest detail to a whole new look. Come as you are; leave feeling more like you.</p><TextLink>Discover our story</TextLink></div></div>
         </section>
 
         <section id="services" className="services-section">
           <div className="section-wrap services-inner">
             <div className="section-heading"><div><span className="overline">02 / What we imagine for WIZ</span><h2>Every detail,<br /><em>beautifully you.</em></h2></div><p>Four ways to make a moment your own.</p></div>
             <div className="services-grid">{services.map((service, i) => <article className={`service-item ${service.className}`} key={service.name}><div className="service-image img-frame"><img src={service.image} alt={service.alt} width={service.width} height={service.height} loading="lazy" /></div><div className="service-caption"><span className="service-index">0{i + 1}</span><div><h3>{service.name}</h3><p>{service.copy}</p></div><ArrowRight size={22} strokeWidth={1.3}/></div></article>)}</div>
-            <div className="service-end"><span className="demo-note">Imagery and categories are for visual preview only.</span><TextLink href="#booking">View all services</TextLink></div>
+            <div className="service-end"><span className="demo-note">Imagery and categories are for visual preview only.</span><TextLink>View all services</TextLink></div>
           </div>
         </section>
 
@@ -100,12 +100,12 @@ function Home() {
             <figure className="gallery-three img-frame"><img src={nails} alt="Demo manicure detail" width={768} height={1024} loading="lazy" /></figure>
             <span className="gallery-word" aria-hidden="true">WIZ</span>
           </div>
-          <div className="gallery-end"><span className="demo-note">Temporary editorial images · Replace with WIZ photography</span><TextLink href="#transformation">View gallery</TextLink></div>
+          <div className="gallery-end"><span className="demo-note">Temporary editorial images · Replace with WIZ photography</span><TextLink>View gallery</TextLink></div>
         </section>
 
         <section id="transformation" className="transformation-section">
           <div className="section-wrap transformation-inner">
-            <div className="transformation-copy"><span className="overline">04 / The transformation</span><h2>See the<br /><em>difference.</em></h2><p>Sometimes a change in the mirror changes everything. Move the slider to explore a sample transformation.</p><span className="demo-note">Illustrative demo only — not a WIZ client result.</span><TextLink href="#booking" light>See more transformations</TextLink></div>
+            <div className="transformation-copy"><span className="overline">04 / The transformation</span><h2>See the<br /><em>difference.</em></h2><p>Sometimes a change in the mirror changes everything. Move the slider to explore a sample transformation.</p><span className="demo-note">Illustrative demo only — not a WIZ client result.</span><TextLink light>See more transformations</TextLink></div>
             <div className="comparison-wrap"><div className="comparison" aria-label="Illustrative before and after hair comparison"><img src={after} alt="Demo styled hair after" width={1024} height={768} loading="lazy" /><div className="comparison-before" style={{ width: `${comparison}%` }}><img src={before} alt="Demo hair before styling" width={1024} height={768} loading="lazy" /></div><span className="comparison-label comparison-label-before">BEFORE</span><span className="comparison-label comparison-label-after">AFTER</span><div className="comparison-handle" style={{ left: `${comparison}%` }} aria-hidden="true"><span>‹ &nbsp; ›</span></div><input type="range" min="0" max="100" value={comparison} onChange={(event) => setComparison(Number(event.target.value))} aria-label="Reveal before and after demo transformation" /></div></div>
           </div>
         </section>
