@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowRight, Camera } from "lucide-react";
-import { BookingBand, PageHero, SiteLayout } from "@/components/site/SiteChrome";
+import { ArrowRight } from "lucide-react";
+import { BookingBand, PageHero, PhotoSlot, SiteLayout } from "@/components/site/SiteChrome";
 import { categories, galleryWork, images, type Category } from "@/data/wiz";
 
 export const Route = createFileRoute("/services")({
@@ -19,7 +19,7 @@ export const Route = createFileRoute("/services")({
 });
 
 function Services() {
-  const [active, setActive] = useState<string>(categories[0].id);
+  const [active, setActive] = useState<string>("hair-styling");
 
   useEffect(() => {
     const els = categories.map((c) => document.getElementById(c.id)).filter(Boolean) as HTMLElement[];
@@ -110,15 +110,5 @@ function CategorySection({ c, index }: { c: Category; index: number }) {
         </div>
       </div>
     </section>
-  );
-}
-
-export function PhotoSlot({ label }: { label: string }) {
-  return (
-    <div className="photo-slot" role="img" aria-label={`${label} — coming soon`}>
-      <Camera size={20} strokeWidth={1.3} aria-hidden="true" />
-      <span>{label}</span>
-      <small>Coming soon</small>
-    </div>
   );
 }
