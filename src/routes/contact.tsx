@@ -43,7 +43,7 @@ function Contact() {
             </ul>
             <span className="demo-note">All contact details are placeholders until WIZ provides them.</span>
           </div>
-          <figure className="contact-image img-frame reveal"><img src={images.skin} alt="Demo skincare portrait" /></figure>
+          <figure className="contact-image img-frame reveal"><img src={images.skin} alt="Demo beauty portrait" /></figure>
         </div>
       </section>
 

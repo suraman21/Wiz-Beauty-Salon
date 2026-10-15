@@ -1,15 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowDown, ArrowRight } from "lucide-react";
 import { BeforeAfter, BookingBand, EditorialLink, SiteLayout } from "@/components/site/SiteChrome";
-import { categories, images } from "@/data/wiz";
+import { homeFeatured, images } from "@/data/wiz";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "WIZ Beauty Salon | Beauty, Your Way" },
-      { name: "description", content: "WIZ Beauty Salon: hair, nails, makeup and skin in a beauty experience made for you. Explore services and book your appointment." },
+      { name: "description", content: "WIZ Beauty Salon: hair, braids, nails, makeup and more in a beauty experience made for you. Explore services and book your appointment." },
       { property: "og:title", content: "WIZ Beauty Salon | Beauty, Your Way" },
-      { property: "og:description", content: "Hair, nails, makeup and skin — a beauty experience made entirely yours." },
+      { property: "og:description", content: "Hair, braids, nails and makeup — a beauty experience made entirely yours." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -45,9 +45,9 @@ function Home() {
 
       <section className="services-section">
         <div className="section-wrap services-inner">
-          <div className="section-heading"><div><span className="overline">02 / Our services</span><h2>Every detail,<br /><em>beautifully you.</em></h2></div><p>Four ways to make a moment your own.</p></div>
+          <div className="section-heading"><div><span className="overline">02 / Our services</span><h2>Every detail,<br /><em>beautifully you.</em></h2></div><p>Hair, braids, nails, makeup and a Kids' Corner.</p></div>
           <div className="services-grid">
-            {categories.map((c, i) => (
+            {homeFeatured.map((c, i) => (
               <Link to="/services" hash={c.id} className={`service-item ${layout[i]}`} key={c.id}>
                 <div className="service-image img-frame"><img src={c.image} alt={c.alt} loading="lazy" /></div>
                 <div className="service-caption"><span className="service-index">0{i + 1}</span><div><h3>{c.name}</h3><p>{c.tagline}</p></div><ArrowRight size={22} strokeWidth={1.3} /></div>
