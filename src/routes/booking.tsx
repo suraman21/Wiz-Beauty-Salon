@@ -87,7 +87,7 @@ function Booking() {
   const option = service?.options?.find((o) => o.id === optionId);
   const category = categories.find((c) => c.id === catId);
   const unsure = mode === "unsure";
-  const showChild = unsure || service?.categoryId === "kids";
+  const showChild = unsure || service?.categoryId === "kids-braids";
 
   const serviceReady = unsure || (mode === "known" && !!service && (!service.options || !!option));
   const canNext = [serviceReady, !!date, !!time, !!(details.name.trim() && details.phone.trim()), true][step];

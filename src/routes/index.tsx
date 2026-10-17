@@ -48,7 +48,7 @@ function Home() {
           <div className="section-heading"><div><span className="overline">02 / Our services</span><h2>Every detail,<br /><em>beautifully you.</em></h2></div><p>Hair, braids, nails, makeup and a Kids' Corner.</p></div>
           <div className="services-grid">
             {homeFeatured.map((c, i) => (
-              <Link to="/services" hash={c.id} className={`service-item ${layout[i]}`} key={c.id}>
+              <Link to="/services" className={`service-item ${layout[i]}`} key={c.id}>
                 <div className="service-image img-frame"><img src={c.image} alt={c.alt} loading="lazy" /></div>
                 <div className="service-caption"><span className="service-index">0{i + 1}</span><div><h3>{c.name}</h3><p>{c.tagline}</p></div><ArrowRight size={22} strokeWidth={1.3} /></div>
               </Link>
