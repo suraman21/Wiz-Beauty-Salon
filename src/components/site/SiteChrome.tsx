@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
-import { ArrowRight, Camera, Menu, X } from "lucide-react";
+import { ArrowRight, Menu, X } from "lucide-react";
 import logo from "@/assets/wiz-logo.png.asset.json";
 import { contact, nav } from "@/data/wiz";
 
@@ -116,16 +116,6 @@ export function BeforeAfter({ before, after, label = "Illustrative before and af
       <span className="comparison-label comparison-label-after">AFTER</span>
       <div className="comparison-handle" style={{ left: `${v}%` }} aria-hidden="true"><span>‹ &nbsp; ›</span></div>
       <input type="range" min="0" max="100" value={v} onChange={(e) => setV(Number(e.target.value))} aria-label="Reveal before and after demo transformation" />
-    </div>
-  );
-}
-
-export function PhotoSlot({ label }: { label: string }) {
-  return (
-    <div className="photo-slot" role="img" aria-label={`${label} — coming soon`}>
-      <Camera size={20} strokeWidth={1.3} aria-hidden="true" />
-      <span>{label}</span>
-      <small>Coming soon</small>
     </div>
   );
 }
