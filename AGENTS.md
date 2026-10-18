@@ -11,3 +11,4 @@
 
 - Keep the WIZ Home page as a standalone route with section anchors until other pages are approved, so navigation never points to unfinished pages.
 - Keep illustrative service and gallery content in local arrays and label it as demo, so actual salon material can replace it without implying fabricated results.
+- Keep the confirmed Services/Booking catalog and booking validation in a shared local module, separate from unrelated editorial demo data, so both forms stay consistent without changing Home or Gallery.

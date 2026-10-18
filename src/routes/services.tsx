@@ -2,15 +2,17 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { BookingBand, PageHero, SiteLayout } from "@/components/site/SiteChrome";
-import { categories, images, PRICE_PLACEHOLDER, type CategoryId } from "@/data/wiz";
+import { Button } from "@/components/ui/button";
+import { images, PRICE_PLACEHOLDER } from "@/data/wiz";
+import { serviceCategories, filterServiceCategories, type ServiceCategoryId } from "@/data/services";
 
 export const Route = createFileRoute("/services")({
   head: () => ({
     meta: [
       { title: "Services | WIZ Beauty Salon" },
-      { name: "description", content: "Hair, nails, makeup and skin services at WIZ Beauty Salon. Choose your treatment and book in a few steps." },
+      { name: "description", content: "Explore WIZ Beauty Salon's 14 service categories in English and Amharic, including hair, nails, makeup and kids' braids." },
       { property: "og:title", content: "Services | WIZ Beauty Salon" },
-      { property: "og:description", content: "Explore hair, nails, makeup and skin services and book your WIZ moment." },
+      { property: "og:description", content: "Explore WIZ's bilingual service menu and choose your appointment or an undecided request." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -19,15 +21,16 @@ export const Route = createFileRoute("/services")({
 });
 
 function Services() {
-  const [filter, setFilter] = useState<CategoryId | "all">("all");
-  const shown = filter === "all" ? categories : categories.filter((c) => c.id === filter);
+  const [filter, setFilter] = useState<ServiceCategoryId | "all">("all");
+  const shown = filterServiceCategories(filter);
   return (
     <SiteLayout>
-      <PageHero overline="Services" title={<>Made for<br /><em>every moment.</em></>} copy="Hair, nails, makeup and skin — each one shaped around you. Choose a category, then book in a few easy steps." image={images.makeup} alt="Demo makeup portrait" />
+      <PageHero overline="Services" title={<>Made for<br /><em>every moment.</em></>} copy="Hair, nails, makeup and more — choose a category, then select your appointment." image={images.makeup} alt="Demo makeup portrait" />
 
       <div className="filter-bar section-wrap" role="tablist" aria-label="Service categories">
-        {[{ id: "all", name: "All" }, ...categories].map((c) => (
-          <button key={c.id} role="tab" aria-selected={filter === c.id} className={`chip ${filter === c.id ? "is-active" : ""}`} onClick={() => setFilter(c.id as CategoryId | "all")}>{c.name}</button>
+        <Button variant="ghost" role="tab" aria-selected={filter === "all"} className={`chip h-auto rounded-none ${filter === "all" ? "is-active" : ""}`} onClick={() => setFilter("all")}>All</Button>
+        {serviceCategories.map((c) => (
+          <Button variant="ghost" key={c.id} role="tab" aria-selected={filter === c.id} className={`chip h-auto rounded-none flex-wrap whitespace-normal ${filter === c.id ? "is-active" : ""}`} onClick={() => setFilter(c.id)}>{c.name} <span lang="am">{c.amharic}</span></Button>
         ))}
       </div>
 
@@ -37,18 +40,17 @@ function Services() {
             <div className="section-wrap svc-cat-inner">
               <figure className="svc-cat-image img-frame"><img src={c.image} alt={c.alt} loading="lazy" /></figure>
               <div className="svc-cat-body">
-                <span className="overline">0{categories.indexOf(c) + 1} / {c.name}</span>
-                <h2>{c.name}<br /><em>{c.tagline.split(".")[0]}.</em></h2>
-                <p className="svc-cat-copy">{c.copy}</p>
+                <span className="overline">{String(serviceCategories.indexOf(c) + 1).padStart(2, "0")} / {c.name}</span>
+                <h2 className="break-words">{c.name}<br /><em lang="am" className="font-sans text-2xl leading-normal not-italic">{c.amharic}</em></h2>
                 <ul className="svc-items">
                   {c.items.map((item) => (
                     <li key={item.id}>
-                      <div><h3>{item.name}</h3><span>{item.duration} · {PRICE_PLACEHOLDER}</span></div>
+                      <div className="min-w-0 break-words"><h3>{item.name}</h3><span>{PRICE_PLACEHOLDER}</span></div>
                       <Link to="/booking" search={{ service: item.id }} className="svc-book" aria-label={`Book ${item.name}`}>Book <ArrowRight size={15} /></Link>
                     </li>
                   ))}
                 </ul>
-                <span className="demo-note">Service names, durations and prices are demo placeholders.</span>
+                <span className="demo-note">Illustrative image only. Prices and durations to be confirmed by WIZ.</span>
               </div>
             </div>
           </section>
