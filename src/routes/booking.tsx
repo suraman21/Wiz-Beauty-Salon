@@ -201,7 +201,7 @@ function Booking() {
   );
 }
 
-function Summary({ service, date, time, details }: { service?: BookableService; date: string; time: string; details: Details }) {
+function Summary({ service, date, time, details }: { service: BookableService | undefined; date: string; time: string; details: Details }) {
   return (
     <dl className="summary">
       <div><dt>Service</dt><dd>{service?.name ?? UNDECIDED_LABEL} {service ? <small>{service.category} — <span lang="am">{service.amharic}</span></small> : <small>Undecided request</small>}</dd></div>
