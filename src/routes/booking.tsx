@@ -3,7 +3,9 @@ import { useMemo, useState } from "react";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { z } from "zod";
 import { SiteLayout } from "@/components/site/SiteChrome";
-import { allServices, categories, demoTimes, images, PRICE_PLACEHOLDER } from "@/data/wiz";
+import { Button } from "@/components/ui/button";
+import { demoTimes, images, PRICE_PLACEHOLDER } from "@/data/wiz";
+import { serviceCategories, findBookableService, isValidServiceSelection, bookingDetailsSchema, UNDECIDED_SERVICE, UNDECIDED_LABEL, type BookableService } from "@/data/services";
 
 export const Route = createFileRoute("/booking")({
   validateSearch: (s) => z.object({ service: z.string().optional() }).parse(s),
@@ -39,9 +41,10 @@ const fmt = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { weekday
 
 function Booking() {
   const search = Route.useSearch();
-  const initial = allServices.some((s) => s.id === search.service) ? search.service! : "";
+  const initial = findBookableService(search.service)?.id ?? "";
   const [step, setStep] = useState(initial ? 1 : 0);
   const [serviceId, setServiceId] = useState(initial);
+  const [categoryId, setCategoryId] = useState(findBookableService(initial)?.categoryId ?? "");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [details, setDetails] = useState<Details>({ name: "", phone: "", email: "", notes: "" });
@@ -49,11 +52,15 @@ function Booking() {
   const [cancelled, setCancelled] = useState(false);
   const [rescheduling, setRescheduling] = useState(false);
   const days = useMemo(() => nextDays(14), []);
-  const service = allServices.find((s) => s.id === serviceId);
+  const service = findBookableService(serviceId);
+  const selectedCategory = serviceCategories.find((c) => c.id === categoryId);
+  const undecided = serviceId === UNDECIDED_SERVICE;
+  const validDetails = bookingDetailsSchema.safeParse(details).success;
 
-  const canNext = [!!serviceId, !!date, !!time, details.name.trim() && details.phone.trim(), true][step];
+  const canNext = [isValidServiceSelection(serviceId), !!date, !!time, validDetails, isValidServiceSelection(serviceId) && !!date && !!time && validDetails][step];
 
   const confirm = () => {
+    if (!isValidServiceSelection(serviceId) || !date || !time || !validDetails) return;
     setConfirmed({ ref: confirmed?.ref ?? `WIZ-${Math.random().toString(36).slice(2, 7).toUpperCase()}`, serviceId, date, time, details });
     setCancelled(false);
     setRescheduling(false);
@@ -62,7 +69,7 @@ function Booking() {
   };
   const restart = () => {
     setConfirmed(null); setCancelled(false); setRescheduling(false);
-    setServiceId(""); setDate(""); setTime(""); setDetails({ name: "", phone: "", email: "", notes: "" }); setStep(0);
+    setServiceId(""); setCategoryId(""); setDate(""); setTime(""); setDetails({ name: "", phone: "", email: "", notes: "" }); setStep(0);
   };
 
   return (
@@ -75,41 +82,56 @@ function Booking() {
 
         <div className="booking-panel">
           <span className="overline">Booking {rescheduling && "· Rescheduling"}</span>
-          <h1>{step === 5 ? (cancelled ? <>Appointment<br /><em>cancelled.</em></> : <>You're<br /><em>booked.</em></>) : <>Book an<br /><em>appointment.</em></>}</h1>
+          <h1>{step === 5 ? (cancelled ? <>Demo request<br /><em>cancelled.</em></> : <>Demo request<br /><em>reviewed.</em></>) : <>Book an<br /><em>appointment.</em></>}</h1>
 
           {step < 5 && (
             <ol className="stepper" aria-label="Booking progress">
               {steps.map((s, i) => (
                 <li key={s} className={i === step ? "is-current" : i < step ? "is-done" : ""}>
-                  <button type="button" disabled={i > step} onClick={() => setStep(i)}><span>{i < step ? <Check size={12} /> : i + 1}</span>{s}</button>
+                  <Button variant="ghost" className="h-auto rounded-none p-0 justify-start" type="button" disabled={i > step} onClick={() => setStep(i)}><span>{i < step ? <Check size={12} /> : i + 1}</span>{s}</Button>
                 </li>
               ))}
             </ol>
           )}
 
           <div className="step-body" key={step}>
-            {step === 0 && categories.map((c) => (
-              <fieldset key={c.id} className="svc-group">
-                <legend>{c.name}</legend>
-                {c.items.map((i) => (
+            {step === 0 && (
+              <>
+                <label className={`option ${undecided ? "is-selected" : ""}`}>
+                  <input type="radio" name="service" checked={undecided} onChange={() => { setServiceId(UNDECIDED_SERVICE); setCategoryId(""); }} />
+                  <span className="opt-name">{UNDECIDED_LABEL}</span>
+                  <span className="opt-meta">Undecided request</span>
+                </label>
+                <div className="wiz-form my-6">
+                  <label className="full">Category
+                    <select className="w-full min-w-0 border-b border-input bg-background py-3 text-base font-normal normal-case tracking-normal" aria-label="Service category" value={categoryId} onChange={(e) => { setCategoryId(e.target.value); setServiceId(""); }}>
+                      <option value="">Choose a category</option>
+                      {serviceCategories.map((c) => <option key={c.id} value={c.id}>{c.name} — {c.amharic}</option>)}
+                    </select>
+                  </label>
+                </div>
+                {selectedCategory && <fieldset className="svc-group">
+                <legend>{selectedCategory.name} <span lang="am" className="block font-sans text-lg">{selectedCategory.amharic}</span></legend>
+                {selectedCategory.items.map((i) => (
                   <label key={i.id} className={`option ${serviceId === i.id ? "is-selected" : ""}`}>
                     <input type="radio" name="service" checked={serviceId === i.id} onChange={() => setServiceId(i.id)} />
-                    <span className="opt-name">{i.name}</span><span className="opt-meta">{i.duration} · {PRICE_PLACEHOLDER}</span>
+                    <span className="opt-name">{i.name}</span><span className="opt-meta">{PRICE_PLACEHOLDER}</span>
                   </label>
                 ))}
-              </fieldset>
-            ))}
+                </fieldset>}
+              </>
+            )}
 
             {step === 1 && (
               <div className="date-grid" role="radiogroup" aria-label="Choose a date">
                 {days.map((d) => {
                   const iso = d.toISOString();
                   return (
-                    <button type="button" role="radio" aria-checked={date === iso} key={iso} className={`date-cell ${date === iso ? "is-selected" : ""}`} onClick={() => { setDate(iso); setTime(""); }}>
+                    <Button variant="ghost" type="button" role="radio" aria-checked={date === iso} key={iso} className={`date-cell h-auto rounded-none ${date === iso ? "is-selected" : ""}`} onClick={() => { setDate(iso); setTime(""); }}>
                       <span>{d.toLocaleDateString("en-GB", { weekday: "short" })}</span>
                       <strong>{d.getDate()}</strong>
                       <span>{d.toLocaleDateString("en-GB", { month: "short" })}</span>
-                    </button>
+                    </Button>
                   );
                 })}
               </div>
@@ -119,7 +141,7 @@ function Booking() {
               <>
                 <p className="step-hint">{fmt(date)}</p>
                 <div className="time-grid" role="radiogroup" aria-label="Choose a time">
-                  {demoTimes.map((t) => <button type="button" role="radio" aria-checked={time === t} key={t} className={`chip ${time === t ? "is-active" : ""}`} onClick={() => setTime(t)}>{t}</button>)}
+                  {demoTimes.map((t) => <Button variant="ghost" type="button" role="radio" aria-checked={time === t} key={t} className={`chip h-auto rounded-none ${time === t ? "is-active" : ""}`} onClick={() => setTime(t)}>{t}</Button>)}
                 </div>
                 <span className="demo-note">Demo times — real availability will come from the salon.</span>
               </>
@@ -127,21 +149,21 @@ function Booking() {
 
             {step === 3 && (
               <div className="wiz-form">
-                <label>Full name *<input value={details.name} onChange={(e) => setDetails({ ...details, name: e.target.value })} autoComplete="name" /></label>
-                <label>Phone *<input type="tel" value={details.phone} onChange={(e) => setDetails({ ...details, phone: e.target.value })} autoComplete="tel" /></label>
+                <label>Full name *<input required value={details.name} onChange={(e) => setDetails({ ...details, name: e.target.value })} autoComplete="name" /></label>
+                <label>Phone *<input required type="tel" value={details.phone} onChange={(e) => setDetails({ ...details, phone: e.target.value })} autoComplete="tel" /></label>
                 <label className="full">Email<input type="email" value={details.email} onChange={(e) => setDetails({ ...details, email: e.target.value })} autoComplete="email" /></label>
                 <label className="full">Notes<textarea rows={3} value={details.notes} onChange={(e) => setDetails({ ...details, notes: e.target.value })} placeholder="Anything we should know?" /></label>
               </div>
             )}
 
-            {step === 4 && service && <Summary service={service} date={date} time={time} details={details} />}
+            {step === 4 && isValidServiceSelection(serviceId) && <Summary service={service} date={date} time={time} details={details} />}
 
             {step === 5 && confirmed && (() => {
-              const s = allServices.find((x) => x.id === confirmed.serviceId)!;
+              const s = findBookableService(confirmed.serviceId);
               return (
                 <div className="confirmation" role="status">
                   {cancelled ? (
-                    <p>Your demo appointment <strong>{confirmed.ref}</strong> has been cancelled.</p>
+                    <p>Your demo request <strong>{confirmed.ref}</strong> has been cancelled.</p>
                   ) : (
                     <>
                       <p className="conf-ref">Reference <strong>{confirmed.ref}</strong></p>
@@ -149,15 +171,15 @@ function Booking() {
                       <div className="manage">
                         <span className="overline">Manage booking</span>
                         <div className="manage-actions">
-                          <button type="button" className="btn btn-outline" onClick={() => { setRescheduling(true); setStep(1); }}>Reschedule</button>
-                          <button type="button" className="btn btn-outline btn-danger" onClick={() => setCancelled(true)}>Cancel appointment</button>
+                          <Button variant="ghost" type="button" className="btn btn-outline h-auto rounded-none" onClick={() => { setRescheduling(true); setStep(1); }}>Reschedule</Button>
+                          <Button variant="ghost" type="button" className="btn btn-outline btn-danger h-auto rounded-none" onClick={() => setCancelled(true)}>Cancel demo request</Button>
                         </div>
                       </div>
                     </>
                   )}
-                  <span className="demo-note">Demo booking — no appointment has actually been made. Real bookings will be connected once WIZ confirms its system.</span>
+                  <span className="demo-note">Demo only — this request has not been saved or sent to WIZ. No appointment has been made.</span>
                   <div className="manage-actions">
-                    <button type="button" className="btn btn-ink" onClick={restart}>Book another</button>
+                    <Button variant="ghost" type="button" className="btn btn-ink h-auto rounded-none" onClick={restart}>Book another</Button>
                     <Link to="/" className="editorial-link">Back home <ArrowRight size={16} /></Link>
                   </div>
                 </div>
@@ -167,10 +189,10 @@ function Booking() {
 
           {step < 5 && (
             <div className="step-nav">
-              {step > 0 ? <button type="button" className="btn btn-outline" onClick={() => setStep(step - 1)}><ArrowLeft size={16} /> Back</button> : <span />}
+              {step > 0 ? <Button variant="ghost" type="button" className="btn btn-outline h-auto rounded-none" onClick={() => setStep(step - 1)}><ArrowLeft size={16} /> Back</Button> : <span />}
               {step < 4
-                ? <button type="button" className="btn btn-ink" disabled={!canNext} onClick={() => setStep(step + 1)}>Continue <ArrowRight size={16} /></button>
-                : <button type="button" className="btn btn-ink" onClick={confirm}>{rescheduling ? "Confirm new time" : "Confirm booking"} <Check size={16} /></button>}
+                ? <Button variant="ghost" type="button" className="btn btn-ink h-auto rounded-none" disabled={!canNext} onClick={() => setStep(step + 1)}>Continue <ArrowRight size={16} /></Button>
+                : <Button variant="ghost" type="button" className="btn btn-ink h-auto rounded-none" disabled={!canNext} onClick={confirm}>{rescheduling ? "Review new time" : "Review demo request"} <Check size={16} /></Button>}
             </div>
           )}
         </div>
@@ -179,10 +201,10 @@ function Booking() {
   );
 }
 
-function Summary({ service, date, time, details }: { service: (typeof allServices)[number]; date: string; time: string; details: Details }) {
+function Summary({ service, date, time, details }: { service?: BookableService; date: string; time: string; details: Details }) {
   return (
     <dl className="summary">
-      <div><dt>Service</dt><dd>{service.name} <small>{service.category}</small></dd></div>
+      <div><dt>Service</dt><dd>{service?.name ?? UNDECIDED_LABEL} {service ? <small>{service.category} — <span lang="am">{service.amharic}</span></small> : <small>Undecided request</small>}</dd></div>
       <div><dt>Date</dt><dd>{fmt(date)}</dd></div>
       <div><dt>Time</dt><dd>{time}</dd></div>
       <div><dt>Name</dt><dd>{details.name}</dd></div>
