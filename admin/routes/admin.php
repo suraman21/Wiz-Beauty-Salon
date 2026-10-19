@@ -38,6 +38,11 @@ return static function (Router $router, App $app): void {
             'svg' => 'image/svg+xml',
             'png' => 'image/png',
             'ico' => 'image/x-icon',
+            'woff2' => 'font/woff2',
+            'woff' => 'font/woff',
+            'ttf' => 'font/ttf',
+            'otf' => 'font/otf',
+            'eot' => 'application/vnd.ms-fontobject',
         ];
 
         $extension = strtolower(pathinfo($file, PATHINFO_EXTENSION));

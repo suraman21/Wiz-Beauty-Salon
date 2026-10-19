@@ -21,6 +21,9 @@ if (root) {
   const editor = grapesjs.init({
     container: root,
     telemetry: false,
+    // Self-hosted, exactly as the reference build does it: without this the
+    // library falls back to a Font Awesome CDN URL and the toolbar loses icons.
+    cssIcons: "/admin/assets/font-awesome.min.css",
     height: "640px",
     width: "auto",
     fromElement: false,
