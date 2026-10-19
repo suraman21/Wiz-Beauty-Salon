@@ -38,8 +38,8 @@ describe("booking API client", () => {
     const services = await fetchServices();
 
     expect(services).toHaveLength(1);
-    expect(services[0].name).toBe("Wave");
-    expect(fetchMock.mock.calls[0][0]).toBe("/api/v1/services");
+    expect(services[0]?.name).toBe("Wave");
+    expect(fetchMock.mock.calls[0]?.[0]).toBe("/api/v1/services");
   });
 
   it("asks for the calendar with the service, the start date and the number of days", async () => {
@@ -52,9 +52,9 @@ describe("booking API client", () => {
 
     const days = await fetchCalendar(4, "2026-10-22", 7);
 
-    expect(days[0].slots).toEqual(["09:00"]);
+    expect(days[0]?.slots).toEqual(["09:00"]);
 
-    const url = String(fetchMock.mock.calls[0][0]);
+    const url = String(fetchMock.mock.calls[0]?.[0]);
     expect(url).toContain("/api/v1/calendar?");
     expect(url).toContain("service_id=4");
     expect(url).toContain("from=2026-10-22");
@@ -84,7 +84,7 @@ describe("booking API client", () => {
 
     expect(result.reference).toBe("WZ261019-AC4K");
 
-    const init = fetchMock.mock.calls[0][1] as RequestInit;
+    const init = fetchMock.mock.calls[0]?.[1] as RequestInit;
     expect(init.method).toBe("POST");
     expect(JSON.parse(String(init.body))).toMatchObject({ service_id: 4, time: "10:00" });
   });
