@@ -118,6 +118,7 @@ if (!function_exists('activity_label')) {
             'settings.test_email' => 'Sent a test email',
             'auth.logout' => 'Signed out',
             'auth.password_changed' => 'Changed their password',
+            'account.profile_updated' => 'Updated their account details',
             default => ucfirst(str_replace(['.', '_'], ' ', $action)),
         };
     }

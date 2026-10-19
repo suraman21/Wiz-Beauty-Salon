@@ -30,11 +30,12 @@ final class Session implements SessionStore
         }
 
         $secure = (bool) ($this->config['session_secure'] ?? true);
+        $lifetime = max(1800, (int) ($this->config['session_lifetime'] ?? 7200));
 
         session_name((string) ($this->config['session_name'] ?? 'wiz_admin'));
 
         session_set_cookie_params([
-            'lifetime' => (int) ($this->config['session_lifetime'] ?? 7200),
+            'lifetime' => $lifetime,
             'path' => '/',
             'domain' => '',
             'secure' => $secure,
@@ -42,10 +43,23 @@ final class Session implements SessionStore
             'samesite' => 'Lax',
         ]);
 
+        // Garbage collection must not be shorter than the cookie. The default
+        // is 1440 seconds, which silently ends a session after 24 idle minutes
+        // even though the cookie promised two hours.
+        ini_set('session.gc_maxlifetime', (string) $lifetime);
+        ini_set('session.use_strict_mode', '1');
+        ini_set('session.use_only_cookies', '1');
+
         $savePath = $this->config['session_path'] ?? null;
 
-        if (is_string($savePath) && $savePath !== '' && is_dir($savePath) && is_writable($savePath)) {
-            session_save_path($savePath);
+        if (is_string($savePath) && $savePath !== '') {
+            if (!is_dir($savePath)) {
+                @mkdir($savePath, 0700, true);
+            }
+
+            if (is_dir($savePath) && is_writable($savePath)) {
+                session_save_path($savePath);
+            }
         }
 
         session_start();

@@ -12,6 +12,7 @@ use Wiz\Core\Validator;
 use Wiz\Core\View;
 use Wiz\Repositories\ReviewRepository;
 use Wiz\Repositories\ServiceRepository;
+use Wiz\Support\Paginator;
 
 /**
  * Reviews waiting for a decision, and the ones already published.
@@ -22,6 +23,8 @@ use Wiz\Repositories\ServiceRepository;
  */
 final class ReviewController
 {
+    private const PER_PAGE = 25;
+
     public function __construct(
         private readonly View $view,
         private readonly ReviewRepository $reviews,
@@ -35,15 +38,22 @@ final class ReviewController
      */
     public function index(Request $request, array $params = []): Response
     {
+        $paginator = Paginator::of(
+            max(1, (int) $request->queryString('page', '1')),
+            self::PER_PAGE,
+            $this->reviews->count(),
+        );
+
         return $this->view->render('admin/reviews/index', [
             'title' => 'Reviews',
             'heading' => 'Reviews',
             'subheading' => 'Approve what appears on the website.',
             'active' => 'reviews',
-            'reviews' => $this->reviews->allWithService(),
+            'reviews' => $this->reviews->paginateWithService($paginator->perPage, $paginator->offset()),
             'pending' => $this->reviews->countPending(),
             'services' => $this->services->activeWithCategory(),
             'error' => $this->session->flash('error'),
+            'paginator' => $paginator,
         ]);
     }
 

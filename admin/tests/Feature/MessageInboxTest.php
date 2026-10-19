@@ -46,7 +46,7 @@ final class MessageInboxTest extends TestCase
 
         $this->messages->create('Hanna Tesfaye', $split['email'], $split['phone'], 'Do you do bridal hair?', '127.0.0.1');
 
-        $all = $this->messages->all();
+        $all = $this->messages->paginate(false, 50, 0);
 
         self::assertCount(1, $all);
         self::assertSame('Hanna Tesfaye', $all[0]['name']);
@@ -61,7 +61,7 @@ final class MessageInboxTest extends TestCase
 
         $this->messages->create('Selam B.', $split['email'], $split['phone'], 'Price for braids?', '');
 
-        $all = $this->messages->all();
+        $all = $this->messages->paginate(false, 50, 0);
 
         self::assertSame('0911223344', $all[0]['phone']);
         self::assertNull($all[0]['email']);
@@ -78,8 +78,8 @@ final class MessageInboxTest extends TestCase
         $this->messages->setRead($id, true);
 
         self::assertSame(1, $this->messages->unreadCount());
-        self::assertCount(1, $this->messages->all(true));
-        self::assertCount(2, $this->messages->all(false));
+        self::assertCount(1, $this->messages->paginate(true, 50, 0));
+        self::assertCount(2, $this->messages->paginate(false, 50, 0));
 
         $this->messages->setRead($id, false);
 
@@ -96,12 +96,40 @@ final class MessageInboxTest extends TestCase
         self::assertNull($this->messages->find($id));
     }
 
+    public function testPagesDoNotRepeatOrSkipRows(): void
+    {
+        for ($i = 1; $i <= 5; $i++) {
+            $this->messages->create('Person ' . $i, null, '09110000' . $i, 'Body ' . $i, '');
+        }
+
+        $first = $this->messages->paginate(false, 2, 0);
+        $second = $this->messages->paginate(false, 2, 2);
+
+        self::assertCount(2, $first);
+        self::assertCount(2, $second);
+        self::assertSame('Person 5', $first[0]['name']);
+        self::assertSame('Person 3', $second[0]['name']);
+    }
+
+    public function testMarkAllReadClearsTheBadge(): void
+    {
+        $this->messages->create('One', null, '0911000001', 'a', '');
+        $this->messages->create('Two', null, '0911000002', 'b', '');
+
+        self::assertSame(2, $this->messages->unreadCount());
+
+        $changed = $this->messages->markAllRead();
+
+        self::assertSame(2, $changed);
+        self::assertSame(0, $this->messages->unreadCount());
+    }
+
     public function testNewestComesFirst(): void
     {
         $this->messages->create('First', null, '0911000001', 'One', '');
         $this->messages->create('Second', null, '0911000002', 'Two', '');
 
-        $all = $this->messages->all();
+        $all = $this->messages->paginate(false, 50, 0);
 
         self::assertSame('Second', $all[0]['name']);
     }

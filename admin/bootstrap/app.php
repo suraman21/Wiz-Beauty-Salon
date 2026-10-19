@@ -14,7 +14,9 @@ declare(strict_types=1);
  * readable in one screen.
  */
 
+use Wiz\Controllers\Admin\AccountController;
 use Wiz\Controllers\Admin\AuthController;
+use Wiz\Controllers\Admin\ActivityController;
 use Wiz\Controllers\Admin\BookingController;
 use Wiz\Controllers\Admin\CategoryController;
 use Wiz\Controllers\Admin\DashboardController;
@@ -183,6 +185,7 @@ $app->singleton(AuthService::class, static fn (App $a): AuthService => new AuthS
     $a->get(Logger::class),
     (int) ($a->config('app.login_max_attempts') ?? 5),
     (int) ($a->config('app.login_lockout_minutes') ?? 15),
+    (int) ($a->config('app.login_max_attempts_per_ip') ?? 25),
 ));
 
 $app->singleton(SignedLink::class, static fn (App $a): SignedLink => new SignedLink(
@@ -244,9 +247,13 @@ $app->singleton(AuthController::class, static fn (App $a): AuthController => new
 $app->singleton(DashboardController::class, static fn (App $a): DashboardController => new DashboardController(
     $a->get(View::class),
     $a->get(Auth::class),
-    $a->get(Database::class),
+    $a->get(BookingRepository::class),
+    $a->get(MessageRepository::class),
+    $a->get(ReviewRepository::class),
+    $a->get(ServiceRepository::class),
     $a->get(ActivityLogRepository::class),
     $a->get(UserRepository::class),
+    $a->get(Logger::class),
 ));
 
 $app->singleton(ServiceController::class, static fn (App $a): ServiceController => new ServiceController(
@@ -337,6 +344,20 @@ $app->singleton(UserController::class, static fn (App $a): UserController => new
     $a->get(TeamService::class),
     $a->get(Auth::class),
     $a->get(Session::class),
+));
+
+$app->singleton(AccountController::class, static fn (App $a): AccountController => new AccountController(
+    $a->get(View::class),
+    $a->get(Auth::class),
+    $a->get(UserRepository::class),
+    $a->get(AuthService::class),
+    $a->get(ActivityLogRepository::class),
+    $a->get(Session::class),
+));
+
+$app->singleton(ActivityController::class, static fn (App $a): ActivityController => new ActivityController(
+    $a->get(View::class),
+    $a->get(ActivityLogRepository::class),
 ));
 
 $app->singleton(SettingsController::class, static fn (App $a): SettingsController => new SettingsController(

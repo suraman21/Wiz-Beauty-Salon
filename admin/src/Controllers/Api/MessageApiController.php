@@ -93,7 +93,7 @@ final class MessageApiController
             $ip,
         );
 
-        $this->tellTheSalon((string) $input['name'], $contact, (string) $input['message']);
+        $this->tellTheSalon((string) $input['name'], $contact, (string) $input['message'], $email);
 
         return Response::json([
             'ok' => true,
@@ -105,7 +105,7 @@ final class MessageApiController
      * Best-effort: the note is already saved, so a failure here is a nudge, not
      * an error the visitor should see.
      */
-    private function tellTheSalon(string $name, string $contact, string $message): void
+    private function tellTheSalon(string $name, string $contact, string $message, ?string $replyTo = null): void
     {
         if (trim($this->salonEmail) === '') {
             return;
@@ -115,7 +115,7 @@ final class MessageApiController
             $subject = 'New message from ' . $name;
             $text = "From: {$name}\nReply to: {$contact}\n\n{$message}\n";
 
-            $this->mailer->send($this->salonEmail, $subject, $text);
+            $this->mailer->send($this->salonEmail, $subject, $text, '', $replyTo);
         } catch (Throwable) {
             // Logged inside Mailer; nothing else to do.
         }

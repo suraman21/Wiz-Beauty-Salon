@@ -42,12 +42,20 @@ final class Kernel
         } catch (HttpException $e) {
             return $this->errorResponse($request, $e);
         } catch (\Throwable $e) {
-            $this->logger->error('Unhandled exception: ' . $e->getMessage(), [
+            // A short code ties the page a customer or staff member is looking
+            // at to the exact line in the log, without exposing the message.
+            $reference = strtoupper(bin2hex(random_bytes(4)));
+
+            $this->logger->error('Unhandled exception [' . $reference . ']: ' . $e->getMessage(), [
                 'path' => $request->path(),
                 'file' => $e->getFile() . ':' . $e->getLine(),
             ]);
 
-            return $this->errorResponse($request, new HttpException(500, 'Something went wrong.'));
+            return $this->errorResponse(
+                $request,
+                new HttpException(500, 'Something went wrong.'),
+                $reference,
+            );
         }
     }
 
@@ -125,12 +133,26 @@ final class Kernel
         return Response::html('');
     }
 
-    private function errorResponse(Request $request, HttpException $e): Response
+    private function errorResponse(Request $request, HttpException $e, ?string $reference = null): Response
     {
         $status = $e->status();
 
         if ($request->wantsJson()) {
             return Response::json(['error' => $e->getMessage(), 'status' => $status], $status);
+        }
+
+        $data = [
+            'title' => (string) $status,
+            'message' => $e->getMessage(),
+            'status' => $status,
+            'reference' => $reference,
+            'path' => $request->path(),
+        ];
+
+        // A customer following a booking link must never be shown the staff
+        // sign-in screen. Only /admin gets the staff layout.
+        if (!str_starts_with($request->path(), '/admin')) {
+            return $this->view->render('errors/public', $data, 'layouts/error')->withStatus($status);
         }
 
         $view = match ($status) {
@@ -143,10 +165,6 @@ final class Kernel
 
         // The rendered page is a normal 200 response until the status is
         // applied to it — without this an error page would answer 200.
-        return $this->view->render($view, [
-            'title' => (string) $status,
-            'message' => $e->getMessage(),
-            'status' => $status,
-        ], 'layouts/auth')->withStatus($status);
+        return $this->view->render($view, $data, 'layouts/auth')->withStatus($status);
     }
 }

@@ -47,4 +47,6 @@ $kernel = new Kernel(
     $app->get(\Wiz\Core\Logger::class),
 );
 
-$kernel->handle(Request::capture())->send();
+$kernel->handle(Request::capture(
+    is_array($config['trusted_proxies'] ?? null) ? $config['trusted_proxies'] : [],
+))->send();

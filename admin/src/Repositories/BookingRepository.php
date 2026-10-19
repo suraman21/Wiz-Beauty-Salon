@@ -44,12 +44,55 @@ final class BookingRepository
     }
 
     /**
-     * List for the admin screen.
+     * List for the admin screen, one page at a time.
      *
      * @param array{status?: string, range?: string} $filters
      * @return list<array<string, mixed>>
      */
-    public function search(array $filters = []): array
+    public function search(array $filters = [], int $limit = 50, int $offset = 0): array
+    {
+        [$where, $params] = $this->where($filters);
+
+        $sql = 'SELECT * FROM bookings';
+
+        if ($where !== []) {
+            $sql .= ' WHERE ' . implode(' AND ', $where);
+        }
+
+        // Ascending by date: the next appointment is the one staff need first.
+        $sql .= ' ORDER BY booking_date ASC, start_time ASC';
+        $sql .= ' LIMIT ' . max(1, min(200, $limit));
+        $sql .= ' OFFSET ' . max(0, $offset);
+
+        return $this->db->all($sql, $params);
+    }
+
+    /**
+     * How many bookings match the same filters, so the list can be paged.
+     *
+     * @param array{status?: string, range?: string} $filters
+     */
+    public function countSearch(array $filters = []): int
+    {
+        [$where, $params] = $this->where($filters);
+
+        $sql = 'SELECT COUNT(*) FROM bookings';
+
+        if ($where !== []) {
+            $sql .= ' WHERE ' . implode(' AND ', $where);
+        }
+
+        return (int) $this->db->scalar($sql, $params);
+    }
+
+    /**
+     * The WHERE clause shared by the list and its count. One place means the
+     * page numbers can never disagree with the rows.
+     *
+     * @param array{status?: string, range?: string} $filters
+     * @return array{list<string>, array<string, mixed>}
+     */
+    private function where(array $filters): array
     {
         $where = [];
         $params = [];
@@ -79,16 +122,7 @@ final class BookingRepository
                 $where[] = 'booking_date >= CURDATE()';
         }
 
-        $sql = 'SELECT * FROM bookings';
-
-        if ($where !== []) {
-            $sql .= ' WHERE ' . implode(' AND ', $where);
-        }
-
-        // Ascending by date: the next appointment is the one staff need first.
-        $sql .= ' ORDER BY booking_date ASC, start_time ASC';
-
-        return $this->db->all($sql, $params);
+        return [$where, $params];
     }
 
     /**

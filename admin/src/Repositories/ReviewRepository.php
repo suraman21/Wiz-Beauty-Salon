@@ -18,14 +18,20 @@ final class ReviewRepository
     {
     }
 
-    /** @return list<array<string, mixed>> */
-    public function allWithService(): array
+    /**
+     * One page for the admin screen: waiting reviews first, then published.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function paginateWithService(int $limit, int $offset): array
     {
         return $this->db->all(
             'SELECT r.*, s.name AS service_name
                FROM reviews r
           LEFT JOIN services s ON s.id = r.service_id
-           ORDER BY r.is_approved ASC, r.created_at DESC, r.id DESC',
+           ORDER BY r.is_approved ASC, r.created_at DESC, r.id DESC
+              LIMIT ' . max(1, min(100, $limit)) . '
+             OFFSET ' . max(0, $offset),
         );
     }
 

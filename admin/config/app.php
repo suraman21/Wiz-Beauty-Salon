@@ -23,7 +23,18 @@ return [
     'upload_url' => Env::get('UPLOAD_URL', '/uploads'),
     'upload_max_bytes' => Env::int('UPLOAD_MAX_BYTES', 5 * 1024 * 1024),
 
+    // Comma-separated addresses or CIDR ranges of reverse proxies whose
+    // forwarding headers may be believed (Cloudflare's ranges in production).
+    // Empty means "trust REMOTE_ADDR only", which is the safe default.
+    'trusted_proxies' => array_values(array_filter(array_map(
+        'trim',
+        explode(',', (string) Env::get('TRUSTED_PROXIES', '')),
+    ))),
+
     // Failed logins allowed per email/IP inside the window.
+    // Five failures for one email from one address; a wider per-address limit
+    // so one machine cannot work through a list of accounts.
     'login_max_attempts' => Env::int('LOGIN_MAX_ATTEMPTS', 5),
+    'login_max_attempts_per_ip' => Env::int('LOGIN_MAX_ATTEMPTS_PER_IP', 25),
     'login_lockout_minutes' => Env::int('LOGIN_LOCKOUT_MINUTES', 15),
 ];

@@ -12,9 +12,10 @@ use Wiz\Repositories\UserRepository;
 /**
  * Login rules: credential check, throttling and audit.
  *
- * Throttling is deliberately simple — a fixed number of failures per email or
- * IP inside a window — because it needs no extra infrastructure and is enough
- * to make online guessing impractical.
+ * Throttling is deliberately simple — five failures for one email from one
+ * address, and a wider limit per address — because it needs no extra
+ * infrastructure and is enough to make online guessing impractical without
+ * letting a stranger lock a real account out.
  */
 final class AuthService
 {
@@ -26,6 +27,7 @@ final class AuthService
         private readonly Logger $logger,
         private readonly int $maxAttempts = 5,
         private readonly int $lockoutMinutes = 15,
+        private readonly int $maxAttemptsPerIp = 25,
     ) {
     }
 
@@ -36,7 +38,10 @@ final class AuthService
     {
         $email = mb_strtolower(trim($email));
 
-        if ($this->attempts->recentFailures($email, $ip, $this->lockoutMinutes) >= $this->maxAttempts) {
+        $tooManyHere = $this->attempts->recentFailures($email, $ip, $this->lockoutMinutes) >= $this->maxAttempts;
+        $tooManyFromThisAddress = $this->attempts->recentFailuresForIp($ip, $this->lockoutMinutes) >= $this->maxAttemptsPerIp;
+
+        if ($tooManyHere || $tooManyFromThisAddress) {
             return [
                 'ok' => false,
                 'error' => sprintf(
@@ -86,7 +91,7 @@ final class AuthService
     /**
      * @return array{ok: bool, error: ?string}
      */
-    public function changePassword(int $userId, string $current, string $new): array
+    public function changePassword(int $userId, string $current, string $new, string $ip = ''): array
     {
         $user = $this->users->findById($userId);
 
@@ -100,7 +105,23 @@ final class AuthService
             return ['ok' => false, 'error' => 'Your current password is incorrect.'];
         }
 
+        $length = mb_strlen($new);
+
+        if ($length < 10) {
+            return ['ok' => false, 'error' => 'Your new password must be at least 10 characters.'];
+        }
+
+        if ($length > 200) {
+            return ['ok' => false, 'error' => 'Your new password may not be longer than 200 characters.'];
+        }
+
+        if ($new === $current) {
+            return ['ok' => false, 'error' => 'Your new password must be different from the current one.'];
+        }
+
         $this->users->updatePassword($userId, password_hash($new, PASSWORD_DEFAULT));
+        $this->activity->record($userId, 'auth.password_changed', 'user', $userId, [], $ip);
+        $this->logger->info('Password changed', ['user_id' => $userId]);
 
         return ['ok' => true, 'error' => null];
     }

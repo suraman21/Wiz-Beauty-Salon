@@ -16,6 +16,7 @@ use Wiz\Repositories\BookingRepository;
 use Wiz\Repositories\ServiceRepository;
 use Wiz\Services\AvailabilityService;
 use Wiz\Services\BookingService;
+use Wiz\Support\Paginator;
 
 /**
  * The bookings screen.
@@ -25,6 +26,9 @@ use Wiz\Services\BookingService;
  */
 final class BookingController
 {
+    /** Rows per page. A day of appointments fits twice over. */
+    private const PER_PAGE = 50;
+
     public function __construct(
         private readonly View $view,
         private readonly BookingRepository $bookings,
@@ -43,8 +47,15 @@ final class BookingController
     {
         $status = $request->queryString('status', 'open');
         $range = $request->queryString('range', 'upcoming');
+        $filters = ['status' => $status, 'range' => $range];
 
-        $rows = $this->bookings->search(['status' => $status, 'range' => $range]);
+        $paginator = Paginator::of(
+            max(1, (int) $request->queryString('page', '1')),
+            self::PER_PAGE,
+            $this->bookings->countSearch($filters),
+        );
+
+        $rows = $this->bookings->search($filters, $paginator->perPage, $paginator->offset());
 
         return $this->view->render('admin/bookings/index', [
             'title' => 'Bookings',
@@ -55,6 +66,8 @@ final class BookingController
             'status' => $status,
             'range' => $range,
             'pending' => $this->bookings->countAwaitingApproval(),
+            'paginator' => $paginator,
+            'query' => $filters,
         ]);
     }
 

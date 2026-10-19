@@ -59,7 +59,7 @@ final class BookingNotifier
             'actionUrl' => $this->adminUrl((int) $booking['id']),
             'actionLabel' => 'Open the booking',
             'outro' => 'It is waiting for a yes or a no in the panel.',
-        ], 'New booking request · ' . $when . ' · ' . $reference);
+        ], 'New booking request · ' . $when . ' · ' . $reference, (string) ($booking['customer_email'] ?? ''));
     }
 
     /**
@@ -173,19 +173,19 @@ final class BookingNotifier
     /**
      * @param array{title: string, intro: string, rows: list<array{0: string, 1: string}>, actionUrl: string, actionLabel: string, outro: string} $content
      */
-    private function toSalon(array $content, string $subject): void
+    private function toSalon(array $content, string $subject, string $replyTo = ''): void
     {
         if (trim($this->salonEmail) === '') {
             return;
         }
 
-        $this->deliver($this->salonEmail, $subject, $content);
+        $this->deliver($this->salonEmail, $subject, $content, $replyTo);
     }
 
     /**
      * @param array{title: string, intro: string, rows: list<array{0: string, 1: string}>, actionUrl: string, actionLabel: string, outro: string} $content
      */
-    private function deliver(string $to, string $subject, array $content): void
+    private function deliver(string $to, string $subject, array $content, string $replyTo = ''): void
     {
         try {
             $html = $this->view->capture('mail.booking', [
@@ -198,7 +198,13 @@ final class BookingNotifier
                 'outro' => $content['outro'],
             ]);
 
-            $result = $this->mailer->send($to, $subject, $this->plain($content), $html);
+            $result = $this->mailer->send(
+                $to,
+                $subject,
+                $this->plain($content),
+                $html,
+                $replyTo === '' ? null : $replyTo,
+            );
 
             if ($result['ok'] !== true) {
                 $this->logger->error('Mail failed: ' . (string) ($result['error'] ?? 'unknown'), [

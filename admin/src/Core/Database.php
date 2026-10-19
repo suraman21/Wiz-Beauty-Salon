@@ -53,7 +53,35 @@ final class Database
             ],
         );
 
+        $this->applyTimezone($this->pdo);
+
         return $this->pdo;
+    }
+
+    /**
+     * Put the connection on the salon's clock.
+     *
+     * PHP formats every date it displays; MySQL decides what "today" means for
+     * CURDATE() and what NOW() returns. If the two run in different zones the
+     * panel shows one day's bookings while the calendar is already on the next,
+     * so the session zone is pinned here, once, at connection time.
+     */
+    private function applyTimezone(PDO $pdo): void
+    {
+        $timezone = (string) ($this->config['timezone'] ?? '');
+
+        if ($timezone === '') {
+            return;
+        }
+
+        // Either an offset (+03:00) or a named zone; anything else is a
+        // configuration mistake and must not reach the SET statement.
+        if (preg_match('/^[+-](0\d|1[0-4]):[0-5]\d$/', $timezone) !== 1
+            && preg_match('/^[A-Za-z_\/]+$/', $timezone) !== 1) {
+            throw new \InvalidArgumentException('Invalid database time zone: ' . $timezone);
+        }
+
+        $pdo->exec('SET time_zone = ' . $pdo->quote($timezone));
     }
 
     /**

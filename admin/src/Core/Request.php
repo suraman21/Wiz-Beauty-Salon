@@ -16,6 +16,8 @@ final class Request
      * @param array<string, mixed> $body
      * @param array<string, mixed> $server
      * @param array<string, mixed> $files
+     * @param list<string> $trustedProxies addresses or CIDR ranges allowed to
+     *                                     set the client-IP headers
      */
     public function __construct(
         private readonly string $method,
@@ -24,10 +26,14 @@ final class Request
         private readonly array $body = [],
         private readonly array $server = [],
         private readonly array $files = [],
+        private readonly array $trustedProxies = [],
     ) {
     }
 
-    public static function capture(): self
+    /**
+     * @param list<string> $trustedProxies
+     */
+    public static function capture(array $trustedProxies = []): self
     {
         $method = strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? 'GET'));
         $uri = (string) ($_SERVER['REQUEST_URI'] ?? '/');
@@ -41,6 +47,7 @@ final class Request
             self::body(),
             $_SERVER,
             $_FILES,
+            $trustedProxies,
         );
     }
 
@@ -140,11 +147,20 @@ final class Request
 
     public function ip(): string
     {
-        // Cloudflare terminates TLS for this origin and sets the real client IP.
+        $remote = trim((string) ($this->server['REMOTE_ADDR'] ?? ''));
+
+        // Forwarding headers are only believed when the request actually came
+        // from the proxy that sets them. Anyone can send CF-Connecting-IP or
+        // X-Forwarded-For, so trusting them unconditionally would hand every
+        // rate limit and login lockout to the caller.
+        if ($remote === '' || !$this->isTrustedProxy($remote)) {
+            return filter_var($remote, FILTER_VALIDATE_IP) !== false ? $remote : '0.0.0.0';
+        }
+
         $candidates = [
             $this->header('CF-Connecting-IP'),
             $this->header('X-Forwarded-For'),
-            $this->server['REMOTE_ADDR'] ?? null,
+            $remote,
         ];
 
         foreach ($candidates as $candidate) {
@@ -161,6 +177,85 @@ final class Request
         }
 
         return '0.0.0.0';
+    }
+
+    /**
+     * Can this request tell one visitor from another?
+     *
+     * True for a direct request, and for one that arrived through a proxy we
+     * trust. False when a proxy is in front but its range is not configured —
+     * in that case every visitor shares one address, so per-IP throttling
+     * would punish the whole site instead of one abuser.
+     */
+    public function trustsClientIp(): bool
+    {
+        $remote = trim((string) ($this->server['REMOTE_ADDR'] ?? ''));
+
+        if ($remote === '') {
+            return false;
+        }
+
+        if ($this->isTrustedProxy($remote)) {
+            return true;
+        }
+
+        return $this->header('CF-Connecting-IP') === null
+            && $this->header('X-Forwarded-For') === null;
+    }
+
+    private function isTrustedProxy(string $ip): bool
+    {
+        foreach ($this->trustedProxies as $range) {
+            $range = trim($range);
+
+            if ($range !== '' && self::ipMatches($ip, $range)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Does an address fall inside "203.0.113.7" or "203.0.113.0/24"?
+     */
+    private static function ipMatches(string $ip, string $range): bool
+    {
+        if (!str_contains($range, '/')) {
+            return $ip === $range;
+        }
+
+        [$subnet, $bits] = explode('/', $range, 2);
+        $bits = (int) $bits;
+
+        $ipBinary = @inet_pton($ip);
+        $netBinary = @inet_pton(trim($subnet));
+
+        if ($ipBinary === false || $netBinary === false || strlen($ipBinary) !== strlen($netBinary)) {
+            return false;
+        }
+
+        $maxBits = strlen($ipBinary) * 8;
+
+        if ($bits < 0 || $bits > $maxBits) {
+            return false;
+        }
+
+        $wholeBytes = intdiv($bits, 8);
+
+        if ($wholeBytes > 0 && substr($ipBinary, 0, $wholeBytes) !== substr($netBinary, 0, $wholeBytes)) {
+            return false;
+        }
+
+        $remainder = $bits % 8;
+
+        if ($remainder === 0) {
+            return true;
+        }
+
+        $mask = (0xFF << (8 - $remainder)) & 0xFF;
+
+        return (ord($ipBinary[$wholeBytes]) & $mask) === (ord($netBinary[$wholeBytes]) & $mask);
     }
 
     public function userAgent(): string

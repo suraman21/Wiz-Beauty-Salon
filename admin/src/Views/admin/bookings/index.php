@@ -102,4 +102,9 @@ $chip = static function (array $query, string $label, bool $active): string {
             </div>
         </section>
     <?php endforeach; ?>
+
+    <?php
+    $path = '/admin/bookings';
+    require __DIR__ . '/../../partials/pagination.php';
+    ?>
 <?php endif; ?>

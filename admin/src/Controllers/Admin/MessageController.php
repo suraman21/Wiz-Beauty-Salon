@@ -10,6 +10,7 @@ use Wiz\Core\Response;
 use Wiz\Core\Session;
 use Wiz\Core\View;
 use Wiz\Repositories\MessageRepository;
+use Wiz\Support\Paginator;
 
 /**
  * The contact inbox.
@@ -20,6 +21,8 @@ use Wiz\Repositories\MessageRepository;
  */
 final class MessageController
 {
+    private const PER_PAGE = 25;
+
     public function __construct(
         private readonly View $view,
         private readonly MessageRepository $messages,
@@ -34,15 +37,23 @@ final class MessageController
     {
         $unreadOnly = $request->queryString('filter') === 'unread';
 
+        $paginator = Paginator::of(
+            max(1, (int) $request->queryString('page', '1')),
+            self::PER_PAGE,
+            $this->messages->count($unreadOnly),
+        );
+
         return $this->view->render('admin/messages/index', [
             'title' => 'Messages',
             'heading' => 'Messages',
             'subheading' => 'Everything sent through the contact form.',
             'active' => 'messages',
-            'messages' => $this->messages->all($unreadOnly),
+            'messages' => $this->messages->paginate($unreadOnly, $paginator->perPage, $paginator->offset()),
             'unreadOnly' => $unreadOnly,
             'unread' => $this->messages->unreadCount(),
             'total' => $this->messages->count(),
+            'paginator' => $paginator,
+            'query' => $unreadOnly ? ['filter' => 'unread'] : [],
         ]);
     }
 
@@ -63,11 +74,12 @@ final class MessageController
      */
     public function readAll(Request $request, array $params = []): Response
     {
-        foreach ($this->messages->all(true, 500) as $message) {
-            $this->messages->setRead((int) $message['id'], true);
-        }
+        $changed = $this->messages->markAllRead();
 
-        $this->session->flash('success', 'All messages marked as read.');
+        $this->session->flash(
+            'success',
+            $changed === 1 ? '1 message marked as read.' : sprintf('%d messages marked as read.', $changed),
+        );
 
         throw new RedirectException('/admin/messages');
     }

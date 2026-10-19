@@ -31,6 +31,24 @@ final class ClosureRepository
         );
     }
 
+    /**
+     * Closures that overlap a range, oldest first.
+     *
+     * Used by the month calendar so a whole run of days costs one query
+     * instead of one per day.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function between(string $from, string $to): array
+    {
+        return $this->db->all(
+            'SELECT * FROM closures
+              WHERE end_date >= :from AND start_date <= :to
+              ORDER BY start_date ASC, id ASC',
+            [':from' => $from, ':to' => $to],
+        );
+    }
+
     /** @return array<string, mixed>|null */
     public function covering(string $date): ?array
     {

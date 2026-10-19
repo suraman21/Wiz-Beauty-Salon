@@ -8,6 +8,8 @@ declare(strict_types=1);
  * `admin` require the administrator role in addition to being signed in.
  */
 
+use Wiz\Controllers\Admin\AccountController;
+use Wiz\Controllers\Admin\ActivityController;
 use Wiz\Controllers\Admin\AuthController;
 use Wiz\Controllers\PublicBookingController;
 use Wiz\Controllers\Admin\BookingController;
@@ -81,6 +83,13 @@ return static function (Router $router, App $app): void {
     // ------------------------------------------------------------- dashboard
     $router->get('/admin', [DashboardController::class, 'index'], ['auth']);
 
+    // ------------------------------------------------------------- my account
+    // Available to every signed-in person, staff included: changing your own
+    // password is not an administrative act.
+    $router->get('/admin/account', [AccountController::class, 'index'], ['auth']);
+    $router->post('/admin/account/profile', [AccountController::class, 'updateProfile'], ['auth']);
+    $router->post('/admin/account/password', [AccountController::class, 'updatePassword'], ['auth']);
+
     // -------------------------------------------------------------- bookings
     $router->get('/admin/bookings', [BookingController::class, 'index'], ['auth']);
     $router->get('/admin/bookings/new', [BookingController::class, 'create'], ['auth']);
@@ -137,6 +146,9 @@ return static function (Router $router, App $app): void {
     $router->post('/admin/users/{id}', [UserController::class, 'update'], ['auth', 'admin']);
     $router->post('/admin/users/{id}/activate', [UserController::class, 'activate'], ['auth', 'admin']);
     $router->post('/admin/users/{id}/deactivate', [UserController::class, 'deactivate'], ['auth', 'admin']);
+
+    // --------------------------------------------------------------- audit
+    $router->get('/admin/activity', [ActivityController::class, 'index'], ['auth', 'admin']);
 
     // ------------------------------------------------------------- settings
     $router->get('/admin/settings', [SettingsController::class, 'index'], ['auth', 'admin']);

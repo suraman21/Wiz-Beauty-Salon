@@ -4,21 +4,36 @@ declare(strict_types=1);
 namespace Wiz\Controllers\Admin;
 
 use Wiz\Core\Auth;
-use Wiz\Core\Database;
+use Wiz\Core\Logger;
 use Wiz\Core\Request;
 use Wiz\Core\Response;
 use Wiz\Core\View;
 use Wiz\Repositories\ActivityLogRepository;
+use Wiz\Repositories\BookingRepository;
+use Wiz\Repositories\MessageRepository;
+use Wiz\Repositories\ReviewRepository;
+use Wiz\Repositories\ServiceRepository;
 use Wiz\Repositories\UserRepository;
 
+/**
+ * The first screen of the day: who is coming in, what is waiting, and what
+ * changed recently.
+ *
+ * Every number comes from the same repository the list screen uses, so the card
+ * and the page it links to can never disagree.
+ */
 final class DashboardController
 {
     public function __construct(
         private readonly View $view,
         private readonly Auth $auth,
-        private readonly Database $db,
+        private readonly BookingRepository $bookings,
+        private readonly MessageRepository $messages,
+        private readonly ReviewRepository $reviews,
+        private readonly ServiceRepository $services,
         private readonly ActivityLogRepository $activity,
         private readonly UserRepository $users,
+        private readonly Logger $logger,
     ) {
     }
 
@@ -28,48 +43,100 @@ final class DashboardController
     public function index(Request $request, array $params = []): Response
     {
         $user = $this->auth->user() ?? [];
+        $counts = $this->counts();
 
         return $this->view->render('admin/dashboard', [
             'title' => 'Dashboard',
             'heading' => 'Dashboard',
             'subheading' => 'Welcome back, ' . (string) ($user['name'] ?? 'there') . '.',
+            'active' => 'dashboard',
             'user' => $user,
-            'counts' => $this->counts(),
+            'counts' => $counts,
+            'attention' => $this->attention($counts),
+            'today' => $this->todaySchedule(),
             'team' => $this->team(),
             'activity' => $this->activity->recent(8),
         ]);
     }
 
     /**
-     * Counters for the cards. Each is defensive: a table that does not exist yet
-     * (because its phase has not shipped) shows a dash instead of crashing.
-     *
      * @return array<string, int|null>
      */
     private function counts(): array
     {
         return [
-            'bookings_today' => $this->safeCount(
-                'SELECT COUNT(*) FROM bookings WHERE booking_date = CURDATE()',
-            ),
-            'bookings_pending' => $this->safeCount(
-                "SELECT COUNT(*) FROM bookings WHERE status = 'requested'",
-            ),
-            'messages_unread' => $this->safeCount(
-                "SELECT COUNT(*) FROM contact_messages WHERE status = 'new'",
-            ),
-            'reviews_pending' => $this->safeCount(
-                'SELECT COUNT(*) FROM reviews WHERE is_approved = 0',
-            ),
-            'services_active' => $this->safeCount(
-                'SELECT COUNT(*) FROM services WHERE is_active = 1',
-            ),
+            'bookings_today' => $this->safe('bookings today', fn (): int => $this->bookings->countToday()),
+            'bookings_pending' => $this->safe('bookings awaiting approval', fn (): int => $this->bookings->countAwaitingApproval()),
+            'messages_unread' => $this->safe('unread messages', fn (): int => $this->messages->unreadCount()),
+            'reviews_pending' => $this->safe('reviews awaiting approval', fn (): int => $this->reviews->countPending()),
+            'services_active' => $this->safe('active services', fn (): int => $this->services->countActive()),
         ];
     }
 
     /**
-     * Team members are real data from day one, so this card is never empty.
+     * What genuinely needs a person today, with the place to go and do it.
      *
+     * @param array<string, int|null> $counts
+     * @return list<array{count: int, label: string, href: string, action: string}>
+     */
+    private function attention(array $counts): array
+    {
+        $items = [];
+
+        $pending = $counts['bookings_pending'] ?? 0;
+
+        if ($pending > 0) {
+            $items[] = [
+                'count' => $pending,
+                'label' => $pending === 1 ? 'booking is waiting for a yes' : 'bookings are waiting for a yes',
+                'href' => '/admin/bookings?status=requested&range=upcoming',
+                'action' => 'Review',
+            ];
+        }
+
+        $unread = $counts['messages_unread'] ?? 0;
+
+        if ($unread > 0) {
+            $items[] = [
+                'count' => $unread,
+                'label' => $unread === 1 ? 'unread message' : 'unread messages',
+                'href' => '/admin/messages?filter=unread',
+                'action' => 'Read',
+            ];
+        }
+
+        $reviews = $counts['reviews_pending'] ?? 0;
+
+        if ($reviews > 0) {
+            $items[] = [
+                'count' => $reviews,
+                'label' => $reviews === 1 ? 'review is waiting for approval' : 'reviews are waiting for approval',
+                'href' => '/admin/reviews',
+                'action' => 'Approve',
+            ];
+        }
+
+        return $items;
+    }
+
+    /**
+     * The next few appointments today, so the answer to "who is next?" is the
+     * first thing on the screen.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function todaySchedule(): array
+    {
+        try {
+            return array_slice($this->bookings->forDate(date('Y-m-d')), 0, 6);
+        } catch (\Throwable $e) {
+            $this->logger->error('Dashboard schedule failed', ['error' => $e->getMessage()]);
+
+            return [];
+        }
+    }
+
+    /**
      * @return array{total: int, admins: int}
      */
     private function team(): array
@@ -79,16 +146,27 @@ final class DashboardController
                 'total' => count($this->users->all()),
                 'admins' => $this->users->countActiveAdmins(),
             ];
-        } catch (\Throwable) {
+        } catch (\Throwable $e) {
+            $this->logger->error('Dashboard team count failed', ['error' => $e->getMessage()]);
+
             return ['total' => 0, 'admins' => 0];
         }
     }
 
-    private function safeCount(string $sql): ?int
+    /**
+     * A dashboard card is a convenience; one broken query must not take the
+     * whole page down. It is logged, never silently dropped, and the card shows
+     * a dash so the number is never mistaken for a real zero.
+     *
+     * @param callable(): int $query
+     */
+    private function safe(string $label, callable $query): ?int
     {
         try {
-            return (int) $this->db->scalar($sql);
-        } catch (\Throwable) {
+            return $query();
+        } catch (\Throwable $e) {
+            $this->logger->error('Dashboard count failed: ' . $label, ['error' => $e->getMessage()]);
+
             return null;
         }
     }

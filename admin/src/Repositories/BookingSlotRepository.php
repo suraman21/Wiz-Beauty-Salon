@@ -36,6 +36,31 @@ final class BookingSlotRepository
     }
 
     /**
+     * Occupied cells across a range of dates, grouped by date.
+     *
+     * @return array<string, list<string>> date => ["HH:MM", …]
+     */
+    public function occupiedBetween(string $from, string $to): array
+    {
+        $rows = $this->db->all(
+            'SELECT DATE_FORMAT(slot_start, "%Y-%m-%d") AS day,
+                    DATE_FORMAT(slot_start, "%H:%i") AS slot
+               FROM booking_slots
+              WHERE slot_start >= :from AND slot_start < :to
+              ORDER BY slot_start ASC',
+            [':from' => $from, ':to' => $to],
+        );
+
+        $out = [];
+
+        foreach ($rows as $row) {
+            $out[(string) $row['day']][] = (string) $row['slot'];
+        }
+
+        return $out;
+    }
+
+    /**
      * Claim the cells for a booking. A duplicate key means somebody else took
      * one of them between the availability check and this insert.
      *

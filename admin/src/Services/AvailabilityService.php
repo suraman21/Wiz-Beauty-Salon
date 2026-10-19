@@ -138,21 +138,115 @@ final class AvailabilityService
     {
         $start = $this->parse($from) ?? new DateTimeImmutable('today');
         $days = max(1, min(31, $days));
+        $last = $start->modify('+' . ($days - 1) . ' days');
+
+        // Four queries for the whole run, not four per day. The booking page
+        // asks for three weeks at a time, and the naive version issued roughly
+        // a hundred and fifty statements to answer it.
+        $hoursByDay = [];
+
+        foreach ($this->hours->all() as $row) {
+            $hoursByDay[(int) $row['day_of_week']] = $row;
+        }
+
+        $closures = $this->closures->between($start->format('Y-m-d'), $last->format('Y-m-d'));
+        $occupied = $this->slots->occupiedBetween(
+            $start->format('Y-m-d') . ' 00:00:00',
+            $last->format('Y-m-d') . ' 23:59:59',
+        );
+
+        $grid = $this->gridMinutes();
+        $maxAdvance = $this->maxAdvanceDays();
+        $today = new DateTimeImmutable('today');
+        $lastBookable = $today->modify('+' . $maxAdvance . ' days');
+        $earliestToday = $this->earliestStart();
+        $todayKey = $today->format('Y-m-d');
+
         $out = [];
 
         for ($i = 0; $i < $days; $i++) {
-            $date = $start->modify('+' . $i . ' days')->format('Y-m-d');
-            $status = $this->dayStatus($date);
+            $day = $start->modify('+' . $i . ' days');
+            $date = $day->format('Y-m-d');
+
+            [$open, $reason] = $this->openState($day, $today, $lastBookable, $closures, $hoursByDay, $maxAdvance);
+
+            $slots = [];
+
+            if ($open) {
+                $hours = $hoursByDay[(int) $day->format('w')] ?? null;
+
+                if ($hours !== null) {
+                    $slots = $this->calculator->slots(
+                        [
+                            'opens_at' => $this->stringOrNull($hours['opens_at'] ?? null),
+                            'closes_at' => $this->stringOrNull($hours['closes_at'] ?? null),
+                            'is_closed' => (int) ($hours['is_closed'] ?? 1),
+                        ],
+                        $durationMinutes,
+                        $grid,
+                        $occupied[$date] ?? [],
+                        $date === $todayKey ? $earliestToday : null,
+                    );
+                }
+            }
 
             $out[] = [
                 'date' => $date,
-                'open' => $status['open'],
-                'reason' => $status['reason'],
-                'slots' => $status['open'] ? $this->slotsForDate($date, $durationMinutes) : [],
+                'open' => $open,
+                'reason' => $reason,
+                'slots' => $slots,
             ];
         }
 
         return $out;
+    }
+
+    /**
+     * Whether one day can be booked, using data already loaded for the range.
+     *
+     * @param list<array<string, mixed>> $closures
+     * @param array<int, array<string, mixed>> $hoursByDay
+     * @return array{bool, string|null}
+     */
+    private function openState(
+        DateTimeImmutable $day,
+        DateTimeImmutable $today,
+        DateTimeImmutable $lastBookable,
+        array $closures,
+        array $hoursByDay,
+        int $maxAdvance,
+    ): array {
+        if ($day < $today) {
+            return [false, 'That date has already passed.'];
+        }
+
+        if ($day > $lastBookable) {
+            return [false, sprintf('Bookings open %d days ahead.', $maxAdvance)];
+        }
+
+        $date = $day->format('Y-m-d');
+
+        foreach ($closures as $closure) {
+            $start = (string) ($closure['start_date'] ?? '');
+            $end = (string) ($closure['end_date'] ?? '');
+
+            if ($start !== '' && $end !== '' && $date >= $start && $date <= $end) {
+                $reason = $this->stringOrNull($closure['reason'] ?? null);
+
+                return [
+                    false,
+                    $reason === null ? 'The salon is closed that day.' : 'Closed: ' . $reason,
+                ];
+            }
+        }
+
+        $hours = $hoursByDay[(int) $day->format('w')] ?? null;
+
+        if ($hours === null || (int) ($hours['is_closed'] ?? 1) === 1) {
+            return [false, 'The salon is closed on ' . $day->format('l') . 's.'];
+        }
+
+        return [true, null];
     }
 
     /**

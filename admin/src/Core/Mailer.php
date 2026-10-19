@@ -32,9 +32,12 @@ final class Mailer
     }
 
     /**
+     * @param string|null $replyTo where a reply should go; the customer's own
+     *                             address for salon notifications, so staff can
+     *                             simply press Reply
      * @return array{ok: bool, driver: string, error: string|null}
      */
-    public function send(string $to, string $subject, string $text, string $html = ''): array
+    public function send(string $to, string $subject, string $text, string $html = '', ?string $replyTo = null): array
     {
         $to = trim($to);
 
@@ -46,8 +49,8 @@ final class Mailer
 
         try {
             $result = match ($driver) {
-                'smtp' => $this->sendSmtp($to, $subject, $text, $html),
-                'mail' => $this->sendMail($to, $subject, $text, $html),
+                'smtp' => $this->sendSmtp($to, $subject, $text, $html, $replyTo),
+                'mail' => $this->sendMail($to, $subject, $text, $html, $replyTo),
                 default => $this->sendLog($to, $subject, $text),
             };
         } catch (Throwable $e) {
@@ -102,6 +105,20 @@ final class Mailer
         return 'no-reply@' . $this->hostname();
     }
 
+    /**
+     * A reply address that is safe to put in a header.
+     *
+     * Falls back to the From address when the customer did not leave an email.
+     */
+    private function replyAddress(?string $candidate): string
+    {
+        $candidate = trim((string) $candidate);
+
+        return $candidate !== '' && filter_var($candidate, FILTER_VALIDATE_EMAIL) !== false
+            ? $candidate
+            : $this->fromAddress();
+    }
+
     private function hostname(): string
     {
         $url = (string) (\Wiz\Core\Env::get('APP_URL', '') ?? '');
@@ -138,16 +155,17 @@ final class Mailer
     /**
      * @return array{ok: bool, driver: string, error: string|null}
      */
-    private function sendMail(string $to, string $subject, string $text, string $html): array
+    private function sendMail(string $to, string $subject, string $text, string $html, ?string $replyTo = null): array
     {
         $boundary = bin2hex(random_bytes(8));
         $from = $this->fromAddress();
         $fromName = (string) ($this->config['from_name'] ?? 'WIZ Beauty Salon');
+        $reply = $this->replyAddress($replyTo);
 
         $headers = [
             'MIME-Version: 1.0',
             'From: ' . $this->encodeHeader($fromName) . ' <' . $from . '>',
-            'Reply-To: ' . $from,
+            'Reply-To: ' . $reply,
             'Content-Type: multipart/alternative; boundary="' . $boundary . '"',
         ];
 
@@ -173,7 +191,7 @@ final class Mailer
     /**
      * @return array{ok: bool, driver: string, error: string|null}
      */
-    private function sendSmtp(string $to, string $subject, string $text, string $html): array
+    private function sendSmtp(string $to, string $subject, string $text, string $html, ?string $replyTo = null): array
     {
         $profile = $this->profile();
         $mailer = new PHPMailer(true);
@@ -197,6 +215,7 @@ final class Mailer
         $mailer->CharSet = 'UTF-8';
         $mailer->setFrom($this->fromAddress(), (string) ($this->config['from_name'] ?? 'WIZ'));
         $mailer->addAddress($to);
+        $mailer->addReplyTo($this->replyAddress($replyTo));
         $mailer->Subject = $subject;
         $mailer->Body = $html !== '' ? $html : $text;
         $mailer->AltBody = $text;

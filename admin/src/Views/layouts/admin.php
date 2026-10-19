@@ -11,9 +11,45 @@
 // Every page renders inside this layout, so the signed-in user is resolved here
 // once rather than being passed by each controller.
 $signedIn = $user ?? current_user() ?? [];
+$isAdmin = ($signedIn['role'] ?? '') === 'admin';
+
+// Two small counts turn the menu into a to-do list. They are read defensively:
+// a badge is a convenience and must never stop a page from rendering.
+$navPending = 0;
+$navUnread = 0;
+$container = $GLOBALS['__wiz_app'] ?? null;
+
+if ($container instanceof \Wiz\Core\App) {
+    try {
+        $navPending = $container->get(\Wiz\Repositories\BookingRepository::class)->countAwaitingApproval();
+        $navUnread = $container->get(\Wiz\Repositories\MessageRepository::class)->unreadCount();
+    } catch (\Throwable) {
+        // Leave the badges off; the pages themselves will report the problem.
+    }
+}
+
+$activeKey = $active ?? '';
+
+$navItem = static function (string $key, string $href, string $label, int $badge = 0) use ($activeKey): string {
+    $current = $activeKey === $key;
+    $badgeHtml = $badge > 0
+        ? '<span class="nav__badge" aria-label="' . $badge . ' waiting">' . ($badge > 99 ? '99+' : $badge) . '</span>'
+        : '';
+
+    return sprintf(
+        '<a class="nav__item%s" href="%s"%s><span class="nav__dot" aria-hidden="true"></span>%s%s</a>',
+        $current ? ' is-active' : '',
+        e($href),
+        $current ? ' aria-current="page"' : '',
+        e($label),
+        $badgeHtml,
+    );
+};
 ?>
 
 <body class="app">
+
+<a class="skip-link" href="#main-content">Skip to content</a>
 
 <aside class="sidebar">
     <div class="sidebar__brand">
@@ -22,55 +58,29 @@ $signedIn = $user ?? current_user() ?? [];
     </div>
 
     <nav class="nav" aria-label="Main">
-        <a class="nav__item<?= ($active ?? '') === 'dashboard' ? ' is-active' : '' ?>" href="/admin">
-            <span class="nav__dot" aria-hidden="true"></span>
-            Dashboard
-        </a>
+        <?= $navItem('dashboard', '/admin', 'Dashboard') ?>
 
         <p class="nav__heading">Manage</p>
-        <a class="nav__item<?= ($active ?? '') === 'bookings' ? ' is-active' : '' ?>" href="/admin/bookings">
-            <span class="nav__dot" aria-hidden="true"></span>
-            Bookings
-        </a>
-        <a class="nav__item<?= ($active ?? '') === 'services' ? ' is-active' : '' ?>" href="/admin/services">
-            <span class="nav__dot" aria-hidden="true"></span>
-            Services
-        </a>
-        <a class="nav__item<?= ($active ?? '') === 'gallery' ? ' is-active' : '' ?>" href="/admin/gallery">
-            <span class="nav__dot" aria-hidden="true"></span>
-            Gallery
-        </a>
-        <a class="nav__item<?= ($active ?? '') === 'reviews' ? ' is-active' : '' ?>" href="/admin/reviews">
-            <span class="nav__dot" aria-hidden="true"></span>
-            Reviews
-        </a>
-        <a class="nav__item<?= ($active ?? '') === 'schedule' ? ' is-active' : '' ?>" href="/admin/schedule">
-            <span class="nav__dot" aria-hidden="true"></span>
-            Opening hours
-        </a>
-        <a class="nav__item<?= ($active ?? '') === 'messages' ? ' is-active' : '' ?>" href="/admin/messages">
-            <span class="nav__dot" aria-hidden="true"></span>
-            Messages
-        </a>
+        <?= $navItem('bookings', '/admin/bookings', 'Bookings', $navPending) ?>
+        <?= $navItem('services', '/admin/services', 'Services') ?>
+        <?= $navItem('gallery', '/admin/gallery', 'Gallery') ?>
+        <?= $navItem('reviews', '/admin/reviews', 'Reviews') ?>
+        <?= $navItem('schedule', '/admin/schedule', 'Opening hours') ?>
+        <?= $navItem('messages', '/admin/messages', 'Messages', $navUnread) ?>
 
-        <?php if (($signedIn['role'] ?? '') === 'admin'): ?>
+        <?php if ($isAdmin): ?>
             <p class="nav__heading">Administration</p>
-            <a class="nav__item<?= ($active ?? '') === 'team' ? ' is-active' : '' ?>" href="/admin/users">
-                <span class="nav__dot" aria-hidden="true"></span>
-                Team
-            </a>
-            <a class="nav__item<?= ($active ?? '') === 'settings' ? ' is-active' : '' ?>" href="/admin/settings">
-                <span class="nav__dot" aria-hidden="true"></span>
-                Settings
-            </a>
+            <?= $navItem('team', '/admin/users', 'Team') ?>
+            <?= $navItem('activity', '/admin/activity', 'Activity') ?>
+            <?= $navItem('settings', '/admin/settings', 'Settings') ?>
         <?php endif; ?>
     </nav>
 
-    <div class="sidebar__foot">
+    <a class="sidebar__foot sidebar__foot--link<?= $activeKey === 'account' ? ' is-active' : '' ?>" href="/admin/account">
         <span>Signed in as</span>
         <strong><?= e($signedIn['name'] ?? 'Staff member') ?></strong>
-        <span class="role"><?= e(ucfirst((string) ($signedIn['role'] ?? 'staff'))) ?></span>
-    </div>
+        <span class="role"><?= e(ucfirst((string) ($signedIn['role'] ?? 'staff'))) ?> · My account</span>
+    </a>
 </aside>
 
 <div class="main">
@@ -88,7 +98,7 @@ $signedIn = $user ?? current_user() ?? [];
         </form>
     </header>
 
-    <main class="content">
+    <main class="content" id="main-content">
         <?php if ($message = flash('success')): ?>
             <div class="alert alert--success" role="status"><?= e($message) ?></div>
         <?php endif; ?>

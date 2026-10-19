@@ -19,4 +19,8 @@
         <a class="btn btn--primary" href="/admin">Back to dashboard</a>
         <a class="btn btn--ghost" href="/admin/login">Sign in</a>
     </div>
+
+    <?php if (!empty($reference)): ?>
+        <p class="error-reference">Reference: <strong><?= e($reference) ?></strong></p>
+    <?php endif; ?>
 </section>

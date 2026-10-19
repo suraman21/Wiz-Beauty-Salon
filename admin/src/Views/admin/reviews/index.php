@@ -124,4 +124,10 @@ $stars = static function (int $rating): string {
             </li>
         <?php endforeach; ?>
     </ul>
+
+    <?php
+    $path = '/admin/reviews';
+    $query = [];
+    require __DIR__ . '/../../partials/pagination.php';
+    ?>
 <?php endif; ?>

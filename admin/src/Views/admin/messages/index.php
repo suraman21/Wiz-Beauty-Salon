@@ -87,4 +87,9 @@
             </article>
         <?php endforeach; ?>
     </div>
+
+    <?php
+    $path = '/admin/messages';
+    require __DIR__ . '/../../partials/pagination.php';
+    ?>
 <?php endif; ?>

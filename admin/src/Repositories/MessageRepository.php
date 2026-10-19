@@ -17,13 +17,20 @@ final class MessageRepository
     {
     }
 
-    /** @return list<array<string, mixed>> */
-    public function all(bool $unreadOnly = false, int $limit = 200): array
+    /**
+     * One page of the inbox, newest first.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function paginate(bool $unreadOnly, int $limit, int $offset): array
     {
         $where = $unreadOnly ? 'WHERE is_read = 0' : '';
 
         return $this->db->all(
-            'SELECT * FROM contact_messages ' . $where . ' ORDER BY created_at DESC, id DESC LIMIT ' . max(1, min(500, $limit)),
+            'SELECT * FROM contact_messages ' . $where
+            . ' ORDER BY created_at DESC, id DESC'
+            . ' LIMIT ' . max(1, min(100, $limit))
+            . ' OFFSET ' . max(0, $offset),
         );
     }
 
@@ -64,10 +71,20 @@ final class MessageRepository
         return $row === null ? 0 : (int) $row['total'];
     }
 
-    public function count(): int
+    public function count(bool $unreadOnly = false): int
     {
-        $row = $this->db->first('SELECT COUNT(*) AS total FROM contact_messages');
+        $sql = $unreadOnly
+            ? 'SELECT COUNT(*) AS total FROM contact_messages WHERE is_read = 0'
+            : 'SELECT COUNT(*) AS total FROM contact_messages';
+
+        $row = $this->db->first($sql);
 
         return $row === null ? 0 : (int) $row['total'];
+    }
+
+    /** Mark the whole inbox as read in one statement rather than one per row. */
+    public function markAllRead(): int
+    {
+        return $this->db->execute('UPDATE contact_messages SET is_read = 1 WHERE is_read = 0');
     }
 }

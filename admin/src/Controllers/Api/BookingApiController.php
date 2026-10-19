@@ -44,6 +44,8 @@ final class BookingApiController
      */
     public function services(Request $request, array $params = []): Response
     {
+        $this->guardRead('services', $request);
+
         $rows = $this->services->activeWithCategory();
         $out = [];
 
@@ -71,6 +73,8 @@ final class BookingApiController
      */
     public function availability(Request $request, array $params = []): Response
     {
+        $this->guardRead('availability', $request);
+
         $serviceId = (int) $request->queryString('service_id');
         $date = $request->queryString('date', date('Y-m-d'));
 
@@ -104,6 +108,8 @@ final class BookingApiController
      */
     public function calendar(Request $request, array $params = []): Response
     {
+        $this->guardRead('calendar', $request);
+
         $service = $this->services->find((int) $request->queryString('service_id'));
 
         if ($service === null || (int) ($service['is_active'] ?? 0) !== 1) {
@@ -123,6 +129,25 @@ final class BookingApiController
             ],
             'days' => $this->availability->calendar($from, $days, $duration),
         ])->withHeader('Cache-Control', 'public, max-age=60');
+    }
+
+    /**
+     * A ceiling on reads, per visitor.
+     *
+     * The site loads the catalogue and a three-week calendar on every visit, so
+     * the limit is high enough that a real customer never notices it. It only
+     * applies when the request can be attributed to one address; behind an
+     * unconfigured proxy a per-IP count would throttle everybody at once.
+     */
+    private function guardRead(string $bucket, Request $request): void
+    {
+        if (!$request->trustsClientIp()) {
+            return;
+        }
+
+        if (!$this->limits->attempt('api-read:' . $bucket . ':' . $request->ip(), 120, 1)) {
+            throw new HttpException(429, 'Too many requests just now. Please wait a moment and try again.');
+        }
     }
 
     /**
