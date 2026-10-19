@@ -9,14 +9,14 @@ use Wiz\Repositories\SettingsRepository;
 /**
  * The mail configuration the panel actually uses.
  *
- * config/mail.php holds the values the hosting account was set up with; the
- * settings screen can override the parts a salon can reasonably look after —
- * whether mail goes out at all, the name and address it comes from, where
- * notifications land, and the mailbox password.
+ * config/mail.php holds what the hosting account was set up with; the settings
+ * screen overrides the parts a salon can reasonably look after — the transport,
+ * its server and account, the address it comes from, where notifications land,
+ * and the mailbox password.
  *
- * The password is the only secret here, so it is never stored as plain text:
- * it is sealed with AES-256-GCM using a key derived from APP_KEY and only
- * decrypted in memory when a message is being sent.
+ * The password is the only secret here, so it is never stored as plain text: it
+ * is sealed with AES-256-GCM under a key derived from APP_KEY and only opened
+ * in memory when a message is being sent.
  */
 final class MailSettings
 {
@@ -31,102 +31,99 @@ final class MailSettings
     }
 
     /**
-     * The config array Mailer expects, panel values winning over the file.
+     * The flat array Mailer expects, panel values winning over the file.
      *
      * @return array<string, mixed>
      */
     public function config(): array
     {
-        $config = $this->config;
-
-        $config['enabled'] = $this->enabled();
-        $config['from_name'] = $this->fromName();
-        $config['from_email'] = $this->fromEmail();
-        $config['salon_email'] = $this->salonEmail();
-
-        $active = $this->activeProfile();
-        $profiles = is_array($config['profiles'] ?? null) ? $config['profiles'] : [];
-        $profile = is_array($profiles[$active] ?? null) ? $profiles[$active] : [];
-
-        $password = $this->password();
-
-        if ($password !== null) {
-            $profile['password'] = $password;
-        }
-
-        $profiles[$active] = $profile;
-        $config['profiles'] = $profiles;
-
-        return $config;
+        return [
+            'driver' => $this->driver(),
+            'host' => $this->host(),
+            'port' => $this->port(),
+            'encryption' => $this->encryption(),
+            'username' => $this->username(),
+            'password' => (string) ($this->password() ?? $this->fileValue('password')),
+            'from_email' => $this->fromEmail(),
+            'from_name' => $this->fromName(),
+            'salon_email' => $this->salonEmail(),
+        ];
     }
 
-    public function enabled(): bool
+    public function driver(): string
     {
-        $stored = $this->settings->get('mail.enabled', '');
+        $driver = $this->text('mail.driver', $this->fileText('driver', 'smtp'));
 
-        if ($stored === '') {
-            return ($this->config['enabled'] ?? false) === true;
-        }
+        return in_array($driver, ['smtp', 'mail'], true) ? $driver : 'smtp';
+    }
 
-        return $stored === '1';
+    public function host(): string
+    {
+        return $this->text('mail.host', $this->fileText('host'));
+    }
+
+    public function port(): int
+    {
+        $stored = $this->settings->get('mail.port', '');
+        $port = $stored === '' ? (int) ($this->config['port'] ?? 587) : (int) $stored;
+
+        return $port >= 1 && $port <= 65_535 ? $port : 587;
+    }
+
+    public function encryption(): string
+    {
+        $value = $this->text('mail.encryption', $this->fileText('encryption', 'tls'));
+
+        return in_array($value, ['tls', 'ssl', 'none'], true) ? $value : 'tls';
+    }
+
+    public function username(): string
+    {
+        return $this->text('mail.username', $this->fileText('username'));
     }
 
     public function fromName(): string
     {
-        return $this->text('mail.from_name', (string) ($this->config['from_name'] ?? 'WIZ Beauty Salon'));
+        return $this->text('mail.from_name', $this->fileText('from_name', 'WIZ Beauty Salon'));
     }
 
     public function fromEmail(): string
     {
-        return $this->text('mail.from_email', (string) ($this->config['from_email'] ?? ''));
+        return $this->text('mail.from_email', $this->fileText('from_email'));
     }
 
     public function salonEmail(): string
     {
-        $fallback = (string) ($this->config['salon_email'] ?? '');
+        $fallback = $this->fileText('salon_email');
 
-        if (trim($fallback) === '') {
+        if ($fallback === '') {
             $fallback = $this->fromEmail();
         }
 
         return $this->text('mail.salon_email', $fallback);
     }
 
-    /**
-     * The SMTP account the hosting account was given. Read-only in the panel:
-     * changing it is a hosting decision, not a daily one.
-     */
-    public function smtpUsername(): string
-    {
-        $profile = $this->profileConfig();
-
-        return (string) ($profile['username'] ?? '');
-    }
-
-    public function smtpHost(): string
-    {
-        $profile = $this->profileConfig();
-        $host = (string) ($profile['host'] ?? '');
-        $port = (int) ($profile['port'] ?? 0);
-
-        return $host === '' ? '' : $host . ($port > 0 ? ':' . $port : '');
-    }
-
     public function passwordSaved(): bool
     {
-        return $this->password() !== null;
+        return $this->password() !== null || $this->fileValue('password') !== '';
     }
 
     /**
-     * Store the three visible fields, and the password only when one was typed
-     * — an empty box means "keep the one already saved".
+     * Store the visible fields. The password is handled separately because an
+     * empty box means "keep the one already saved".
+     *
+     * @param array{driver: string, host: string, port: int, encryption: string, username: string, from_name: string, from_email: string, salon_email: string} $values
      */
-    public function save(bool $enabled, string $fromName, string $fromEmail, string $salonEmail): void
+    public function save(array $values): void
     {
-        $this->settings->put('mail.enabled', $enabled ? '1' : '0');
-        $this->settings->put('mail.from_name', trim($fromName));
-        $this->settings->put('mail.from_email', trim($fromEmail));
-        $this->settings->put('mail.salon_email', trim($salonEmail));
+        $this->settings->put('mail.driver', $values['driver']);
+        $this->settings->put('mail.host', trim($values['host']));
+        $this->settings->put('mail.port', (string) $values['port']);
+        $this->settings->put('mail.encryption', $values['encryption']);
+        $this->settings->put('mail.username', trim($values['username']));
+        $this->settings->put('mail.from_name', trim($values['from_name']));
+        $this->settings->put('mail.from_email', trim($values['from_email']));
+        $this->settings->put('mail.salon_email', trim($values['salon_email']));
     }
 
     public function savePassword(string $plain): void
@@ -142,7 +139,17 @@ final class MailSettings
     {
         $stored = $this->settings->get($key, '');
 
-        return trim($stored) === '' ? $fallback : trim($stored);
+        return trim($stored) === '' ? trim($fallback) : trim($stored);
+    }
+
+    private function fileText(string $key, string $fallback = ''): string
+    {
+        return trim((string) ($this->config[$key] ?? $fallback));
+    }
+
+    private function fileValue(string $key): string
+    {
+        return (string) ($this->config[$key] ?? '');
     }
 
     private function password(): ?string
@@ -154,27 +161,6 @@ final class MailSettings
         }
 
         return $this->open($stored);
-    }
-
-    private function activeProfile(): string
-    {
-        $active = (string) ($this->config['active_profile'] ?? 'cpanel');
-
-        return $active === '' ? 'cpanel' : $active;
-    }
-
-    /** @return array<string, mixed> */
-    private function profileConfig(): array
-    {
-        $profiles = $this->config['profiles'] ?? null;
-        $active = $this->activeProfile();
-
-        if (!is_array($profiles) || !is_array($profiles[$active] ?? null)) {
-            return [];
-        }
-
-        /** @var array<string, mixed> */
-        return $profiles[$active];
     }
 
     private function seal(string $plain): string

@@ -178,8 +178,23 @@ jobs:
           cp -a .output/public/. release/site/
           rsync -a --exclude-from=admin/.gitignore admin/ release/admin/ || cp -a admin release/admin
           rm -rf release/admin/tests release/admin/.env
+          # No .gitignore in the published tree: git add (inside the publish
+          # action) honours it, and `/vendor/` in it would silently drop the
+          # PHPMailer build from the release.
+          rm -f release/admin/.gitignore
           find release -name '.gitkeep' -delete
           echo "${{ github.sha }}" > release/RELEASE
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+
+      # PHPMailer and HTML Purifier must exist on the server: SMTP delivery and
+      # the email design studio both depend on them. `vendor/` is still not
+      # committed; it is built here and shipped in the release tree.
+      - name: Install runtime dependencies
+        run: composer install --no-dev --prefer-dist --no-interaction --no-progress --working-dir=release/admin
 
       - name: Publish to deploy branch
         uses: peaceiris/actions-gh-pages@v4

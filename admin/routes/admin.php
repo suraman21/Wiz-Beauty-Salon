@@ -15,6 +15,7 @@ use Wiz\Controllers\PublicBookingController;
 use Wiz\Controllers\Admin\BookingController;
 use Wiz\Controllers\Admin\CategoryController;
 use Wiz\Controllers\Admin\DashboardController;
+use Wiz\Controllers\Admin\EmailTemplateController;
 use Wiz\Controllers\Admin\GalleryController;
 use Wiz\Controllers\Admin\MessageController;
 use Wiz\Controllers\Admin\ReviewController;
@@ -149,6 +150,12 @@ return static function (Router $router, App $app): void {
 
     // --------------------------------------------------------------- audit
     $router->get('/admin/activity', [ActivityController::class, 'index'], ['auth', 'admin']);
+
+    // --------------------------------------------------------- email designs
+    // Administrator-only, draft-first; these routes never send an email.
+    $router->get('/admin/email-templates', [EmailTemplateController::class, 'index'], ['auth', 'admin']);
+    $router->post('/admin/email-templates/save', [EmailTemplateController::class, 'save'], ['auth', 'admin']);
+    $router->post('/admin/email-templates/publish', [EmailTemplateController::class, 'publish'], ['auth', 'admin']);
 
     // ------------------------------------------------------------- settings
     $router->get('/admin/settings', [SettingsController::class, 'index'], ['auth', 'admin']);

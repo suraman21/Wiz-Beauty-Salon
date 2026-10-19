@@ -6,6 +6,7 @@
     <meta name="robots" content="noindex, nofollow">
     <title><?= e($title ?? 'Admin') ?> · WIZ Beauty Salon</title>
     <link rel="stylesheet" href="<?= e(asset('admin.css')) ?>">
+    <?= $head ?? '' ?>
 </head>
 <?php
 // Every page renders inside this layout, so the signed-in user is resolved here
@@ -72,6 +73,7 @@ $navItem = static function (string $key, string $href, string $label, int $badge
             <p class="nav__heading">Administration</p>
             <?= $navItem('team', '/admin/users', 'Team') ?>
             <?= $navItem('activity', '/admin/activity', 'Activity') ?>
+            <?= $navItem('email-templates', '/admin/email-templates', 'Email designs') ?>
             <?= $navItem('settings', '/admin/settings', 'Settings') ?>
         <?php endif; ?>
     </nav>
@@ -115,5 +117,6 @@ $navItem = static function (string $key, string $href, string $label, int $badge
     </footer>
 </div>
 
+    <?= $scripts ?? '' ?>
 </body>
 </html>

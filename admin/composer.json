@@ -5,13 +5,14 @@
     "license": "proprietary",
     "require": {
         "php": "^8.2",
+        "ext-fileinfo": "*",
+        "ext-gd": "*",
+        "ext-json": "*",
+        "ext-mbstring": "*",
         "ext-pdo": "*",
         "ext-pdo_mysql": "*",
-        "ext-gd": "*",
-        "ext-mbstring": "*",
-        "ext-json": "*",
         "ext-sodium": "*",
-        "ext-fileinfo": "*",
+        "ezyang/htmlpurifier": "^4.19",
         "phpmailer/phpmailer": "^6.10"
     },
     "require-dev": {

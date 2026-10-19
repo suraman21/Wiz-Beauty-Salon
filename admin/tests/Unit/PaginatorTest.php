@@ -3,62 +3,93 @@ declare(strict_types=1);
 
 namespace Wiz\Tests\Unit;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Wiz\Support\Paginator;
 
 final class PaginatorTest extends TestCase
 {
-    public function testSplitsRowsIntoPages(): void
+    public function testTheFirstPageStartsAtRowOne(): void
     {
-        $paginator = Paginator::of(2, 25, 120);
+        $page = Paginator::of(1, 25, 31);
 
-        self::assertSame(2, $paginator->page);
-        self::assertSame(5, $paginator->pages());
-        self::assertSame(25, $paginator->offset());
-        self::assertSame(26, $paginator->firstItem());
-        self::assertSame(50, $paginator->lastItem());
-        self::assertTrue($paginator->hasPrevious());
-        self::assertTrue($paginator->hasNext());
+        self::assertSame(1, $page->page);
+        self::assertSame(0, $page->offset());
+        self::assertSame(2, $page->pages());
+        self::assertSame(1, $page->firstItem());
+        self::assertSame(25, $page->lastItem());
+        self::assertTrue($page->hasNext());
+        self::assertFalse($page->hasPrevious());
     }
 
-    public function testClampsAPageBeyondTheEnd(): void
+    public function testTheLastPageHoldsOnlyWhatIsLeft(): void
     {
-        $paginator = Paginator::of(99, 25, 40);
+        $page = Paginator::of(2, 25, 31);
 
-        self::assertSame(2, $paginator->page);
-        self::assertFalse($paginator->hasNext());
+        self::assertSame(25, $page->offset());
+        self::assertSame(26, $page->firstItem());
+        self::assertSame(31, $page->lastItem());
+        self::assertFalse($page->hasNext());
+        self::assertTrue($page->hasPrevious());
     }
 
-    public function testClampsAPageBelowOne(): void
+    public function testAPageBeyondTheEndIsClampedToTheLastPage(): void
     {
-        $paginator = Paginator::of(0, 25, 40);
+        $page = Paginator::of(99, 25, 31);
 
-        self::assertSame(1, $paginator->page);
-        self::assertFalse($paginator->hasPrevious());
+        self::assertSame(2, $page->page);
+        self::assertSame(25, $page->offset());
     }
 
-    public function testAnEmptyListStillHasOnePage(): void
+    public function testZeroAndNegativePagesBecomeOne(): void
     {
-        $paginator = Paginator::of(3, 25, 0);
-
-        self::assertSame(1, $paginator->page);
-        self::assertSame(1, $paginator->pages());
-        self::assertSame(0, $paginator->firstItem());
-        self::assertSame(0, $paginator->lastItem());
+        self::assertSame(1, Paginator::of(0, 10, 5)->page);
+        self::assertSame(1, Paginator::of(-4, 10, 5)->page);
     }
 
-    public function testWindowKeepsTheEndsAndTheCurrentPage(): void
+    public function testAnEmptySetIsStillOnePage(): void
     {
-        $window = Paginator::of(10, 10, 200)->window();
+        $page = Paginator::of(1, 25, 0);
+
+        self::assertSame(1, $page->pages());
+        self::assertSame(0, $page->firstItem());
+        self::assertSame(0, $page->lastItem());
+        self::assertFalse($page->hasNext());
+    }
+
+    public function testTheWindowStaysShortOnALongList(): void
+    {
+        $window = Paginator::of(10, 10, 300)->window();
 
         self::assertSame(1, $window[0]);
-        self::assertSame(20, $window[count($window) - 1]);
+        self::assertSame(30, $window[count($window) - 1]);
         self::assertContains(10, $window);
-        self::assertContains(null, $window);
+        self::assertLessThan(9, count($window));
     }
 
-    public function testShortListsShowEveryPageNumber(): void
+    public function testTheWindowIsEveryPageWhenTheyFit(): void
     {
-        self::assertSame([1, 2, 3], Paginator::of(2, 10, 30)->window());
+        self::assertSame([1, 2, 3], Paginator::of(2, 10, 25)->window());
+    }
+
+    /**
+     * @return iterable<string, array{int, int, int}>
+     */
+    public static function limits(): iterable
+    {
+        yield 'zero rows' => [1, 10, 0];
+        yield 'one row' => [1, 10, 1];
+        yield 'exactly one page' => [1, 10, 10];
+        yield 'one row over' => [2, 10, 11];
+        yield 'many pages' => [7, 10, 61];
+    }
+
+    #[DataProvider('limits')]
+    public function testPagingNeverOverlapsOrSkipsARow(int $requested, int $perPage, int $total): void
+    {
+        $page = Paginator::of($requested, $perPage, $total);
+
+        self::assertSame(($page->page - 1) * $perPage, $page->offset());
+        self::assertSame($total, $page->offset() + max(0, $page->lastItem() - $page->offset()));
     }
 }

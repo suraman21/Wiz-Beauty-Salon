@@ -98,7 +98,6 @@ mkdir -p "$APPDIR"
 rsync -a --delete \
     --exclude '.env' \
     --exclude 'storage/' \
-    --exclude 'vendor/' \
     "$REPO_DIR/admin/" "$APPDIR/"
 
 # ---------------------------------------------------------------- runtime state

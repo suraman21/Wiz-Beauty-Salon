@@ -15,6 +15,7 @@ use Wiz\Support\MailSettings;
 final class MailSettingsTest extends TestCase
 {
     private Database $db;
+
     private SettingsRepository $settings;
 
     /** @var list<array<string, mixed>> */
@@ -22,21 +23,15 @@ final class MailSettingsTest extends TestCase
 
     /** @var array<string, mixed> */
     private array $config = [
-        'enabled' => false,
-        'active_profile' => 'cpanel',
+        'driver' => 'smtp',
+        'host' => 'mail.example.test',
+        'port' => 587,
+        'encryption' => 'tls',
+        'username' => 'mailer@example.test',
+        'password' => 'password-from-file',
         'from_name' => 'From the file',
         'from_email' => 'file@example.test',
         'salon_email' => 'salon-file@example.test',
-        'profiles' => [
-            'cpanel' => [
-                'label' => 'cPanel SMTP',
-                'host' => 'mail.example.test',
-                'port' => 587,
-                'encryption' => 'tls',
-                'username' => 'mailer@example.test',
-                'password' => 'password-from-file',
-            ],
-        ],
     ];
 
     protected function setUp(): void
@@ -66,6 +61,10 @@ final class MailSettingsTest extends TestCase
 
     protected function tearDown(): void
     {
+        if (!isset($this->db)) {
+            return;
+        }
+
         $this->db->execute("DELETE FROM settings WHERE setting_key LIKE 'mail.%'");
 
         foreach ($this->saved as $row) {
@@ -80,38 +79,65 @@ final class MailSettingsTest extends TestCase
     {
         $mail = $this->mail();
 
-        self::assertFalse($mail->enabled());
+        self::assertSame('smtp', $mail->driver());
+        self::assertSame('mail.example.test', $mail->host());
+        self::assertSame(587, $mail->port());
+        self::assertSame('tls', $mail->encryption());
+        self::assertSame('mailer@example.test', $mail->username());
         self::assertSame('From the file', $mail->fromName());
         self::assertSame('file@example.test', $mail->fromEmail());
         self::assertSame('salon-file@example.test', $mail->salonEmail());
-        self::assertFalse($mail->passwordSaved());
+        self::assertTrue($mail->passwordSaved());
 
         $config = $mail->config();
-        self::assertSame('password-from-file', $config['profiles']['cpanel']['password'] ?? null);
+        self::assertSame('password-from-file', $config['password']);
+        self::assertSame('smtp', $config['driver']);
     }
 
     public function testSavedValuesWinOverTheFile(): void
     {
-        $this->mail()->save(true, 'WIZ Salon', 'hello@wiz.test', 'inbox@wiz.test');
-
         $mail = $this->mail();
+        $mail->save([
+            'driver' => 'mail',
+            'host' => 'smtp.wiz.test',
+            'port' => 465,
+            'encryption' => 'ssl',
+            'username' => 'hello@wiz.test',
+            'from_name' => 'WIZ Salon',
+            'from_email' => 'hello@wiz.test',
+            'salon_email' => 'inbox@wiz.test',
+        ]);
 
-        self::assertTrue($mail->enabled());
-        self::assertSame('WIZ Salon', $mail->fromName());
-        self::assertSame('hello@wiz.test', $mail->fromEmail());
-        self::assertSame('inbox@wiz.test', $mail->salonEmail());
+        $fresh = $this->mail();
 
-        $config = $mail->config();
-        self::assertTrue($config['enabled']);
-        self::assertSame('hello@wiz.test', $config['from_email']);
+        self::assertSame('mail', $fresh->driver());
+        self::assertSame('smtp.wiz.test', $fresh->host());
+        self::assertSame(465, $fresh->port());
+        self::assertSame('ssl', $fresh->encryption());
+        self::assertSame('hello@wiz.test', $fresh->username());
+        self::assertSame('WIZ Salon', $fresh->fromName());
+        self::assertSame('inbox@wiz.test', $fresh->salonEmail());
+
+        $config = $fresh->config();
+        self::assertSame('mail', $config['driver']);
         self::assertSame('inbox@wiz.test', $config['salon_email']);
     }
 
-    public function testSwitchingDeliveryOffWithoutChangingAnythingElse(): void
+    public function testAnImpossibleStoredDriverFallsBackToSmtp(): void
     {
-        $this->mail()->save(false, 'From the file', 'file@example.test', 'salon-file@example.test');
+        $this->settings->put('mail.driver', 'carrier-pigeon');
 
-        self::assertFalse($this->mail()->enabled());
+        self::assertSame('smtp', $this->mail()->driver());
+    }
+
+    public function testTheSalonFallsBackToTheFromAddress(): void
+    {
+        $config = $this->config;
+        $config['salon_email'] = '';
+
+        $mail = new MailSettings($this->settings, $config, 'test-app-key');
+
+        self::assertSame('file@example.test', $mail->salonEmail());
     }
 
     public function testThePasswordIsSealedAndReadsBack(): void
@@ -129,8 +155,7 @@ final class MailSettingsTest extends TestCase
         self::assertIsString($stored);
         self::assertStringNotContainsString('s3cret', $stored);
 
-        $config = $this->mail()->config();
-        self::assertSame('s3cret-mail-password', $config['profiles']['cpanel']['password'] ?? null);
+        self::assertSame('s3cret-mail-password', $this->mail()->config()['password']);
     }
 
     public function testAnEmptyPasswordKeepsTheSavedOne(): void
@@ -139,9 +164,7 @@ final class MailSettingsTest extends TestCase
         $mail->savePassword('first-password');
         $mail->savePassword('');
 
-        $config = $this->mail()->config();
-
-        self::assertSame('first-password', $config['profiles']['cpanel']['password'] ?? null);
+        self::assertSame('first-password', $this->mail()->config()['password']);
     }
 
     public function testWithoutAnAppKeyThePasswordIsNotSaved(): void

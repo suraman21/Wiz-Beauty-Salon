@@ -4,13 +4,14 @@ declare(strict_types=1);
 namespace Wiz\Controllers\Api;
 
 use Throwable;
+use Wiz\Contracts\MailTransport;
 use Wiz\Core\HttpException;
-use Wiz\Core\Mailer;
 use Wiz\Core\Request;
 use Wiz\Core\Response;
 use Wiz\Core\Validator;
 use Wiz\Repositories\MessageRepository;
 use Wiz\Repositories\RateLimitRepository;
+use Wiz\Services\EmailTemplateService;
 use Wiz\Support\Contact;
 use Wiz\Support\Origin;
 
@@ -27,7 +28,8 @@ final class MessageApiController
     public function __construct(
         private readonly MessageRepository $messages,
         private readonly RateLimitRepository $limits,
-        private readonly Mailer $mailer,
+        private readonly MailTransport $transport,
+        private readonly EmailTemplateService $templates,
         private readonly string $appOrigin = '',
         private readonly string $salonEmail = '',
     ) {
@@ -114,10 +116,27 @@ final class MessageApiController
         try {
             $subject = 'New message from ' . $name;
             $text = "From: {$name}\nReply to: {$contact}\n\n{$message}\n";
+            $html = '<div style="font-family:Arial,sans-serif;padding:24px;color:#2b2320">'
+                . '<h1 style="font-size:20px">New website message</h1>'
+                . '<p><strong>From:</strong> ' . e($name) . '<br>'
+                . '<strong>Reply to:</strong> ' . e($contact) . '</p>'
+                . '<p style="white-space:pre-line">' . e($message) . '</p></div>';
 
-            $this->mailer->send($this->salonEmail, $subject, $text, '', $replyTo);
+            $rendered = $this->templates->render('message_received', ['message' => $text, 'name' => $name], [
+                'subject' => $subject,
+                'html' => $html,
+                'text' => $text,
+            ]);
+
+            $this->transport->send(
+                $this->salonEmail,
+                $rendered['subject'],
+                $rendered['html'],
+                $rendered['text'],
+                $replyTo,
+            );
         } catch (Throwable) {
-            // Logged inside Mailer; nothing else to do.
+            // The note is already saved; a mail failure must not surface here.
         }
     }
 }

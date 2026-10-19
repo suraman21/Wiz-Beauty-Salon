@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace Wiz\Controllers\Admin;
 
+use Throwable;
+use Wiz\Contracts\MailTransport;
 use Wiz\Core\Auth;
 use Wiz\Core\HttpException;
 use Wiz\Core\RedirectException;
@@ -13,6 +15,7 @@ use Wiz\Core\Validator;
 use Wiz\Core\View;
 use Wiz\Repositories\ActivityLogRepository;
 use Wiz\Repositories\UserRepository;
+use Wiz\Services\EmailTemplateService;
 use Wiz\Services\AuthService;
 
 /**
@@ -32,6 +35,8 @@ final class AccountController
         private readonly AuthService $authService,
         private readonly ActivityLogRepository $activity,
         private readonly Session $session,
+        private readonly MailTransport $transport,
+        private readonly EmailTemplateService $templates,
     ) {
     }
 
@@ -164,9 +169,45 @@ final class AccountController
 
         // A new password invalidates any session that was open with the old one.
         $this->session->regenerate();
+        $this->notifyPasswordChanged($user);
         $this->session->flash('success', 'Your password was changed.');
 
         throw new RedirectException('/admin/account');
+    }
+
+    /**
+     * A short security notice, in the same template system as every other email.
+     * Best-effort: the password has already changed, so a mail failure must not
+     * look like a failure of the change itself.
+     *
+     * @param array<string, mixed> $user
+     */
+    private function notifyPasswordChanged(array $user): void
+    {
+        $to = trim((string) ($user['email'] ?? ''));
+
+        if ($to === '' || filter_var($to, FILTER_VALIDATE_EMAIL) === false) {
+            return;
+        }
+
+        try {
+            $subject = 'Your WIZ Beauty Salon password was changed';
+            $text = 'Your panel password was changed just now. If this was you, no action is needed. '
+                . 'If it was not, tell another administrator and change the password again immediately.';
+            $html = '<div style="font-family:Arial,sans-serif;padding:24px;color:#2b2320">'
+                . '<h1 style="font-size:20px">Password changed</h1>'
+                . '<p>' . e($text) . '</p></div>';
+
+            $message = $this->templates->render('staff_password_changed', ['message' => $text, 'name' => (string) ($user['name'] ?? '')], [
+                'subject' => $subject,
+                'html' => $html,
+                'text' => $text,
+            ]);
+
+            $this->transport->send($to, $message['subject'], $message['html'], $message['text']);
+        } catch (Throwable) {
+            // Never surface a mail problem on the account screen.
+        }
     }
 
     /**

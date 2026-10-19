@@ -20,6 +20,7 @@ use Wiz\Controllers\Admin\ActivityController;
 use Wiz\Controllers\Admin\BookingController;
 use Wiz\Controllers\Admin\CategoryController;
 use Wiz\Controllers\Admin\DashboardController;
+use Wiz\Controllers\Admin\EmailTemplateController;
 use Wiz\Controllers\Admin\GalleryController;
 use Wiz\Controllers\Admin\MessageController;
 use Wiz\Controllers\Admin\ReviewController;
@@ -60,11 +61,14 @@ use Wiz\Repositories\ReviewRepository;
 use Wiz\Repositories\ServiceRepository;
 use Wiz\Repositories\UserRepository;
 use Wiz\Core\Mailer;
+use Wiz\Infrastructure\PhpMailerTransport;
+use Wiz\Contracts\MailTransport;
 use Wiz\Services\AuthService;
 use Wiz\Services\TeamService;
 use Wiz\Services\AvailabilityService;
 use Wiz\Services\BookingService;
 use Wiz\Services\BookingNotifier;
+use Wiz\Services\EmailTemplateService;
 use Wiz\Services\Uploader;
 use Wiz\Support\MailSettings;
 use Wiz\Support\SignedLink;
@@ -200,11 +204,21 @@ $app->singleton(MailSettings::class, static fn (App $a): MailSettings => new Mai
 
 $app->singleton(Mailer::class, static fn (App $a): Mailer => new Mailer(
     $a->get(MailSettings::class)->config(),
-    $a->basePath('storage/logs'),
+    $a->get(Logger::class),
+));
+
+$app->singleton(MailTransport::class, static fn (App $a): MailTransport => new PhpMailerTransport(
+    $a->get(Mailer::class),
+));
+
+$app->singleton(EmailTemplateService::class, static fn (App $a): EmailTemplateService => new EmailTemplateService(
+    $a->get(Database::class),
+    (string) ($a->config('app.url') ?? ''),
 ));
 
 $app->singleton(BookingNotifier::class, static fn (App $a): BookingNotifier => new BookingNotifier(
-    $a->get(Mailer::class),
+    $a->get(MailTransport::class),
+    $a->get(EmailTemplateService::class),
     $a->get(View::class),
     $a->get(SignedLink::class),
     $a->get(Logger::class),
@@ -328,7 +342,8 @@ $app->singleton(ContentApiController::class, static fn (App $a): ContentApiContr
 $app->singleton(MessageApiController::class, static fn (App $a): MessageApiController => new MessageApiController(
     $a->get(MessageRepository::class),
     $a->get(RateLimitRepository::class),
-    $a->get(Mailer::class),
+    $a->get(MailTransport::class),
+    $a->get(EmailTemplateService::class),
     (string) ($a->config('app.url') ?? ''),
     $a->get(MailSettings::class)->salonEmail(),
 ));
@@ -353,6 +368,8 @@ $app->singleton(AccountController::class, static fn (App $a): AccountController 
     $a->get(AuthService::class),
     $a->get(ActivityLogRepository::class),
     $a->get(Session::class),
+    $a->get(MailTransport::class),
+    $a->get(EmailTemplateService::class),
 ));
 
 $app->singleton(ActivityController::class, static fn (App $a): ActivityController => new ActivityController(
@@ -363,8 +380,16 @@ $app->singleton(ActivityController::class, static fn (App $a): ActivityControlle
 $app->singleton(SettingsController::class, static fn (App $a): SettingsController => new SettingsController(
     $a->get(View::class),
     $a->get(MailSettings::class),
-    $a->get(Mailer::class),
+    $a->get(MailTransport::class),
     $a->get(RateLimitRepository::class),
+    $a->get(ActivityLogRepository::class),
+    $a->get(Auth::class),
+    $a->get(Session::class),
+));
+
+$app->singleton(EmailTemplateController::class, static fn (App $a): EmailTemplateController => new EmailTemplateController(
+    $a->get(View::class),
+    $a->get(EmailTemplateService::class),
     $a->get(ActivityLogRepository::class),
     $a->get(Auth::class),
     $a->get(Session::class),
