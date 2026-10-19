@@ -56,6 +56,17 @@ if [ "$LOCAL_SHA" != "$REMOTE_SHA" ]; then
     git reset --hard --quiet "origin/$BRANCH" || fail "git reset failed"
 fi
 
+# ---------------------------------------------------------------- self-update
+# The release ships the current version of this script; adopt it so a stale
+# local copy can never hold the pipeline back. Safe: the running process keeps
+# its own inode.
+if [ -f "$REPO_DIR/admin/deploy/deploy.sh" ] && \
+   ! cmp -s "$REPO_DIR/admin/deploy/deploy.sh" "$REPO_DIR/deploy.sh"; then
+    cp "$REPO_DIR/admin/deploy/deploy.sh" "$REPO_DIR/deploy.sh"
+    chmod +x "$REPO_DIR/deploy.sh"
+    log "deploy script updated — new version applies from the next run"
+fi
+
 # ---------------------------------------------------------------- sanity
 [ -d "$REPO_DIR/site" ]  || fail "release has no site/ directory"
 [ -d "$REPO_DIR/admin" ] || fail "release has no admin/ directory"
@@ -129,19 +140,22 @@ if [ -f "$APPDIR/database/migrate.php" ] && [ -f "$APPDIR/vendor/autoload.php" ]
 fi
 
 # ---------------------------------------------------------------- health check
-# The frontend is served from a directory that rsync rewrites, so a request can
-# land in the middle of the swap. Retry briefly before reporting a problem.
+# Checked against the origin directly with a Host header. Going out through the
+# public hostname would route back through Cloudflare, whose bot rules can
+# answer the server's own request with 403 and make a good deploy look broken.
 CODE="000"
 for attempt in 1 2 3 4 5; do
-    CODE="$(curl -s -o /dev/null -w '%{http_code}' -m 20 "https://wiz.arkeonethiopia.com/?cb=$STAMP-$attempt")"
+    CODE="$(curl -s -o /dev/null -w '%{http_code}' -m 15 \
+        -H "Host: wiz.arkeonethiopia.com" \
+        "http://127.0.0.1/?cb=$STAMP-$attempt")"
     [ "$CODE" = "200" ] && break
     sleep 3
 done
 
 if [ "$CODE" = "200" ]; then
-    log "home page 200 OK"
+    log "origin health check: 200 OK"
 else
-    log "WARNING: home page returned $CODE after deploy"
+    log "WARNING: origin returned $CODE after deploy"
 fi
 
 log "done — $(cat "$REPO_DIR/RELEASE" 2>/dev/null || echo "$REMOTE_SHA")"
