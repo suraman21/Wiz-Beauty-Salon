@@ -648,6 +648,28 @@ a.nav__item:hover { background: rgba(255, 255, 255, .06); color: #fff; }
 
 .icon-btn:hover { color: var(--ink); border-color: var(--line-strong); }
 
+.card--wide { width: min(100%, 620px); }
+
+.overline-soft {
+    margin-bottom: 4px;
+    font-size: 10.5px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--accent);
+}
+
+.detail-grid--tight { gap: 12px; margin-top: 14px; }
+
+.manage-day {
+    margin-bottom: 18px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--line);
+}
+
+.manage-day:last-of-type { border-bottom: 0; }
+
+.manage-again { margin-top: 18px; }
+
 /* --------------------------------------------------------------- badges ---- */
 
 .badge {

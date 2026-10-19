@@ -8,8 +8,8 @@ DirectoryIndex index.html
 <IfModule mod_rewrite.c>
   RewriteEngine On
 
-  # 1. JSON API and 2. admin panel -> PHP front controller
-  RewriteRule ^(api|admin)(/.*)?$ index.php [L,QSA]
+  # 1. JSON API, 2. admin panel, 3. customer links -> PHP front controller
+  RewriteRule ^(api|admin|booking/manage)(/.*)?$ index.php [L,QSA]
 
   # 3. Real files and directories are served as-is (assets, /services/index.html)
   RewriteCond %{REQUEST_FILENAME} -f [OR]

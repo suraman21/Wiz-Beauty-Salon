@@ -23,6 +23,7 @@ use Wiz\Controllers\Admin\ReviewController;
 use Wiz\Controllers\Admin\ScheduleController;
 use Wiz\Controllers\Admin\ServiceController;
 use Wiz\Controllers\Api\BookingApiController;
+use Wiz\Controllers\PublicBookingController;
 use Wiz\Core\App;
 use Wiz\Core\Auth;
 use Wiz\Core\Config;
@@ -50,10 +51,13 @@ use Wiz\Repositories\LoginAttemptRepository;
 use Wiz\Repositories\ReviewRepository;
 use Wiz\Repositories\ServiceRepository;
 use Wiz\Repositories\UserRepository;
+use Wiz\Core\Mailer;
 use Wiz\Services\AuthService;
 use Wiz\Services\AvailabilityService;
 use Wiz\Services\BookingService;
+use Wiz\Services\BookingNotifier;
 use Wiz\Services\Uploader;
+use Wiz\Support\SignedLink;
 
 $root = dirname(__DIR__);
 
@@ -156,6 +160,7 @@ $app->singleton(BookingService::class, static fn (App $a): BookingService => new
     $a->get(SlotCalculator::class),
     $a->get(ActivityLogRepository::class),
     $a->get(Logger::class),
+    $a->get(BookingNotifier::class),
 ));
 
 $app->singleton(AuthService::class, static fn (App $a): AuthService => new AuthService(
@@ -166,6 +171,25 @@ $app->singleton(AuthService::class, static fn (App $a): AuthService => new AuthS
     $a->get(Logger::class),
     (int) ($a->config('app.login_max_attempts') ?? 5),
     (int) ($a->config('app.login_lockout_minutes') ?? 15),
+));
+
+$app->singleton(SignedLink::class, static fn (App $a): SignedLink => new SignedLink(
+    (string) ($a->config('app.key') ?? ''),
+));
+
+$app->singleton(Mailer::class, static fn (App $a): Mailer => new Mailer(
+    is_array($a->config('mail')) ? $a->config('mail') : [],
+    $a->basePath('storage/logs'),
+));
+
+$app->singleton(BookingNotifier::class, static fn (App $a): BookingNotifier => new BookingNotifier(
+    $a->get(Mailer::class),
+    $a->get(View::class),
+    $a->get(SignedLink::class),
+    $a->get(Logger::class),
+    (string) ($a->config('app.url') ?? ''),
+    (string) ($a->config('mail.salon_email') ?? $a->config('mail.from_email') ?? ''),
+    (string) ($a->config('app.name') ?? 'WIZ Beauty Salon'),
 ));
 
 $app->singleton(Uploader::class, static fn (App $a): Uploader => new Uploader(
@@ -252,6 +276,16 @@ $app->singleton(BookingApiController::class, static fn (App $a): BookingApiContr
     $a->get(ServiceRepository::class),
     $a->get(RateLimitRepository::class),
     (string) ($a->config('app.url') ?? ''),
+    $a->get(SignedLink::class),
+));
+
+$app->singleton(PublicBookingController::class, static fn (App $a): PublicBookingController => new PublicBookingController(
+    $a->get(View::class),
+    $a->get(BookingRepository::class),
+    $a->get(BookingService::class),
+    $a->get(AvailabilityService::class),
+    $a->get(SignedLink::class),
+    $a->get(Session::class),
 ));
 
 $app->singleton(ReviewController::class, static fn (App $a): ReviewController => new ReviewController(

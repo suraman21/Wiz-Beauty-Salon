@@ -108,6 +108,11 @@ jobs:
       - name: Static analysis
         run: composer analyse
 
+      - name: Generate an application key
+        # Signs the links customers use to change a booking. CI only needs a
+        # value, not the one production uses.
+        run: echo "APP_KEY=$(php -r 'echo bin2hex(random_bytes(32));')" >> "$GITHUB_ENV"
+
       - name: Tests
         run: composer unit
 

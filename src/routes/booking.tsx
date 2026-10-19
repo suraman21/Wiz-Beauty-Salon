@@ -49,6 +49,8 @@ type Confirmed = {
   date: string;
   time: string;
   details: Details;
+  /** Signed link the customer can keep to cancel or move the booking. */
+  manageUrl: string | null;
 };
 
 const emptyDetails: Details = { name: "", phone: "", email: "", notes: "" };
@@ -211,7 +213,14 @@ function Booking() {
         notes: details.notes.trim(),
       });
 
-      setConfirmed({ reference: result.reference, serviceId, date, time, details });
+      setConfirmed({
+        reference: result.reference,
+        serviceId,
+        date,
+        time,
+        details,
+        manageUrl: result.manage_url ?? null,
+      });
       setStep(5);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (error) {
@@ -528,6 +537,12 @@ function Booking() {
                   Your request is with the salon. We will call you to confirm the appointment — it
                   is not booked until we do.
                 </p>
+                {confirmed.manageUrl && (
+                  <p className="demo-note">
+                    Keep this link to change or cancel it:{" "}
+                    <a href={confirmed.manageUrl}>manage this booking</a>
+                  </p>
+                )}
                 <div className="manage-actions">
                   <Button
                     variant="ghost"

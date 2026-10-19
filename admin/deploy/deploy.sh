@@ -111,6 +111,13 @@ chmod 775 "$APPDIR/storage/logs" "$APPDIR/storage/sessions" "$APPDIR/storage/cac
 
 if [ ! -f "$APPDIR/.env" ]; then
     log "WARNING: $APPDIR/.env is missing — /admin cannot reach the database"
+elif ! grep -q '^APP_KEY=.' "$APPDIR/.env"; then
+    # Signs the links customers use to cancel or move a booking. Generated
+    # once, then never touched: replacing it would break every link in an
+    # inbox that is still inside its 24-hour window.
+    APP_KEY_VAL="$("$PHP_BIN" -r 'echo bin2hex(random_bytes(32));')"
+    printf '\nAPP_KEY=%s\n' "$APP_KEY_VAL" >> "$APPDIR/.env"
+    log "APP_KEY generated in $APPDIR/.env"
 fi
 
 # ---------------------------------------------------------------- site (public)

@@ -34,6 +34,7 @@ final class BookingService
         private readonly SlotCalculator $calculator,
         private readonly ActivityLogRepository $activity,
         private readonly Logger $logger,
+        private readonly ?BookingNotifier $notifier = null,
     ) {
     }
 
@@ -115,6 +116,14 @@ final class BookingService
         $this->activity->record($userId, 'booking.created', 'booking', $id, ['reference' => $reference], $ip);
         $this->logger->info('Booking created', ['reference' => $reference, 'date' => $date, 'time' => $time]);
 
+        // Tell the customer and the salon. Best-effort: a mail server having a
+        // bad morning must never lose a booking that was already saved.
+        $fresh = $this->bookings->find($id);
+
+        if ($fresh !== null) {
+            $this->notifier?->requested($fresh);
+        }
+
         return ['ok' => true, 'id' => $id, 'reference' => $reference];
     }
 
@@ -156,6 +165,14 @@ final class BookingService
 
         $this->bookings->addHistory($bookingId, $from->value, $to->value, $userId, $note);
         $this->activity->record($userId, 'booking.' . $to->value, 'booking', $bookingId, [], $ip);
+
+        if (in_array($to, [BookingStatus::Confirmed, BookingStatus::Declined, BookingStatus::Cancelled], true)) {
+            $fresh = $this->bookings->find($bookingId);
+
+            if ($fresh !== null) {
+                $this->notifier?->statusChanged($fresh, $to->value);
+            }
+        }
 
         return ['ok' => true];
     }
@@ -221,12 +238,35 @@ final class BookingService
 
         $this->activity->record($userId, 'booking.rescheduled', 'booking', $bookingId, ['to' => $date . ' ' . $time], $ip);
 
+        $fresh = $this->bookings->find($bookingId);
+
+        if ($fresh !== null) {
+            $this->notifier?->rescheduled($fresh, $this->describe($booking));
+        }
+
         return ['ok' => true];
     }
 
     public function saveAdminNotes(int $bookingId, ?string $notes): void
     {
         $this->bookings->updateNotes($bookingId, $notes === '' ? null : $notes);
+    }
+
+    /**
+     * "Monday 20 October, 10:00–11:00" — the old time, for the "moved" email.
+     *
+     * @param array<string, mixed> $booking
+     */
+    private function describe(array $booking): string
+    {
+        $date = strtotime((string) $booking['booking_date']);
+
+        return sprintf(
+            '%s, %s–%s',
+            $date === false ? (string) $booking['booking_date'] : date('l j F', $date),
+            substr((string) $booking['start_time'], 0, 5),
+            substr((string) $booking['end_time'], 0, 5),
+        );
     }
 
     /**

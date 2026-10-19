@@ -47,6 +47,8 @@ export type BookingResult = {
   reference: string;
   status: string;
   message: string;
+  /** A signed link the customer can keep to cancel or move the booking. */
+  manage_url?: string | null;
 };
 
 /** An error the server described in words we can show a customer. */

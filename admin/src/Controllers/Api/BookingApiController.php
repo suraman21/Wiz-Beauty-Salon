@@ -11,6 +11,7 @@ use Wiz\Repositories\RateLimitRepository;
 use Wiz\Repositories\ServiceRepository;
 use Wiz\Services\AvailabilityService;
 use Wiz\Services\BookingService;
+use Wiz\Support\SignedLink;
 
 /**
  * Public JSON endpoints used by the React site.
@@ -27,6 +28,7 @@ final class BookingApiController
         private readonly ServiceRepository $services,
         private readonly RateLimitRepository $limits,
         private readonly string $appOrigin = '',
+        private readonly ?SignedLink $links = null,
     ) {
     }
 
@@ -195,10 +197,15 @@ final class BookingApiController
             throw HttpException::validation((string) ($result['error'] ?? 'The booking could not be saved.'));
         }
 
+        // The same signed link the email carries, so a customer who closes the
+        // tab can still keep or move the appointment straight away.
+        $token = $this->links?->issue('booking', (int) ($result['id'] ?? 0));
+
         return Response::json([
             'ok' => true,
             'reference' => (string) ($result['reference'] ?? ''),
             'status' => 'requested',
+            'manage_url' => $token === null ? null : rtrim($this->appOrigin, '/') . '/booking/manage/' . $token,
             'message' => 'Thank you. The salon will confirm your appointment shortly.',
         ], 201);
     }

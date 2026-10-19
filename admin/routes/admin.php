@@ -9,6 +9,7 @@ declare(strict_types=1);
  */
 
 use Wiz\Controllers\Admin\AuthController;
+use Wiz\Controllers\PublicBookingController;
 use Wiz\Controllers\Admin\BookingController;
 use Wiz\Controllers\Admin\CategoryController;
 use Wiz\Controllers\Admin\DashboardController;
@@ -66,6 +67,13 @@ return static function (Router $router, App $app): void {
     $router->get('/admin/login', [AuthController::class, 'showLogin'], ['guest']);
     $router->post('/admin/login', [AuthController::class, 'login'], ['guest']);
     $router->post('/admin/logout', [AuthController::class, 'logout'], ['auth']);
+
+    // ------------------------------------------- the customer's own booking
+    // Reached from the link in the confirmation email. The signed token is the
+    // credential, so these live outside the admin session on purpose.
+    $router->get('/booking/manage/{token}', [PublicBookingController::class, 'show']);
+    $router->post('/booking/manage/{token}/cancel', [PublicBookingController::class, 'cancel']);
+    $router->post('/booking/manage/{token}/reschedule', [PublicBookingController::class, 'reschedule']);
 
     // ------------------------------------------------------------- dashboard
     $router->get('/admin', [DashboardController::class, 'index'], ['auth']);

@@ -13,6 +13,8 @@ return [
     'active_profile' => Env::get('MAIL_ACTIVE_PROFILE', 'cpanel'),
     'from_email' => Env::get('MAIL_FROM_EMAIL', ''),
     'from_name' => Env::get('MAIL_FROM_NAME', 'WIZ Beauty Salon'),
+    // Where the salon's own notifications go. Falls back to the From address.
+    'salon_email' => Env::get('MAIL_SALON_EMAIL', ''),
 
     'profiles' => [
         'cpanel' => [
