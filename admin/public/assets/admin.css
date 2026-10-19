@@ -574,6 +574,11 @@ a.nav__item:hover { background: rgba(255, 255, 255, .06); color: #fff; }
 
 .table tbody tr:hover { background: #fdfcfa; }
 
+.table tbody tr.is-highlighted {
+    background: #fbf6ef;
+    box-shadow: inset 3px 0 0 var(--accent);
+}
+
 .table__order { width: 44px; padding-right: 0 !important; }
 
 .table__num { text-align: right; white-space: nowrap; }

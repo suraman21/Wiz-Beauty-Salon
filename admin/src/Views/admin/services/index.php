@@ -5,6 +5,7 @@
  * @var list<array<string, mixed>> $services
  * @var list<array<string, mixed>> $categories
  * @var \Wiz\Services\Uploader $uploads
+ * @var int $highlight
  */
 
 $money = static function (mixed $cents): string {
@@ -57,7 +58,7 @@ $money = static function (mixed $cents): string {
                 $active = (int) ($service['is_active'] ?? 0) === 1;
                 $image = is_string($service['image_path'] ?? null) ? $service['image_path'] : null;
                 ?>
-                <tr>
+                <tr<?= ($highlight ?? 0) === $id ? ' class="is-highlighted"' : '' ?>>
                     <td class="table__order">
                         <form method="post" action="/admin/services/<?= $id ?>/move" class="order-buttons">
                             <?= csrf_field() ?>

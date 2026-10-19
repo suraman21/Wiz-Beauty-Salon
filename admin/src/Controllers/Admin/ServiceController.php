@@ -46,6 +46,8 @@ final class ServiceController
             'services' => $this->services->allWithCategory(),
             'categories' => $this->categories->allWithCounts(),
             'uploads' => $this->uploader,
+            // Set after a new service is saved, so the fresh row is obvious.
+            'highlight' => (int) $request->queryString('highlight'),
         ]);
     }
 
