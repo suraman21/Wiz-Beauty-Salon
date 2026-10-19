@@ -30,6 +30,12 @@ require $root . '/bootstrap/autoload.php';
 Env::load($root . '/.env');
 
 $config = new Config($root . '/config');
+
+// The web front controller sets this; a CLI run has only php.ini, which on this
+// host is Asia/Dubai. Without it the log file is named for the wrong day.
+$appConfig = $config->file('app');
+date_default_timezone_set((string) ($appConfig['timezone'] ?? 'Africa/Addis_Ababa'));
+
 $databaseConfig = $config->file('database');
 
 if ($databaseConfig === []) {

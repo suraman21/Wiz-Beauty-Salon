@@ -75,8 +75,16 @@ final class BookingSlotRepository
                     [':slot' => $slot, ':booking' => $bookingId],
                 );
             }
-        } catch (PDOException) {
-            return false;
+        } catch (PDOException $e) {
+            // 1062 is a duplicate key: another request claimed the same cell
+            // first, which is the answer this method exists to give. Anything
+            // else (a missing table, a deadlock, a broken connection) is a real
+            // failure and must not be reported to the customer as "taken".
+            if ((int) ($e->errorInfo[1] ?? 0) === 1062) {
+                return false;
+            }
+
+            throw $e;
         }
 
         return true;
