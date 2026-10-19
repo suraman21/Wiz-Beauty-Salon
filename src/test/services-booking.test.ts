@@ -1,11 +1,29 @@
 import { describe, expect, it } from "vitest";
-import { serviceCategories, bookableServices, filterServiceCategories, findBookableService, isValidServiceSelection, bookingDetailsSchema, UNDECIDED_SERVICE } from "@/data/services";
+import {
+  serviceCategories,
+  bookableServices,
+  filterServiceCategories,
+  findBookableService,
+  isValidServiceSelection,
+  bookingDetailsSchema,
+  UNDECIDED_SERVICE,
+} from "@/data/services";
 
 const expected = [
-  ["Make Up", "ሜክ አፕ"], ["Nail", "ጥፍር"], ["Pedicure", "ፔዲኪውር"], ["Wax", "ዋክስ"],
-  ["Eye Lash", "ቅንድብ"], ["Mesh", "ሜሽ"], ["Hair Treatment", "የጸጉር እንክብካቤ"],
-  ["Hair Cut", "የጸጉር ቁርጥ"], ["Hair Paint", "የጸጉር ቀለም"], ["Hair Styling", "የጸጉር ስታይል"],
-  ["Braids", "ሹሩባ"], ["Sewing", "ስፌት"], ["Ponytail", "ፖኒቴል"], ["Kids Braids", "የህጻናት ሹሩባ"],
+  ["Make Up", "ሜክ አፕ"],
+  ["Nail", "ጥፍር"],
+  ["Pedicure", "ፔዲኪውር"],
+  ["Wax", "ዋክስ"],
+  ["Eye Lash", "ቅንድብ"],
+  ["Mesh", "ሜሽ"],
+  ["Hair Treatment", "የጸጉር እንክብካቤ"],
+  ["Hair Cut", "የጸጉር ቁርጥ"],
+  ["Hair Paint", "የጸጉር ቀለም"],
+  ["Hair Styling", "የጸጉር ስታይል"],
+  ["Braids", "ሹሩባ"],
+  ["Sewing", "ስፌት"],
+  ["Ponytail", "ፖኒቴል"],
+  ["Kids Braids", "የህጻናት ሹሩባ"],
 ];
 describe("WIZ service catalog", () => {
   it("uses exactly the 14 supplied bilingual categories", () => {
@@ -17,21 +35,42 @@ describe("WIZ service catalog", () => {
   for (const c of serviceCategories) {
     it(`filters only ${c.name} and resolves its exact booking options`, () => {
       expect(filterServiceCategories(c.id).map((x) => x.id)).toEqual([c.id]);
-      for (const item of c.items) expect(findBookableService(item.id)).toEqual({ ...item, categoryId: c.id, category: c.name, amharic: c.amharic });
+      for (const item of c.items)
+        expect(findBookableService(item.id)).toEqual({
+          ...item,
+          categoryId: c.id,
+          category: c.name,
+          amharic: c.amharic,
+        });
     });
   }
   it("keeps pedicure separate from nail", () => {
-    expect(serviceCategories.find((c) => c.id === "pedicure")?.items.map((i) => i.name)).toEqual(["Special Pedicure", "Pedicure"]);
-    expect(serviceCategories.find((c) => c.id === "nail")?.items.some((i) => i.name.includes("Pedicure"))).toBe(false);
+    expect(serviceCategories.find((c) => c.id === "pedicure")?.items.map((i) => i.name)).toEqual([
+      "Special Pedicure",
+      "Pedicure",
+    ]);
+    expect(
+      serviceCategories
+        .find((c) => c.id === "nail")
+        ?.items.some((i) => i.name.includes("Pedicure")),
+    ).toBe(false);
   });
   it("keeps the supplied kids' braiding options", () => {
-    expect(serviceCategories.find((c) => c.id === "kids-braids")?.items.map((i) => i.name)).toEqual(["Shuruba", "Kutirtir", "Chele"]);
+    expect(serviceCategories.find((c) => c.id === "kids-braids")?.items.map((i) => i.name)).toEqual(
+      ["Shuruba", "Kutirtir", "Chele"],
+    );
   });
   it("keeps ambiguous supplied terms without inventing meanings", () => {
-    expect(bookableServices.map((s) => s.name)).toEqual(expect.arrayContaining(["Mesh", "Casc", "Publice", "Payestra", "Syntthetic"]));
+    expect(bookableServices.map((s) => s.name)).toEqual(
+      expect.arrayContaining(["Mesh", "Casc", "Publice", "Payestra", "Syntthetic"]),
+    );
   });
   it("excludes obsolete skin services and demo choices", () => {
-    expect(bookableServices.some((s) => /facial|skin|glow|everyday look|occasion makeup|bridal makeup/i.test(s.name))).toBe(false);
+    expect(
+      bookableServices.some((s) =>
+        /facial|skin|glow|everyday look|occasion makeup|bridal makeup/i.test(s.name),
+      ),
+    ).toBe(false);
     expect(findBookableService("skin-facial")).toBeUndefined();
     expect(findBookableService("hair-cut")).toBeUndefined();
   });
@@ -64,6 +103,8 @@ describe("Booking request rules", () => {
   });
   it("validates an email when supplied", () => {
     expect(bookingDetailsSchema.safeParse({ ...details, email: "invalid" }).success).toBe(false);
-    expect(bookingDetailsSchema.safeParse({ ...details, email: "customer@example.com" }).success).toBe(true);
+    expect(
+      bookingDetailsSchema.safeParse({ ...details, email: "customer@example.com" }).success,
+    ).toBe(true);
   });
 });

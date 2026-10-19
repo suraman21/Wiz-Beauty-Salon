@@ -36,5 +36,16 @@ export default tseslint.config(
       "@typescript-eslint/no-unused-vars": "off",
     },
   },
+  {
+    // Generated shadcn/ui primitives intentionally co-locate components with their
+    // `cva` variant maps and hooks (buttonVariants, toggleVariants, useSidebar, …).
+    // That trips this dev-only fast-refresh rule, whose fix would mean splitting
+    // vendor files away from the shadcn registry. Scoped out here instead — it has
+    // no effect on runtime behaviour or production builds.
+    files: ["src/components/ui/**/*.{ts,tsx}"],
+    rules: {
+      "react-refresh/only-export-components": "off",
+    },
+  },
   eslintPluginPrettier,
 );

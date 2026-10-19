@@ -8,9 +8,16 @@ export const Route = createFileRoute("/contact")({
   head: () => ({
     meta: [
       { title: "Contact | WIZ Beauty Salon" },
-      { name: "description", content: "Get in touch with WIZ Beauty Salon by phone, WhatsApp, email or social media, and find our location and hours." },
+      {
+        name: "description",
+        content:
+          "Get in touch with WIZ Beauty Salon by phone, WhatsApp, email or social media, and find our location and hours.",
+      },
       { property: "og:title", content: "Contact | WIZ Beauty Salon" },
-      { property: "og:description", content: "Phone, WhatsApp, email, social, location and hours for WIZ Beauty Salon." },
+      {
+        property: "og:description",
+        content: "Phone, WhatsApp, email, social, location and hours for WIZ Beauty Salon.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -34,31 +41,62 @@ function Contact() {
         <div className="section-wrap contact-grid">
           <div className="reveal-up">
             <span className="overline">Contact</span>
-            <h1>Let's talk<br /><em>beauty.</em></h1>
-            <p className="contact-lead">Questions, ideas or special requests — reach us the way that suits you.</p>
+            <h1>
+              Let's talk
+              <br />
+              <em>beauty.</em>
+            </h1>
+            <p className="contact-lead">
+              Questions, ideas or special requests — reach us the way that suits you.
+            </p>
             <ul className="channels">
               {channels.map(({ icon: Icon, label, value }) => (
-                <li key={label}><Icon size={18} strokeWidth={1.4} /><span className="ch-label">{label}</span><span className="ch-value">{value}</span></li>
+                <li key={label}>
+                  <Icon size={18} strokeWidth={1.4} />
+                  <span className="ch-label">{label}</span>
+                  <span className="ch-value">{value}</span>
+                </li>
               ))}
             </ul>
-            <span className="demo-note">All contact details are placeholders until WIZ provides them.</span>
+            <span className="demo-note">
+              All contact details are placeholders until WIZ provides them.
+            </span>
           </div>
-          <figure className="contact-image img-frame reveal"><img src={images.skin} alt="Demo skincare portrait" /></figure>
+          <figure className="contact-image img-frame reveal">
+            <img src={images.skin} alt="Demo skincare portrait" />
+          </figure>
         </div>
       </section>
 
       <section className="visit section-wrap">
-        <div className="map-placeholder" role="img" aria-label="Map placeholder — location to be added">
+        <div
+          className="map-placeholder"
+          role="img"
+          aria-label="Map placeholder — location to be added"
+        >
           <MapPin size={30} strokeWidth={1.2} />
           <p>Map will appear here</p>
           <span>{contact.address}</span>
         </div>
         <div className="visit-copy">
           <span className="overline">Visit us</span>
-          <h2>Location<br /><em>&amp; hours.</em></h2>
-          <p className="visit-address"><MapPin size={16} /> {contact.address}</p>
+          <h2>
+            Location
+            <br />
+            <em>&amp; hours.</em>
+          </h2>
+          <p className="visit-address">
+            <MapPin size={16} /> {contact.address}
+          </p>
           <dl className="hours">
-            {contact.hours.map((h) => <div key={h.day}><dt><Clock size={14} /> {h.day}</dt><dd>{h.time}</dd></div>)}
+            {contact.hours.map((h) => (
+              <div key={h.day}>
+                <dt>
+                  <Clock size={14} /> {h.day}
+                </dt>
+                <dd>{h.time}</dd>
+              </div>
+            ))}
           </dl>
           <EditorialLink to="/booking">Book an appointment</EditorialLink>
         </div>
@@ -66,15 +104,48 @@ function Contact() {
 
       <section className="message-section">
         <div className="section-wrap message-inner">
-          <div><span className="overline">Send a message</span><h2>Write<br /><em>to us.</em></h2></div>
+          <div>
+            <span className="overline">Send a message</span>
+            <h2>
+              Write
+              <br />
+              <em>to us.</em>
+            </h2>
+          </div>
           {sent ? (
-            <div className="form-done" role="status"><h3>Thank you.</h3><p>This is a demo form — messages are not sent yet. Once WIZ's email is connected, your note will reach the salon.</p><button className="btn btn-ink" onClick={() => setSent(false)}>Write another</button></div>
+            <div className="form-done" role="status">
+              <h3>Thank you.</h3>
+              <p>
+                This is a demo form — messages are not sent yet. Once WIZ's email is connected, your
+                note will reach the salon.
+              </p>
+              <button className="btn btn-ink" onClick={() => setSent(false)}>
+                Write another
+              </button>
+            </div>
           ) : (
-            <form className="wiz-form" onSubmit={(e) => { e.preventDefault(); setSent(true); }}>
-              <label>Name<input required name="name" autoComplete="name" /></label>
-              <label>Email or phone<input required name="contact" /></label>
-              <label className="full">Message<textarea required name="message" rows={4} /></label>
-              <button type="submit" className="btn btn-ink">Send message</button>
+            <form
+              className="wiz-form"
+              onSubmit={(e) => {
+                e.preventDefault();
+                setSent(true);
+              }}
+            >
+              <label>
+                Name
+                <input required name="name" autoComplete="name" />
+              </label>
+              <label>
+                Email or phone
+                <input required name="contact" />
+              </label>
+              <label className="full">
+                Message
+                <textarea required name="message" rows={4} />
+              </label>
+              <button type="submit" className="btn btn-ink">
+                Send message
+              </button>
             </form>
           )}
         </div>

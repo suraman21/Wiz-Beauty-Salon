@@ -45,8 +45,18 @@ export const categories: {
     items: [
       { id: "hair-cut", name: "Cut & finish", note: "Demo service name", duration: "Duration TBC" },
       { id: "hair-colour", name: "Colour", note: "Demo service name", duration: "Duration TBC" },
-      { id: "hair-style", name: "Styling & blow-dry", note: "Demo service name", duration: "Duration TBC" },
-      { id: "hair-treatment", name: "Hair treatment", note: "Demo service name", duration: "Duration TBC" },
+      {
+        id: "hair-style",
+        name: "Styling & blow-dry",
+        note: "Demo service name",
+        duration: "Duration TBC",
+      },
+      {
+        id: "hair-treatment",
+        name: "Hair treatment",
+        note: "Demo service name",
+        duration: "Duration TBC",
+      },
     ],
   },
   {
@@ -70,9 +80,24 @@ export const categories: {
     image: makeup,
     alt: "Demo beauty makeup portrait",
     items: [
-      { id: "makeup-day", name: "Everyday look", note: "Demo service name", duration: "Duration TBC" },
-      { id: "makeup-event", name: "Occasion makeup", note: "Demo service name", duration: "Duration TBC" },
-      { id: "makeup-bridal", name: "Bridal makeup", note: "Demo service name", duration: "Duration TBC" },
+      {
+        id: "makeup-day",
+        name: "Everyday look",
+        note: "Demo service name",
+        duration: "Duration TBC",
+      },
+      {
+        id: "makeup-event",
+        name: "Occasion makeup",
+        note: "Demo service name",
+        duration: "Duration TBC",
+      },
+      {
+        id: "makeup-bridal",
+        name: "Bridal makeup",
+        note: "Demo service name",
+        duration: "Duration TBC",
+      },
     ],
   },
   {
@@ -84,8 +109,18 @@ export const categories: {
     alt: "Demo skincare portrait",
     items: [
       { id: "skin-facial", name: "Facial", note: "Demo service name", duration: "Duration TBC" },
-      { id: "skin-brows", name: "Brow shaping", note: "Demo service name", duration: "Duration TBC" },
-      { id: "skin-glow", name: "Glow treatment", note: "Demo service name", duration: "Duration TBC" },
+      {
+        id: "skin-brows",
+        name: "Brow shaping",
+        note: "Demo service name",
+        duration: "Duration TBC",
+      },
+      {
+        id: "skin-glow",
+        name: "Glow treatment",
+        note: "Demo service name",
+        duration: "Duration TBC",
+      },
     ],
   },
 ];
@@ -94,21 +129,70 @@ export const allServices = categories.flatMap((c) =>
   c.items.map((i) => ({ ...i, category: c.name, categoryId: c.id })),
 );
 
-export const galleryWork: { id: string; category: CategoryId; image: string; alt: string; title: string; tall?: boolean }[] = [
-  { id: "g1", category: "hair", image: portrait, alt: "Demo editorial hair portrait", title: "Soft volume", tall: true },
+export const galleryWork: {
+  id: string;
+  category: CategoryId;
+  image: string;
+  alt: string;
+  title: string;
+  tall?: boolean;
+}[] = [
+  {
+    id: "g1",
+    category: "hair",
+    image: portrait,
+    alt: "Demo editorial hair portrait",
+    title: "Soft volume",
+    tall: true,
+  },
   { id: "g2", category: "nails", image: nails, alt: "Demo manicure detail", title: "Quiet polish" },
-  { id: "g3", category: "makeup", image: makeup, alt: "Demo makeup portrait", title: "Evening glow", tall: true },
+  {
+    id: "g3",
+    category: "makeup",
+    image: makeup,
+    alt: "Demo makeup portrait",
+    title: "Evening glow",
+    tall: true,
+  },
   { id: "g4", category: "skin", image: skin, alt: "Demo skincare portrait", title: "Fresh skin" },
-  { id: "g5", category: "hair", image: hair, alt: "Demo hair styling detail", title: "Movement", tall: true },
+  {
+    id: "g5",
+    category: "hair",
+    image: hair,
+    alt: "Demo hair styling detail",
+    title: "Movement",
+    tall: true,
+  },
   { id: "g6", category: "hair", image: after, alt: "Demo styled waves", title: "Long waves" },
-  { id: "g7", category: "makeup", image: hero, alt: "Demo editorial beauty portrait", title: "Lilac mood" },
+  {
+    id: "g7",
+    category: "makeup",
+    image: hero,
+    alt: "Demo editorial beauty portrait",
+    title: "Lilac mood",
+  },
 ];
 
 // Clearly marked sample stories — replace with real, permission-given client words.
 export const stories = [
-  { id: "s1", quote: "A short client story about how their visit felt will appear here.", who: "Client name · placeholder", service: "Hair" },
-  { id: "s2", quote: "Space for a second real client story, shared with their permission.", who: "Client name · placeholder", service: "Makeup" },
-  { id: "s3", quote: "A third story — a few honest words about a WIZ moment.", who: "Client name · placeholder", service: "Nails" },
+  {
+    id: "s1",
+    quote: "A short client story about how their visit felt will appear here.",
+    who: "Client name · placeholder",
+    service: "Hair",
+  },
+  {
+    id: "s2",
+    quote: "Space for a second real client story, shared with their permission.",
+    who: "Client name · placeholder",
+    service: "Makeup",
+  },
+  {
+    id: "s3",
+    quote: "A third story — a few honest words about a WIZ moment.",
+    who: "Client name · placeholder",
+    service: "Nails",
+  },
 ];
 
 // Contact placeholders — every value is to be supplied by WIZ.
