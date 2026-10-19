@@ -21,6 +21,14 @@ export default defineConfig({
     server: {
       host: "0.0.0.0",
       allowedHosts: true,
+      /**
+       * In production the site and the PHP panel share one host, so the booking
+       * page calls /api/v1 directly. `bun dev` runs on another port, so this
+       * forwards those calls to the local PHP server instead.
+       */
+      proxy: {
+        "/api": { target: "http://127.0.0.1:8080", changeOrigin: false },
+      },
     },
   },
 });

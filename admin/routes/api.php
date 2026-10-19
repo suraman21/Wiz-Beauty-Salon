@@ -4,13 +4,23 @@ declare(strict_types=1);
 /**
  * JSON API consumed by the React site.
  *
- * Public read endpoints land here from Phase 2 onward. Nothing is exposed yet,
- * so a request returns a clean 404 rather than an HTML error page.
+ * Only four endpoints are public: the service catalogue, the times a service is
+ * available on one date, the same answer for a run of days, and asking for a
+ * booking. Everything else stays
+ * behind the admin session.
+ *
+ * These paths carry no session cookie, so the dispatcher does not apply CSRF
+ * here; the write endpoint checks the Origin header instead, and both are
+ * validated on the server exactly like the admin forms.
  */
 
+use Wiz\Controllers\Api\BookingApiController;
 use Wiz\Core\App;
 use Wiz\Core\Router;
 
 return static function (Router $router, App $app): void {
-    // Reserved for Phase 2: /api/v1/services, /gallery, /reviews, /settings
+    $router->get('/api/v1/services', [BookingApiController::class, 'services']);
+    $router->get('/api/v1/availability', [BookingApiController::class, 'availability']);
+    $router->get('/api/v1/calendar', [BookingApiController::class, 'calendar']);
+    $router->post('/api/v1/bookings', [BookingApiController::class, 'store']);
 };

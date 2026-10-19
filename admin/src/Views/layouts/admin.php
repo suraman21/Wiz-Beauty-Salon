@@ -28,7 +28,10 @@ $signedIn = $user ?? current_user() ?? [];
         </a>
 
         <p class="nav__heading">Manage</p>
-        <span class="nav__item is-muted">Bookings <em class="pill">Soon</em></span>
+        <a class="nav__item<?= ($active ?? '') === 'bookings' ? ' is-active' : '' ?>" href="/admin/bookings">
+            <span class="nav__dot" aria-hidden="true"></span>
+            Bookings
+        </a>
         <a class="nav__item<?= ($active ?? '') === 'services' ? ' is-active' : '' ?>" href="/admin/services">
             <span class="nav__dot" aria-hidden="true"></span>
             Services
@@ -40,6 +43,10 @@ $signedIn = $user ?? current_user() ?? [];
         <a class="nav__item<?= ($active ?? '') === 'reviews' ? ' is-active' : '' ?>" href="/admin/reviews">
             <span class="nav__dot" aria-hidden="true"></span>
             Reviews
+        </a>
+        <a class="nav__item<?= ($active ?? '') === 'schedule' ? ' is-active' : '' ?>" href="/admin/schedule">
+            <span class="nav__dot" aria-hidden="true"></span>
+            Opening hours
         </a>
         <span class="nav__item is-muted">Messages <em class="pill">Soon</em></span>
 

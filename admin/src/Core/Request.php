@@ -38,10 +38,35 @@ final class Request
             $method,
             self::normalisePath($path),
             $_GET,
-            $_POST,
+            self::body(),
             $_SERVER,
             $_FILES,
         );
+    }
+
+    /**
+     * Form fields, or the decoded JSON body when the client sent JSON.
+     *
+     * @return array<string, mixed>
+     */
+    private static function body(): array
+    {
+        $type = strtolower((string) ($_SERVER['CONTENT_TYPE'] ?? ''));
+
+        if (!str_contains($type, 'application/json')) {
+            return $_POST;
+        }
+
+        $raw = file_get_contents('php://input');
+
+        if (!is_string($raw) || $raw === '') {
+            return [];
+        }
+
+        $decoded = json_decode($raw, true);
+
+        /** @var array<string, mixed> $decoded */
+        return is_array($decoded) ? $decoded : [];
     }
 
     public static function normalisePath(string $path): string

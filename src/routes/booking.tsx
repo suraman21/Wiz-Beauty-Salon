@@ -1,19 +1,21 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { z } from "zod";
 import { SiteLayout } from "@/components/site/SiteChrome";
 import { Button } from "@/components/ui/button";
-import { demoTimes, images, PRICE_PLACEHOLDER } from "@/data/wiz";
+import { images } from "@/data/wiz";
+import { bookingDetailsSchema, findBookableService } from "@/data/services";
 import {
-  serviceCategories,
-  findBookableService,
-  isValidServiceSelection,
-  bookingDetailsSchema,
-  UNDECIDED_SERVICE,
-  UNDECIDED_LABEL,
-  type BookableService,
-} from "@/data/services";
+  BookingError,
+  createBooking,
+  fetchCalendar,
+  fetchServices,
+  formatPrice,
+  isoToday,
+  type ApiService,
+  type CalendarDay,
+} from "@/lib/booking-api";
 
 export const Route = createFileRoute("/booking")({
   validateSearch: (s) => z.object({ service: z.string().optional() }).parse(s),
@@ -38,74 +40,230 @@ export const Route = createFileRoute("/booking")({
 });
 
 const steps = ["Service", "Date", "Time", "Details", "Summary"];
-type Details = { name: string; phone: string; email: string; notes: string };
-type Confirmed = { ref: string; serviceId: string; date: string; time: string; details: Details };
+const CALENDAR_DAYS = 21;
 
-function nextDays(n: number) {
-  const out: Date[] = [];
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  for (let i = 1; out.length < n; i++) {
-    const x = new Date(d);
-    x.setDate(d.getDate() + i);
-    out.push(x);
-  }
-  return out;
-}
+type Details = { name: string; phone: string; email: string; notes: string };
+type Confirmed = {
+  reference: string;
+  serviceId: number;
+  date: string;
+  time: string;
+  details: Details;
+};
+
+const emptyDetails: Details = { name: "", phone: "", email: "", notes: "" };
+
+/** "2026-10-22" → a local Date, so the weekday never shifts by a timezone. */
+const parseIso = (iso: string) => new Date(`${iso}T00:00:00`);
+
 const fmt = (iso: string) =>
-  new Date(iso).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
+  parseIso(iso).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
 
 function Booking() {
   const search = Route.useSearch();
-  const initial = findBookableService(search.service)?.id ?? "";
-  const [step, setStep] = useState(initial ? 1 : 0);
-  const [serviceId, setServiceId] = useState(initial);
-  const [categoryId, setCategoryId] = useState(findBookableService(initial)?.categoryId ?? "");
+  const appliedSearch = useRef(false);
+
+  const [services, setServices] = useState<ApiService[] | null>(null);
+  const [loadError, setLoadError] = useState("");
+  const [category, setCategory] = useState("");
+  const [serviceId, setServiceId] = useState<number | null>(null);
+
+  const [calendar, setCalendar] = useState<CalendarDay[]>([]);
+  const [calendarBusy, setCalendarBusy] = useState(false);
+  const [calendarError, setCalendarError] = useState("");
+
+  const [step, setStep] = useState(0);
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
-  const [details, setDetails] = useState<Details>({ name: "", phone: "", email: "", notes: "" });
+  const [details, setDetails] = useState<Details>(emptyDetails);
+
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
   const [confirmed, setConfirmed] = useState<Confirmed | null>(null);
-  const [cancelled, setCancelled] = useState(false);
-  const [rescheduling, setRescheduling] = useState(false);
-  const days = useMemo(() => nextDays(14), []);
-  const service = findBookableService(serviceId);
-  const selectedCategory = serviceCategories.find((c) => c.id === categoryId);
-  const undecided = serviceId === UNDECIDED_SERVICE;
+
+  const service = useMemo(
+    () => services?.find((s) => s.id === serviceId) ?? null,
+    [services, serviceId],
+  );
+
+  // ---------------------------------------------------------------- catalogue
+  useEffect(() => {
+    const controller = new AbortController();
+
+    fetchServices(controller.signal)
+      .then((list) => {
+        setServices(list);
+        setLoadError("");
+      })
+      .catch((error: unknown) => {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+        setServices([]);
+        setLoadError(
+          error instanceof BookingError
+            ? error.message
+            : "The booking calendar is not available right now.",
+        );
+      });
+
+    return () => controller.abort();
+  }, []);
+
+  // A link from the services page carries the chosen service — by database id,
+  // or by the catalogue id the older pages still use.
+  useEffect(() => {
+    if (!services || appliedSearch.current || !search.service) return;
+
+    appliedSearch.current = true;
+
+    const byId = services.find((s) => String(s.id) === search.service);
+    const catalogueName = findBookableService(search.service)?.name.toLowerCase();
+    const byName = catalogueName
+      ? services.find((s) => s.name.toLowerCase() === catalogueName)
+      : undefined;
+    const match = byId ?? byName;
+
+    if (match) {
+      setServiceId(match.id);
+      setCategory(match.category);
+      setStep(1);
+    }
+    // `services` and `search.service` both settle once; the ref stops re-runs.
+  }, [services, search.service]);
+
+  // ----------------------------------------------------------------- calendar
+  const loadCalendar = useCallback((id: number, signal?: AbortSignal) => {
+    setCalendarBusy(true);
+    setCalendarError("");
+
+    return fetchCalendar(id, isoToday(), CALENDAR_DAYS, signal)
+      .then((days) => setCalendar(days))
+      .catch((error: unknown) => {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+        setCalendar([]);
+        setCalendarError(
+          error instanceof BookingError ? error.message : "We could not load the available times.",
+        );
+      })
+      .finally(() => setCalendarBusy(false));
+  }, []);
+
+  useEffect(() => {
+    if (serviceId === null) return undefined;
+
+    const controller = new AbortController();
+    void loadCalendar(serviceId, controller.signal);
+
+    return () => controller.abort();
+  }, [serviceId, loadCalendar]);
+
+  // ------------------------------------------------------------------ choices
+  const categories = useMemo(() => {
+    const seen: string[] = [];
+
+    for (const s of services ?? []) {
+      if (!seen.includes(s.category)) seen.push(s.category);
+    }
+
+    return seen;
+  }, [services]);
+
+  const visible = useMemo(
+    () => (services ?? []).filter((s) => category === "" || s.category === category),
+    [services, category],
+  );
+
+  const selectedDay = calendar.find((d) => d.date === date) ?? null;
   const validDetails = bookingDetailsSchema.safeParse(details).success;
 
-  const canNext = [
-    isValidServiceSelection(serviceId),
-    !!date,
-    !!time,
-    validDetails,
-    isValidServiceSelection(serviceId) && !!date && !!time && validDetails,
-  ][step];
+  const canContinue =
+    [serviceId !== null, date !== "", time !== "", validDetails, true][step] ?? false;
 
-  const confirm = () => {
-    if (!isValidServiceSelection(serviceId) || !date || !time || !validDetails) return;
-    setConfirmed({
-      ref: confirmed?.ref ?? `WIZ-${Math.random().toString(36).slice(2, 7).toUpperCase()}`,
-      serviceId,
-      date,
-      time,
-      details,
-    });
-    setCancelled(false);
-    setRescheduling(false);
-    setStep(5);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-  const restart = () => {
-    setConfirmed(null);
-    setCancelled(false);
-    setRescheduling(false);
-    setServiceId("");
-    setCategoryId("");
+  const chooseService = (id: number) => {
+    setServiceId(id);
     setDate("");
     setTime("");
-    setDetails({ name: "", phone: "", email: "", notes: "" });
+    setSubmitError("");
+    setStep(1);
+  };
+
+  const chooseDate = (day: CalendarDay) => {
+    if (day.slots.length === 0) return;
+
+    setDate(day.date);
+    setTime("");
+    setStep(2);
+  };
+
+  const submit = async () => {
+    if (serviceId === null || !date || !time) return;
+
+    setSubmitting(true);
+    setSubmitError("");
+
+    try {
+      const result = await createBooking({
+        name: details.name.trim(),
+        phone: details.phone.trim(),
+        email: details.email.trim(),
+        service_id: serviceId,
+        date,
+        time,
+        notes: details.notes.trim(),
+      });
+
+      setConfirmed({ reference: result.reference, serviceId, date, time, details });
+      setStep(5);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (error) {
+      const message =
+        error instanceof BookingError
+          ? error.message
+          : "The request could not be sent. Please try again.";
+
+      setSubmitError(message);
+
+      // A taken slot means the calendar is stale: reload it and send the
+      // customer back to the time step with the message in front of them.
+      if (error instanceof BookingError && error.status === 422) {
+        setTime("");
+        setStep(2);
+        void loadCalendar(serviceId);
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const restart = () => {
+    setConfirmed(null);
+    setSubmitError("");
+    setServiceId(null);
+    setCategory("");
+    setDate("");
+    setTime("");
+    setDetails(emptyDetails);
     setStep(0);
   };
+
+  const heading = (() => {
+    if (step === 5) {
+      return (
+        <>
+          Request
+          <br />
+          <em>received.</em>
+        </>
+      );
+    }
+
+    return (
+      <>
+        Book an
+        <br />
+        <em>appointment.</em>
+      </>
+    );
+  })();
 
   return (
     <SiteLayout>
@@ -116,37 +274,14 @@ function Booking() {
             <span className="overline">Book your moment</span>
             <p>
               Beauty,
-              <br />
-              <em>your way.</em>
+              <br /> <em>your way.</em>
             </p>
           </div>
         </aside>
 
         <div className="booking-panel">
-          <span className="overline">Booking {rescheduling && "· Rescheduling"}</span>
-          <h1>
-            {step === 5 ? (
-              cancelled ? (
-                <>
-                  Demo request
-                  <br />
-                  <em>cancelled.</em>
-                </>
-              ) : (
-                <>
-                  Demo request
-                  <br />
-                  <em>reviewed.</em>
-                </>
-              )
-            ) : (
-              <>
-                Book an
-                <br />
-                <em>appointment.</em>
-              </>
-            )}
-          </h1>
+          <span className="overline">Booking</span>
+          <h1>{heading}</h1>
 
           {step < 5 && (
             <ol className="stepper" aria-label="Booking progress">
@@ -167,117 +302,162 @@ function Booking() {
             </ol>
           )}
 
+          {loadError !== "" && (
+            <p className="step-hint" role="alert">
+              {loadError}
+            </p>
+          )}
+
           <div className="step-body" key={step}>
             {step === 0 && (
               <>
-                <label className={`option ${undecided ? "is-selected" : ""}`}>
-                  <input
-                    type="radio"
-                    name="service"
-                    checked={undecided}
-                    onChange={() => {
-                      setServiceId(UNDECIDED_SERVICE);
-                      setCategoryId("");
-                    }}
-                  />
-                  <span className="opt-name">{UNDECIDED_LABEL}</span>
-                  <span className="opt-meta">Undecided request</span>
-                </label>
-                <div className="wiz-form my-6">
-                  <label className="full">
-                    Category
-                    <select
-                      className="w-full min-w-0 border-b border-input bg-background py-3 text-base font-normal normal-case tracking-normal"
-                      aria-label="Service category"
-                      value={categoryId}
-                      onChange={(e) => {
-                        setCategoryId(e.target.value);
-                        setServiceId("");
-                      }}
-                    >
-                      <option value="">Choose a category</option>
-                      {serviceCategories.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.name} — {c.amharic}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                </div>
-                {selectedCategory && (
-                  <fieldset className="svc-group">
-                    <legend>
-                      {selectedCategory.name}{" "}
-                      <span lang="am" className="block font-sans text-lg">
-                        {selectedCategory.amharic}
-                      </span>
-                    </legend>
-                    {selectedCategory.items.map((i) => (
-                      <label
-                        key={i.id}
-                        className={`option ${serviceId === i.id ? "is-selected" : ""}`}
-                      >
-                        <input
-                          type="radio"
-                          name="service"
-                          checked={serviceId === i.id}
-                          onChange={() => setServiceId(i.id)}
-                        />
-                        <span className="opt-name">{i.name}</span>
-                        <span className="opt-meta">{PRICE_PLACEHOLDER}</span>
+                {services === null && <p className="step-hint">Loading services…</p>}
+
+                {services !== null && services.length === 0 && loadError === "" && (
+                  <p className="step-hint">
+                    Online booking is not open just yet. Please contact the salon and we will find
+                    you a time.
+                  </p>
+                )}
+
+                {services !== null && services.length > 0 && (
+                  <>
+                    <div className="wiz-form my-6">
+                      <label className="full">
+                        Category
+                        <select
+                          className="w-full min-w-0 border-b border-input bg-background py-3 text-base font-normal normal-case tracking-normal"
+                          aria-label="Service category"
+                          value={category}
+                          onChange={(e) => setCategory(e.target.value)}
+                        >
+                          <option value="">All services</option>
+                          {categories.map((c) => (
+                            <option key={c} value={c}>
+                              {c}
+                            </option>
+                          ))}
+                        </select>
                       </label>
-                    ))}
-                  </fieldset>
+                    </div>
+
+                    <fieldset className="svc-group">
+                      <legend>{category === "" ? "All services" : category}</legend>
+                      {visible.map((s) => {
+                        const price = formatPrice(s.price_cents);
+
+                        return (
+                          <label
+                            key={s.id}
+                            className={`option ${serviceId === s.id ? "is-selected" : ""}`}
+                          >
+                            <input
+                              type="radio"
+                              name="service"
+                              checked={serviceId === s.id}
+                              onChange={() => chooseService(s.id)}
+                            />
+                            <span className="opt-name">{s.name}</span>
+                            <span className="opt-meta">{price ?? "Price · to be confirmed"}</span>
+                          </label>
+                        );
+                      })}
+                    </fieldset>
+                  </>
                 )}
               </>
             )}
 
             {step === 1 && (
-              <div className="date-grid" role="radiogroup" aria-label="Choose a date">
-                {days.map((d) => {
-                  const iso = d.toISOString();
-                  return (
-                    <Button
-                      variant="ghost"
+              <>
+                {calendarBusy && <p className="step-hint">Checking the calendar…</p>}
+
+                {calendarError !== "" && (
+                  <p className="step-hint" role="alert">
+                    {calendarError}{" "}
+                    <button
                       type="button"
-                      role="radio"
-                      aria-checked={date === iso}
-                      key={iso}
-                      className={`date-cell h-auto rounded-none ${date === iso ? "is-selected" : ""}`}
-                      onClick={() => {
-                        setDate(iso);
-                        setTime("");
-                      }}
+                      className="editorial-link"
+                      onClick={() => serviceId !== null && void loadCalendar(serviceId)}
                     >
-                      <span>{d.toLocaleDateString("en-GB", { weekday: "short" })}</span>
-                      <strong>{d.getDate()}</strong>
-                      <span>{d.toLocaleDateString("en-GB", { month: "short" })}</span>
-                    </Button>
-                  );
-                })}
-              </div>
+                      Try again
+                    </button>
+                  </p>
+                )}
+
+                {!calendarBusy && calendarError === "" && calendar.length > 0 && (
+                  <>
+                    <div className="date-grid" role="radiogroup" aria-label="Choose a date">
+                      {calendar.map((day) => {
+                        const d = parseIso(day.date);
+                        const free = day.slots.length;
+                        const full = free === 0;
+
+                        return (
+                          <Button
+                            variant="ghost"
+                            type="button"
+                            role="radio"
+                            aria-checked={date === day.date}
+                            aria-disabled={full}
+                            disabled={full}
+                            title={full ? (day.reason ?? "Fully booked") : `${free} times free`}
+                            key={day.date}
+                            className={`date-cell h-auto rounded-none ${date === day.date ? "is-selected" : ""} ${full ? "is-full" : ""}`}
+                            onClick={() => chooseDate(day)}
+                          >
+                            <span>{d.toLocaleDateString("en-GB", { weekday: "short" })}</span>
+                            <strong>{d.getDate()}</strong>
+                            <span>{d.toLocaleDateString("en-GB", { month: "short" })}</span>
+                          </Button>
+                        );
+                      })}
+                    </div>
+                    <span className="demo-note">
+                      Days the salon is closed are shown greyed out. Times are in Addis Ababa time.
+                    </span>
+                  </>
+                )}
+              </>
             )}
 
             {step === 2 && (
               <>
-                <p className="step-hint">{fmt(date)}</p>
-                <div className="time-grid" role="radiogroup" aria-label="Choose a time">
-                  {demoTimes.map((t) => (
-                    <Button
-                      variant="ghost"
-                      type="button"
-                      role="radio"
-                      aria-checked={time === t}
-                      key={t}
-                      className={`chip h-auto rounded-none ${time === t ? "is-active" : ""}`}
-                      onClick={() => setTime(t)}
-                    >
-                      {t}
-                    </Button>
-                  ))}
-                </div>
+                <p className="step-hint">{date && fmt(date)}</p>
+
+                {submitError !== "" && (
+                  <p className="step-hint" role="alert">
+                    {submitError}
+                  </p>
+                )}
+
+                {selectedDay !== null && selectedDay.slots.length > 0 ? (
+                  <div className="time-grid" role="radiogroup" aria-label="Choose a time">
+                    {selectedDay.slots.map((t) => (
+                      <Button
+                        variant="ghost"
+                        type="button"
+                        role="radio"
+                        aria-checked={time === t}
+                        key={t}
+                        className={`chip h-auto rounded-none ${time === t ? "is-active" : ""}`}
+                        onClick={() => setTime(t)}
+                      >
+                        {t}
+                      </Button>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="step-hint">
+                    {date === "" ? "Choose a day first." : "No times are left on that day."}{" "}
+                    <button type="button" className="editorial-link" onClick={() => setStep(1)}>
+                      Pick another day
+                    </button>
+                  </p>
+                )}
+
                 <span className="demo-note">
-                  Demo times — real availability will come from the salon.
+                  Times shown are still free right now. The salon confirms every request.
                 </span>
               </>
             )}
@@ -321,80 +501,48 @@ function Booking() {
                     placeholder="Anything we should know?"
                   />
                 </label>
+                {!validDetails && (details.name !== "" || details.phone !== "") && (
+                  <span className="demo-note full">
+                    Please add your name and a phone number the salon can reach you on.
+                  </span>
+                )}
               </div>
             )}
 
-            {step === 4 && isValidServiceSelection(serviceId) && (
+            {step === 4 && service !== null && (
               <Summary service={service} date={date} time={time} details={details} />
             )}
 
-            {step === 5 &&
-              confirmed &&
-              (() => {
-                const s = findBookableService(confirmed.serviceId);
-                return (
-                  <div className="confirmation" role="status">
-                    {cancelled ? (
-                      <p>
-                        Your demo request <strong>{confirmed.ref}</strong> has been cancelled.
-                      </p>
-                    ) : (
-                      <>
-                        <p className="conf-ref">
-                          Reference <strong>{confirmed.ref}</strong>
-                        </p>
-                        <Summary
-                          service={s}
-                          date={confirmed.date}
-                          time={confirmed.time}
-                          details={confirmed.details}
-                        />
-                        <div className="manage">
-                          <span className="overline">Manage booking</span>
-                          <div className="manage-actions">
-                            <Button
-                              variant="ghost"
-                              type="button"
-                              className="btn btn-outline h-auto rounded-none"
-                              onClick={() => {
-                                setRescheduling(true);
-                                setStep(1);
-                              }}
-                            >
-                              Reschedule
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              type="button"
-                              className="btn btn-outline btn-danger h-auto rounded-none"
-                              onClick={() => setCancelled(true)}
-                            >
-                              Cancel demo request
-                            </Button>
-                          </div>
-                        </div>
-                      </>
-                    )}
-                    <span className="demo-note">
-                      Demo only — this request has not been saved or sent to WIZ. No appointment has
-                      been made.
-                    </span>
-                    <div className="manage-actions">
-                      <Button
-                        variant="ghost"
-                        type="button"
-                        className="btn btn-ink h-auto rounded-none"
-                        onClick={restart}
-                      >
-                        Book another
-                      </Button>
-                      <Link to="/" className="editorial-link">
-                        Back home <ArrowRight size={16} />
-                      </Link>
-                    </div>
-                  </div>
-                );
-              })()}
+            {step === 5 && confirmed !== null && (
+              <div className="confirmation" role="status">
+                <p className="conf-ref">
+                  Reference <strong>{confirmed.reference}</strong>
+                </p>
+                <Summary
+                  service={services?.find((s) => s.id === confirmed.serviceId) ?? null}
+                  date={confirmed.date}
+                  time={confirmed.time}
+                  details={confirmed.details}
+                />
+                <p className="demo-note">
+                  Your request is with the salon. We will call you to confirm the appointment — it
+                  is not booked until we do.
+                </p>
+                <div className="manage-actions">
+                  <Button
+                    variant="ghost"
+                    type="button"
+                    className="btn btn-ink h-auto rounded-none"
+                    onClick={restart}
+                  >
+                    Book another
+                  </Button>
+                  <Link to="/" className="editorial-link">
+                    Back home <ArrowRight size={16} />
+                  </Link>
+                </div>
+              </div>
+            )}
           </div>
 
           {step < 5 && (
@@ -416,7 +564,7 @@ function Booking() {
                   variant="ghost"
                   type="button"
                   className="btn btn-ink h-auto rounded-none"
-                  disabled={!canNext}
+                  disabled={!canContinue}
                   onClick={() => setStep(step + 1)}
                 >
                   Continue <ArrowRight size={16} />
@@ -426,10 +574,10 @@ function Booking() {
                   variant="ghost"
                   type="button"
                   className="btn btn-ink h-auto rounded-none"
-                  disabled={!canNext}
-                  onClick={confirm}
+                  disabled={!canContinue || submitting}
+                  onClick={() => void submit()}
                 >
-                  {rescheduling ? "Review new time" : "Review demo request"} <Check size={16} />
+                  {submitting ? "Sending…" : "Request appointment"} <Check size={16} />
                 </Button>
               )}
             </div>
@@ -446,33 +594,28 @@ function Summary({
   time,
   details,
 }: {
-  service: BookableService | undefined;
+  service: ApiService | null;
   date: string;
   time: string;
   details: Details;
 }) {
+  const price = service === null ? null : formatPrice(service.price_cents);
+
   return (
     <dl className="summary">
       <div>
         <dt>Service</dt>
         <dd>
-          {service?.name ?? UNDECIDED_LABEL}{" "}
-          {service ? (
-            <small>
-              {service.category} — <span lang="am">{service.amharic}</span>
-            </small>
-          ) : (
-            <small>Undecided request</small>
-          )}
+          {service?.name ?? "—"} {service && <small>{service.category}</small>}
         </dd>
       </div>
       <div>
         <dt>Date</dt>
-        <dd>{fmt(date)}</dd>
+        <dd>{date ? fmt(date) : "—"}</dd>
       </div>
       <div>
         <dt>Time</dt>
-        <dd>{time}</dd>
+        <dd>{time || "—"}</dd>
       </div>
       <div>
         <dt>Name</dt>
@@ -490,7 +633,7 @@ function Summary({
       )}
       <div>
         <dt>Price</dt>
-        <dd>{PRICE_PLACEHOLDER}</dd>
+        <dd>{price ?? "Price · to be confirmed"}</dd>
       </div>
     </dl>
   );

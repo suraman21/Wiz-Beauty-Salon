@@ -64,8 +64,10 @@ final class Kernel
                 : new HttpException(405, 'Method not allowed.');
         }
 
-        // CSRF applies to every state-changing request automatically.
-        if ($request->isPost()) {
+        // CSRF applies to every state-changing request automatically — except
+        // on the public JSON API, which carries no session cookie. Cross-site
+        // posts there are rejected by the Origin check inside the endpoint.
+        if ($request->isPost() && !str_starts_with($request->path(), '/api/')) {
             $this->run($this->middleware['csrf'], $request);
         }
 

@@ -9,10 +9,12 @@ declare(strict_types=1);
  */
 
 use Wiz\Controllers\Admin\AuthController;
+use Wiz\Controllers\Admin\BookingController;
 use Wiz\Controllers\Admin\CategoryController;
 use Wiz\Controllers\Admin\DashboardController;
 use Wiz\Controllers\Admin\GalleryController;
 use Wiz\Controllers\Admin\ReviewController;
+use Wiz\Controllers\Admin\ScheduleController;
 use Wiz\Controllers\Admin\ServiceController;
 use Wiz\Core\App;
 use Wiz\Core\Router;
@@ -67,6 +69,21 @@ return static function (Router $router, App $app): void {
 
     // ------------------------------------------------------------- dashboard
     $router->get('/admin', [DashboardController::class, 'index'], ['auth']);
+
+    // -------------------------------------------------------------- bookings
+    $router->get('/admin/bookings', [BookingController::class, 'index'], ['auth']);
+    $router->get('/admin/bookings/new', [BookingController::class, 'create'], ['auth']);
+    $router->post('/admin/bookings', [BookingController::class, 'store'], ['auth']);
+    $router->get('/admin/bookings/{id}', [BookingController::class, 'show'], ['auth']);
+    $router->post('/admin/bookings/{id}/status', [BookingController::class, 'transition'], ['auth']);
+    $router->post('/admin/bookings/{id}/reschedule', [BookingController::class, 'reschedule'], ['auth']);
+    $router->post('/admin/bookings/{id}/notes', [BookingController::class, 'notes'], ['auth']);
+
+    // -------------------------------------------------------------- schedule
+    $router->get('/admin/schedule', [ScheduleController::class, 'index'], ['auth']);
+    $router->post('/admin/schedule/hours', [ScheduleController::class, 'saveHours'], ['auth']);
+    $router->post('/admin/schedule/closures', [ScheduleController::class, 'storeClosure'], ['auth']);
+    $router->post('/admin/schedule/closures/{id}/delete', [ScheduleController::class, 'destroyClosure'], ['auth']);
 
     // -------------------------------------------------------------- services
     // Specific paths are registered before the {id} patterns so the router,

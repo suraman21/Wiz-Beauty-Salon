@@ -15,11 +15,14 @@ declare(strict_types=1);
  */
 
 use Wiz\Controllers\Admin\AuthController;
+use Wiz\Controllers\Admin\BookingController;
 use Wiz\Controllers\Admin\CategoryController;
 use Wiz\Controllers\Admin\DashboardController;
 use Wiz\Controllers\Admin\GalleryController;
 use Wiz\Controllers\Admin\ReviewController;
+use Wiz\Controllers\Admin\ScheduleController;
 use Wiz\Controllers\Admin\ServiceController;
+use Wiz\Controllers\Api\BookingApiController;
 use Wiz\Core\App;
 use Wiz\Core\Auth;
 use Wiz\Core\Config;
@@ -33,14 +36,23 @@ use Wiz\Core\Middleware\CsrfMiddleware;
 use Wiz\Core\Middleware\GuestMiddleware;
 use Wiz\Core\Session;
 use Wiz\Core\View;
+use Wiz\Domain\Booking\SlotCalculator;
 use Wiz\Repositories\ActivityLogRepository;
+use Wiz\Repositories\BookingRepository;
+use Wiz\Repositories\BookingSlotRepository;
+use Wiz\Repositories\BusinessHoursRepository;
 use Wiz\Repositories\CategoryRepository;
+use Wiz\Repositories\ClosureRepository;
+use Wiz\Repositories\RateLimitRepository;
+use Wiz\Repositories\SettingsRepository;
 use Wiz\Repositories\GalleryRepository;
 use Wiz\Repositories\LoginAttemptRepository;
 use Wiz\Repositories\ReviewRepository;
 use Wiz\Repositories\ServiceRepository;
 use Wiz\Repositories\UserRepository;
 use Wiz\Services\AuthService;
+use Wiz\Services\AvailabilityService;
+use Wiz\Services\BookingService;
 use Wiz\Services\Uploader;
 
 $root = dirname(__DIR__);
@@ -95,10 +107,55 @@ $app->singleton(ReviewRepository::class, static fn (App $a): ReviewRepository =>
     $a->get(Database::class),
 ));
 
+$app->singleton(SettingsRepository::class, static fn (App $a): SettingsRepository => new SettingsRepository(
+    $a->get(Database::class),
+));
+
+$app->singleton(BusinessHoursRepository::class, static fn (App $a): BusinessHoursRepository => new BusinessHoursRepository(
+    $a->get(Database::class),
+));
+
+$app->singleton(ClosureRepository::class, static fn (App $a): ClosureRepository => new ClosureRepository(
+    $a->get(Database::class),
+));
+
+$app->singleton(BookingSlotRepository::class, static fn (App $a): BookingSlotRepository => new BookingSlotRepository(
+    $a->get(Database::class),
+));
+
+$app->singleton(BookingRepository::class, static fn (App $a): BookingRepository => new BookingRepository(
+    $a->get(Database::class),
+));
+
+$app->singleton(RateLimitRepository::class, static fn (App $a): RateLimitRepository => new RateLimitRepository(
+    $a->get(Database::class),
+));
+
 // -------------------------------------------------------------- services
 $app->singleton(Auth::class, static fn (App $a): Auth => new Auth(
     $a->get(Session::class),
     $a->get(UserRepository::class),
+));
+
+$app->singleton(SlotCalculator::class, static fn (App $a): SlotCalculator => new SlotCalculator());
+
+$app->singleton(AvailabilityService::class, static fn (App $a): AvailabilityService => new AvailabilityService(
+    $a->get(BusinessHoursRepository::class),
+    $a->get(ClosureRepository::class),
+    $a->get(BookingSlotRepository::class),
+    $a->get(SettingsRepository::class),
+    $a->get(SlotCalculator::class),
+));
+
+$app->singleton(BookingService::class, static fn (App $a): BookingService => new BookingService(
+    $a->get(Database::class),
+    $a->get(BookingRepository::class),
+    $a->get(BookingSlotRepository::class),
+    $a->get(ServiceRepository::class),
+    $a->get(AvailabilityService::class),
+    $a->get(SlotCalculator::class),
+    $a->get(ActivityLogRepository::class),
+    $a->get(Logger::class),
 ));
 
 $app->singleton(AuthService::class, static fn (App $a): AuthService => new AuthService(
@@ -169,6 +226,32 @@ $app->singleton(GalleryController::class, static fn (App $a): GalleryController 
     $a->get(GalleryRepository::class),
     $a->get(Uploader::class),
     $a->get(Session::class),
+));
+
+$app->singleton(BookingController::class, static fn (App $a): BookingController => new BookingController(
+    $a->get(View::class),
+    $a->get(BookingRepository::class),
+    $a->get(ServiceRepository::class),
+    $a->get(AvailabilityService::class),
+    $a->get(BookingService::class),
+    $a->get(Session::class),
+    $a->get(Auth::class),
+));
+
+$app->singleton(ScheduleController::class, static fn (App $a): ScheduleController => new ScheduleController(
+    $a->get(View::class),
+    $a->get(BusinessHoursRepository::class),
+    $a->get(ClosureRepository::class),
+    $a->get(AvailabilityService::class),
+    $a->get(Session::class),
+));
+
+$app->singleton(BookingApiController::class, static fn (App $a): BookingApiController => new BookingApiController(
+    $a->get(AvailabilityService::class),
+    $a->get(BookingService::class),
+    $a->get(ServiceRepository::class),
+    $a->get(RateLimitRepository::class),
+    (string) ($a->config('app.url') ?? ''),
 ));
 
 $app->singleton(ReviewController::class, static fn (App $a): ReviewController => new ReviewController(
