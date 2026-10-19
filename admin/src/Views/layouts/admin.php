@@ -53,9 +53,17 @@ $signedIn = $user ?? current_user() ?? [];
             Messages
         </a>
 
-        <p class="nav__heading">Administration</p>
-        <span class="nav__item is-muted">Team <em class="pill">Soon</em></span>
-        <span class="nav__item is-muted">Settings <em class="pill">Soon</em></span>
+        <?php if (($signedIn['role'] ?? '') === 'admin'): ?>
+            <p class="nav__heading">Administration</p>
+            <a class="nav__item<?= ($active ?? '') === 'team' ? ' is-active' : '' ?>" href="/admin/users">
+                <span class="nav__dot" aria-hidden="true"></span>
+                Team
+            </a>
+            <a class="nav__item<?= ($active ?? '') === 'settings' ? ' is-active' : '' ?>" href="/admin/settings">
+                <span class="nav__dot" aria-hidden="true"></span>
+                Settings
+            </a>
+        <?php endif; ?>
     </nav>
 
     <div class="sidebar__foot">

@@ -110,6 +110,12 @@ if (!function_exists('activity_label')) {
     {
         return match ($action) {
             'auth.login' => 'Signed in',
+            'team.created' => 'Added a team member',
+            'team.updated' => 'Updated a team member',
+            'team.activated' => 'Switched on an account',
+            'team.deactivated' => 'Switched off an account',
+            'settings.mail_updated' => 'Changed email settings',
+            'settings.test_email' => 'Sent a test email',
             'auth.logout' => 'Signed out',
             'auth.password_changed' => 'Changed their password',
             default => ucfirst(str_replace(['.', '_'], ' ', $action)),

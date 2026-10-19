@@ -18,6 +18,8 @@ use Wiz\Controllers\Admin\MessageController;
 use Wiz\Controllers\Admin\ReviewController;
 use Wiz\Controllers\Admin\ScheduleController;
 use Wiz\Controllers\Admin\ServiceController;
+use Wiz\Controllers\Admin\SettingsController;
+use Wiz\Controllers\Admin\UserController;
 use Wiz\Core\App;
 use Wiz\Core\Router;
 use Wiz\Core\Response;
@@ -125,6 +127,21 @@ return static function (Router $router, App $app): void {
     $router->post('/admin/gallery/{id}/toggle', [GalleryController::class, 'toggle'], ['auth']);
     $router->post('/admin/gallery/{id}/delete', [GalleryController::class, 'destroy'], ['auth']);
     $router->post('/admin/gallery/{id}/move', [GalleryController::class, 'move'], ['auth']);
+
+    // ----------------------------------------------------------------- team
+    // Administrators only: these screens decide who else may sign in.
+    $router->get('/admin/users', [UserController::class, 'index'], ['auth', 'admin']);
+    $router->get('/admin/users/new', [UserController::class, 'create'], ['auth', 'admin']);
+    $router->post('/admin/users', [UserController::class, 'store'], ['auth', 'admin']);
+    $router->get('/admin/users/{id}/edit', [UserController::class, 'edit'], ['auth', 'admin']);
+    $router->post('/admin/users/{id}', [UserController::class, 'update'], ['auth', 'admin']);
+    $router->post('/admin/users/{id}/activate', [UserController::class, 'activate'], ['auth', 'admin']);
+    $router->post('/admin/users/{id}/deactivate', [UserController::class, 'deactivate'], ['auth', 'admin']);
+
+    // ------------------------------------------------------------- settings
+    $router->get('/admin/settings', [SettingsController::class, 'index'], ['auth', 'admin']);
+    $router->post('/admin/settings/mail', [SettingsController::class, 'saveMail'], ['auth', 'admin']);
+    $router->post('/admin/settings/test', [SettingsController::class, 'sendTest'], ['auth', 'admin']);
 
     // --------------------------------------------------------------- reviews
     $router->get('/admin/reviews', [ReviewController::class, 'index'], ['auth']);

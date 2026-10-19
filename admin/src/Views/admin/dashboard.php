@@ -81,13 +81,14 @@ $cards = [
             <li class="is-done">Audit trail of every sign-in</li>
             <li class="is-done">Automatic deployment</li>
             <li class="is-done">Services, gallery and reviews</li>
-            <li>Bookings and calendar <em class="pill">Next</em></li>
+            <li class="is-done">Bookings and calendar</li>
             <li class="is-done">Contact form and message inbox</li>
-            <li>Team and settings <em class="pill">Later</em></li>
+            <li class="is-done">Team and email settings</li>
         </ul>
 
         <p class="card__note">
-            The public website is unchanged — these screens only appear here.
+            The website reads bookings, messages and the gallery from this panel, so there is no
+            second copy to keep in step.
         </p>
     </section>
 </div>

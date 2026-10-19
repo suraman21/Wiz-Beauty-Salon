@@ -23,6 +23,8 @@ use Wiz\Controllers\Admin\MessageController;
 use Wiz\Controllers\Admin\ReviewController;
 use Wiz\Controllers\Admin\ScheduleController;
 use Wiz\Controllers\Admin\ServiceController;
+use Wiz\Controllers\Admin\SettingsController;
+use Wiz\Controllers\Admin\UserController;
 use Wiz\Controllers\Api\BookingApiController;
 use Wiz\Controllers\Api\ContentApiController;
 use Wiz\Controllers\Api\MessageApiController;
@@ -57,10 +59,12 @@ use Wiz\Repositories\ServiceRepository;
 use Wiz\Repositories\UserRepository;
 use Wiz\Core\Mailer;
 use Wiz\Services\AuthService;
+use Wiz\Services\TeamService;
 use Wiz\Services\AvailabilityService;
 use Wiz\Services\BookingService;
 use Wiz\Services\BookingNotifier;
 use Wiz\Services\Uploader;
+use Wiz\Support\MailSettings;
 use Wiz\Support\SignedLink;
 
 $root = dirname(__DIR__);
@@ -185,8 +189,14 @@ $app->singleton(SignedLink::class, static fn (App $a): SignedLink => new SignedL
     (string) ($a->config('app.key') ?? ''),
 ));
 
-$app->singleton(Mailer::class, static fn (App $a): Mailer => new Mailer(
+$app->singleton(MailSettings::class, static fn (App $a): MailSettings => new MailSettings(
+    $a->get(SettingsRepository::class),
     is_array($a->config('mail')) ? $a->config('mail') : [],
+    (string) ($a->config('app.key') ?? ''),
+));
+
+$app->singleton(Mailer::class, static fn (App $a): Mailer => new Mailer(
+    $a->get(MailSettings::class)->config(),
     $a->basePath('storage/logs'),
 ));
 
@@ -196,7 +206,7 @@ $app->singleton(BookingNotifier::class, static fn (App $a): BookingNotifier => n
     $a->get(SignedLink::class),
     $a->get(Logger::class),
     (string) ($a->config('app.url') ?? ''),
-    (string) ($a->config('mail.salon_email') ?? $a->config('mail.from_email') ?? ''),
+    $a->get(MailSettings::class)->salonEmail(),
     (string) ($a->config('app.name') ?? 'WIZ Beauty Salon'),
 ));
 
@@ -313,7 +323,30 @@ $app->singleton(MessageApiController::class, static fn (App $a): MessageApiContr
     $a->get(RateLimitRepository::class),
     $a->get(Mailer::class),
     (string) ($a->config('app.url') ?? ''),
-    (string) ($a->config('mail.salon_email') ?? $a->config('mail.from_email') ?? ''),
+    $a->get(MailSettings::class)->salonEmail(),
+));
+
+$app->singleton(TeamService::class, static fn (App $a): TeamService => new TeamService(
+    $a->get(UserRepository::class),
+    $a->get(ActivityLogRepository::class),
+));
+
+$app->singleton(UserController::class, static fn (App $a): UserController => new UserController(
+    $a->get(View::class),
+    $a->get(UserRepository::class),
+    $a->get(TeamService::class),
+    $a->get(Auth::class),
+    $a->get(Session::class),
+));
+
+$app->singleton(SettingsController::class, static fn (App $a): SettingsController => new SettingsController(
+    $a->get(View::class),
+    $a->get(MailSettings::class),
+    $a->get(Mailer::class),
+    $a->get(RateLimitRepository::class),
+    $a->get(ActivityLogRepository::class),
+    $a->get(Auth::class),
+    $a->get(Session::class),
 ));
 
 $app->singleton(ReviewController::class, static fn (App $a): ReviewController => new ReviewController(

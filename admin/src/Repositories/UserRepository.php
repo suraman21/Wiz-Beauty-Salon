@@ -38,6 +38,23 @@ final class UserRepository
         );
     }
 
+    /**
+     * Any account with this email, active or not — used to keep addresses
+     * unique before the database has to say so.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function findByEmail(string $email): ?array
+    {
+        return $this->db->first(
+            'SELECT id, name, email, role, is_active, last_login_at, created_at
+               FROM users
+              WHERE email = :email
+              LIMIT 1',
+            [':email' => mb_strtolower(trim($email))],
+        );
+    }
+
     /** @return array<string, mixed>|null */
     public function findById(int $id): ?array
     {
@@ -76,6 +93,19 @@ final class UserRepository
         $this->db->execute(
             'UPDATE users SET last_login_at = NOW() WHERE id = :id',
             [':id' => $id],
+        );
+    }
+
+    public function updateProfile(int $id, string $name, string $email, string $role): void
+    {
+        $this->db->execute(
+            'UPDATE users SET name = :name, email = :email, role = :role WHERE id = :id',
+            [
+                ':id' => $id,
+                ':name' => trim($name),
+                ':email' => mb_strtolower(trim($email)),
+                ':role' => $role,
+            ],
         );
     }
 

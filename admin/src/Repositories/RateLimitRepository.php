@@ -22,7 +22,11 @@ final class RateLimitRepository
      */
     public function attempt(string $bucket, int $limit, int $windowMinutes): bool
     {
-        $row = $this->db->first('SELECT hits, window_start FROM rate_limits WHERE bucket = :bucket', [':bucket' => $bucket]);
+        $row = $this->db->first(
+            'SELECT hits, (window_start < (NOW() - INTERVAL :window MINUTE)) AS is_expired
+               FROM rate_limits WHERE bucket = :bucket',
+            [':bucket' => $bucket, ':window' => $windowMinutes],
+        );
 
         if ($row === null) {
             $this->db->execute(
@@ -33,10 +37,7 @@ final class RateLimitRepository
             return $limit >= 1;
         }
 
-        $started = strtotime((string) $row['window_start']);
-        $expired = $started === false || $started < time() - ($windowMinutes * 60);
-
-        if ($expired) {
+        if ((int) $row['is_expired'] === 1) {
             $this->db->execute(
                 'UPDATE rate_limits SET hits = 1, window_start = NOW() WHERE bucket = :bucket',
                 [':bucket' => $bucket],
@@ -52,6 +53,24 @@ final class RateLimitRepository
         );
 
         return $hits <= $limit;
+    }
+
+    /**
+     * How many attempts are left in the current window, without counting one.
+     */
+    public function remaining(string $bucket, int $limit, int $windowMinutes): int
+    {
+        $row = $this->db->first(
+            'SELECT hits, (window_start < (NOW() - INTERVAL :window MINUTE)) AS is_expired
+               FROM rate_limits WHERE bucket = :bucket',
+            [':bucket' => $bucket, ':window' => $windowMinutes],
+        );
+
+        if ($row === null || (int) $row['is_expired'] === 1) {
+            return $limit;
+        }
+
+        return max(0, $limit - (int) $row['hits']);
     }
 
     /**

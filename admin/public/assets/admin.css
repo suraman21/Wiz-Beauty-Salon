@@ -1488,3 +1488,71 @@ a.nav__item:hover { background: rgba(255, 255, 255, .06); color: #fff; }
 
     .upload-form { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* ---------------------------------------------------------------- team ---- */
+.person { display: flex; align-items: center; gap: 10px; }
+
+.avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 30px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #f0e8de;
+    color: var(--brand-dark);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .02em;
+}
+
+.person .cell-title, .person .cell-sub { display: block; }
+
+.row-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+}
+
+.row-actions form { margin: 0; }
+
+.toolbar__count .cell-sub { display: block; }
+
+.role-choice { display: grid; gap: 8px; }
+
+.role-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 11px 13px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    cursor: pointer;
+}
+
+.role-option:hover { border-color: var(--line-strong); background: #fdfcfa; }
+
+.role-option input { margin-top: 2px; accent-color: var(--brand); }
+
+.role-option strong { display: block; font-size: 13.5px; color: var(--ink); }
+
+.role-option .cell-sub { display: block; }
+
+.role-option:has(input:checked) {
+    border-color: var(--accent);
+    box-shadow: inset 0 0 0 1px var(--accent);
+    background: #fdfaf6;
+}
+
+fieldset.field { border: 0; padding: 0; margin: 0 0 18px; }
+
+fieldset.field legend {
+    padding: 0;
+    margin-bottom: 7px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ink-soft);
+}
