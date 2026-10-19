@@ -1,27 +1,14 @@
-# Dependencies (installed from composer.lock)
-/vendor/
-
-# Secrets and environment
+# Local configuration — credentials never enter the repository
 .env
-.env.*
-!.env.example
 
-# Runtime data
-/storage/logs/*
-!/storage/logs/.gitkeep
-/storage/cache/*
-!/storage/cache/.gitkeep
-/storage/sessions/*
-!/storage/sessions/.gitkeep
-/storage/uploads/*
-!/storage/uploads/.gitkeep
-/storage/backups/*
-!/storage/backups/.gitkeep
+# Runtime state
+storage/logs/*.log
+storage/sessions/*
+storage/cache/*
+storage/uploads/*
+storage/backups/*
 
-# Local tooling
+# Composer
+/vendor/
+.phpunit.cache/
 .phpunit.result.cache
-.phpstan-cache/
-.idea/
-.vscode/
-.DS_Store
-Thumbs.db

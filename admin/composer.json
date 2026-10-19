@@ -21,7 +21,10 @@
     "autoload": {
         "psr-4": {
             "Wiz\\": "src/"
-        }
+        },
+        "files": [
+            "src/Support/helpers.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {
@@ -40,7 +43,9 @@
             "@analyse",
             "@unit",
             "@security"
-        ]
+        ],
+        "db:seed": "php database/seed.php",
+        "db:rollback": "php database/migrate.php rollback"
     },
     "config": {
         "allow-plugins": false,

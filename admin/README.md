@@ -1,71 +1,62 @@
-# WIZ — Admin Panel & API
+# WIZ Beauty Salon — admin panel
 
-Plain PHP 8.4 application. No framework, no ORM, no template engine.
+Plain PHP 8.4 and MariaDB. No framework, no ORM, no template engine. The public
+website stays React; this folder powers `/admin` and, from Phase 2, `/api/v1`.
 
-Powers the staff admin panel at `/admin` and the JSON API at `/api/v1` that the
-React site consumes. The public site itself is the separate React project
-(`Wiz-Beauty-Salon`), served as static files from the same domain.
-
-## Requirements
-
-- PHP 8.2+ (production: 8.4)
-- MariaDB 10.6+ / MySQL 8+
-- Extensions: `pdo_mysql`, `gd`, `mbstring`, `json`, `sodium`, `fileinfo`
-- Composer 2
-
-## Setup
-
-```sh
-composer install
-cp .env.example .env      # then fill in DB credentials and APP_KEY
-chmod 600 .env
-php database/migrate.php migrate
+```
+admin/
+├── bootstrap/        autoloader + service container
+├── config/           app, database, mail defaults (read from .env)
+├── database/         migrations, migrate.php, seed.php
+├── public/           front controller + assets (only public/ would ever be web-facing)
+├── routes/           admin.php, api.php
+├── src/
+│   ├── Controllers/  one class per screen
+│   ├── Core/         App, Router, Request, Response, View, Session, Csrf, ...
+│   ├── Database/     migration contract
+│   ├── Domain/       enums shared with the public API
+│   ├── Repositories/ every SQL statement lives here
+│   ├── Services/     rules that span more than one repository
+│   ├── Support/      helper functions used by templates
+│   └── Views/        plain PHP templates
+├── storage/          logs, sessions, cache, uploads (never committed)
+└── tests/            PHPUnit
 ```
 
-Generate the application key once:
+## First run
 
-```sh
-php -r "echo base64_encode(random_bytes(32)), PHP_EOL;"
+```bash
+cp .env.example .env
+chmod 600 .env          # fill in DB_* first
+
+composer install                                   # optional: dev tools only
+php database/migrate.php migrate                   # create the schema
+php database/seed.php "Your Name" you@example.com  # creates the administrator
+php -S 127.0.0.1:8080 -t public public/index.php    # http://127.0.0.1:8080/admin
 ```
 
-## Layout
+Without Composer the app still boots — `bootstrap/autoload.php` falls back to a
+PSR-4 loader. Composer is needed only for PHPStan and PHPUnit.
 
-| Path | Purpose |
-|---|---|
-| `src/Core` | Infrastructure: router, request/response, DB, session, CSRF, validation, auth |
-| `src/Domain` | Enums and value objects — pure PHP, no I/O |
-| `src/Contracts` | Repository interfaces |
-| `src/Repositories` | PDO implementations of those contracts |
-| `src/Services` | Business rules; the only place that may combine repositories |
-| `src/Controllers/Admin` | Server-rendered admin pages (session auth) |
-| `src/Controllers/Api` | JSON endpoints consumed by the React site |
-| `src/Requests` | Input validation objects |
-| `src/Views` | PHP templates |
-| `config` | Configuration arrays backed by `.env` |
-| `database` | Versioned migrations and the CLI runner |
-| `deploy` | Files re-applied to the docroot on every React deploy |
-| `public` | The only web-exposed folder — front controller only |
-| `storage` | Logs, cache, sessions, private uploads, DB backups |
+## Checks
 
-## Rules
-
-- Controllers never write SQL. Services never build HTML.
-- Prepared statements only. No string-interpolated SQL.
-- Every output in a template goes through `e()` unless deliberately raw.
-- Schema changes are migrations, never manual edits in phpMyAdmin.
-- `.env` never enters git; `vendor/` is installed from `composer.lock`.
-
-## Quality gates
-
-```sh
-composer lint       # php -l on all files
-composer analyse    # PHPStan
-composer unit       # PHPUnit
-composer security   # composer audit
-composer quality    # all of the above
+```bash
+composer lint      # php -l on every file
+composer analyse   # PHPStan level 6
+composer unit      # PHPUnit
+composer quality   # all of the above, plus composer audit
 ```
 
-## Deployment
+CI runs the same suite on every push, plus the migrations against a real
+MariaDB 11.4 instance.
 
-Code lives at `/home/arkeonet/wiz-app` (outside the webroot). See
-`WIZ-DEPLOYMENT.md` for the full procedure.
+## Conventions
+
+- Controllers do not touch SQL; they call repositories and services.
+- Every `POST` is CSRF-checked by the dispatcher, not per route.
+- Values reach templates through `e()`. A template that emits raw HTML does so
+  deliberately and says why.
+- Tables are created with `utf8mb4_unicode_ci` explicitly — the database default
+  on this server is `latin1`.
+- Secrets live in `.env`, outside the webroot, `chmod 600`. Nothing sensitive is
+  written to the log: `Logger` redacts known key names.

@@ -20,6 +20,7 @@ DOCROOT="/home/arkeonet/wiz.arkeonethiopia.com"
 APPDIR="/home/arkeonet/wiz-app"
 BRANCH="deploy"
 LOCK="/tmp/wiz-deploy.lock"
+PHP_BIN="/opt/cpanel/ea-php84/root/usr/bin/php"
 
 log() { printf '[%s] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*"; }
 fail() { log "ERROR: $*"; exit 1; }
@@ -97,6 +98,18 @@ rsync -a --delete \
     --exclude 'vendor/' \
     "$REPO_DIR/admin/" "$APPDIR/"
 
+# ---------------------------------------------------------------- runtime state
+# These live outside the release: rsync must never own them.
+mkdir -p "$APPDIR/storage/logs" "$APPDIR/storage/sessions" "$APPDIR/storage/cache" \
+         "$APPDIR/storage/uploads" "$APPDIR/storage/backups"
+chmod 775 "$APPDIR/storage"
+chmod 775 "$APPDIR/storage/logs" "$APPDIR/storage/sessions" "$APPDIR/storage/cache" \
+          "$APPDIR/storage/uploads" "$APPDIR/storage/backups"
+
+if [ ! -f "$APPDIR/.env" ]; then
+    log "WARNING: $APPDIR/.env is missing — /admin cannot reach the database"
+fi
+
 # ---------------------------------------------------------------- site (public)
 rsync -a --delete \
     --exclude 'index.php' \
@@ -134,9 +147,14 @@ if [ -f "$BLOCK" ]; then
 fi
 
 # ---------------------------------------------------------------- migrations
-if [ -f "$APPDIR/database/migrate.php" ] && [ -f "$APPDIR/vendor/autoload.php" ]; then
-    ( cd "$APPDIR" && /opt/cpanel/ea-php84/root/usr/bin/php database/migrate.php migrate ) \
-        || fail "migrations failed"
+MIGRATION_FAILED=0
+if [ -f "$APPDIR/database/migrate.php" ]; then
+    if ( cd "$APPDIR" && "$PHP_BIN" database/migrate.php migrate ); then
+        log "migrations: up to date"
+    else
+        log "ERROR: migrations failed — /admin may be serving an older schema"
+        MIGRATION_FAILED=1
+    fi
 fi
 
 # ---------------------------------------------------------------- health check
@@ -159,3 +177,7 @@ else
 fi
 
 log "done — $(cat "$REPO_DIR/RELEASE" 2>/dev/null || echo "$REMOTE_SHA")"
+
+if [ "$MIGRATION_FAILED" -ne 0 ]; then
+    exit 1
+fi

@@ -1,0 +1,24 @@
+<?php
+declare(strict_types=1);
+
+use Wiz\Core\Env;
+
+return [
+    'name' => Env::get('APP_NAME', 'WIZ Beauty Salon'),
+    'env' => Env::get('APP_ENV', 'production'),
+    'debug' => Env::bool('APP_DEBUG', false),
+    'url' => rtrim(Env::get('APP_URL', 'https://wiz.arkeonethiopia.com') ?? '', '/'),
+    'timezone' => Env::get('APP_TIMEZONE', 'Africa/Addis_Ababa'),
+    'key' => Env::get('APP_KEY', ''),
+
+    'session_name' => Env::get('SESSION_NAME', 'wiz_admin'),
+    'session_lifetime' => Env::int('SESSION_LIFETIME', 7200),
+    'session_secure' => Env::bool('SESSION_SECURE', true),
+    'session_path' => dirname(__DIR__) . '/storage/sessions',
+
+    'upload_max_bytes' => Env::int('UPLOAD_MAX_BYTES', 5 * 1024 * 1024),
+
+    // Failed logins allowed per email/IP inside the window.
+    'login_max_attempts' => Env::int('LOGIN_MAX_ATTEMPTS', 5),
+    'login_lockout_minutes' => Env::int('LOGIN_LOCKOUT_MINUTES', 15),
+];

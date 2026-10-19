@@ -55,11 +55,19 @@ jobs:
   # PHP admin: syntax, static analysis, tests, dependency audit
   # ---------------------------------------------------------------------
   admin:
-    name: Admin — syntax, PHPStan, PHPUnit, audit
+    name: Admin — syntax, PHPStan, PHPUnit, migrations, audit
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: admin
+    env:
+      # The app reads configuration from .env; in CI the same values arrive as
+      # process environment variables, which Env::get() falls back to.
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_NAME: wiz_test
+      DB_USER: wiz
+      DB_PASS: wiz
 
     services:
       mariadb:
@@ -99,20 +107,23 @@ jobs:
 
       - name: Static analysis
         run: composer analyse
-        continue-on-error: true
 
       - name: Tests
         run: composer unit
-        env:
-          DB_HOST: 127.0.0.1
-          DB_PORT: 3306
-          DB_NAME: wiz_test
-          DB_USER: wiz
-          DB_PASS: wiz
+
+      - name: Migrate against the real database
+        run: |
+          php database/migrate.php migrate
+          php database/migrate.php status
+          php database/migrate.php migrate   # must be a no-op the second time
+
+      - name: Seed the first administrator
+        run: |
+          php database/seed.php "CI Administrator" ci@example.test "ci-password-123"
+          php database/seed.php "CI Administrator" ci@example.test "ci-password-123" --force
 
       - name: Dependency audit
         run: composer audit --locked --no-interaction
-        continue-on-error: true
 
   # ---------------------------------------------------------------------
   # Security: dependency and secret scanning across both stacks
