@@ -1,19 +1,22 @@
 import { Link } from "@tanstack/react-router";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ArrowRight, Menu, X } from "lucide-react";
 import logo from "@/assets/wiz-logo.png.asset.json";
 import { contact, nav } from "@/data/wiz";
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
+  const logoRef = useRef<HTMLImageElement>(null);
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
+    const logoImage = logoRef.current;
+    if (logoImage?.complete && logoImage.naturalWidth === 0) logoImage.hidden = true;
     return () => { document.body.style.overflow = ""; };
   }, [open]);
   return (
     <header className="site-header">
       <Link to="/" aria-label="WIZ Beauty Salon home" className="brand-mark" onClick={() => setOpen(false)}>
-        <img src={logo.url} alt="" />
+        <img ref={logoRef} src={logo.url} alt="" onError={(event) => { event.currentTarget.hidden = true; }} />
         <span>WIZ <small>BEAUTY SALON</small></span>
       </Link>
       <nav className="desktop-nav" aria-label="Main navigation">

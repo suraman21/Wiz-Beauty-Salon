@@ -570,3 +570,1188 @@
 @media (prefers-reduced-motion: reduce) { .btn, .masonry-item, .step-body, .lightbox { animation: none; transition: none; } }
 @media (max-width: 900px) { .booking-page { min-height: 0; align-content: start; } }
 @media (max-width: 600px) { .nav-book { white-space: nowrap; padding: 12px 14px; gap: 6px; } }
+
+/* Responsive layout refinement: keep the WIZ palette and editorial typography. */
+:root {
+  --site-gutter: clamp(1.25rem, 4vw, 2.75rem);
+  --site-max-width: 82rem;
+  --site-header-height: 5rem;
+}
+
+html {
+  scroll-padding-top: var(--site-header-height);
+}
+
+body {
+  min-width: 320px;
+}
+
+.home-page {
+  overflow-x: clip;
+}
+
+.section-wrap {
+  width: min(var(--site-max-width), calc(100% - var(--site-gutter) - var(--site-gutter)));
+}
+
+.site-header {
+  height: var(--site-header-height);
+  padding-inline: max(var(--site-gutter), calc((100vw - var(--site-max-width)) / 2));
+  gap: clamp(1rem, 2vw, 2rem);
+  z-index: 40;
+}
+
+.brand-mark {
+  min-width: 0;
+  text-decoration: none;
+}
+
+.brand-mark img {
+  width: 2.875rem;
+  height: 2.875rem;
+}
+
+.desktop-nav {
+  gap: clamp(1rem, 2.2vw, 2.25rem);
+}
+
+.header-actions {
+  flex: none;
+}
+
+.menu-button {
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  border: 1px solid var(--border);
+  background: transparent;
+}
+
+.mobile-nav {
+  top: var(--site-header-height);
+}
+
+.home-hero {
+  height: min(48rem, calc(100svh - var(--site-header-height)));
+  min-height: 39rem;
+  max-height: none;
+}
+
+.home-hero-image {
+  object-position: 65% center;
+}
+
+.home-hero-shade {
+  background: linear-gradient(90deg, color-mix(in oklab, var(--plum-dark) 78%, transparent) 0%, color-mix(in oklab, var(--plum-dark) 48%, transparent) 43%, transparent 78%);
+}
+
+.hero-content {
+  width: min(var(--site-max-width), calc(100% - var(--site-gutter) - var(--site-gutter)));
+  left: max(var(--site-gutter), calc((100vw - var(--site-max-width)) / 2));
+  top: 48%;
+  transform: none;
+}
+
+.home-hero h1 {
+  max-width: 11ch;
+  font-size: clamp(4.25rem, 7.4vw, 7.5rem);
+  line-height: 0.88;
+}
+
+.hero-copy {
+  max-width: 27rem;
+}
+
+.hero-actions {
+  gap: clamp(1rem, 2.5vw, 2rem);
+  flex-wrap: wrap;
+}
+
+.hero-scroll {
+  left: max(var(--site-gutter), calc((100vw - var(--site-max-width)) / 2));
+}
+
+.hero-image-note {
+  right: max(var(--site-gutter), calc((100vw - var(--site-max-width)) / 2));
+}
+
+.intro-section {
+  padding-block: clamp(5rem, 9vw, 8rem);
+  gap: clamp(2rem, 5vw, 4.5rem);
+}
+
+.intro-main h2,
+.section-heading h2,
+.transformation-copy h2,
+.booking-inner h2 {
+  font-size: clamp(3.25rem, 6vw, 5.75rem);
+  line-height: 0.98;
+}
+
+.intro-bottom {
+  gap: clamp(1.5rem, 4vw, 3.5rem);
+}
+
+.services-section,
+.gallery-section,
+.transformation-section,
+.booking-section {
+  padding-block: clamp(4.75rem, 8vw, 7.5rem);
+}
+
+.section-heading {
+  margin-bottom: clamp(2rem, 4.5vw, 3.5rem);
+}
+
+.services-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(1.5rem, 3vw, 2.5rem);
+}
+
+.service-hair {
+  grid-row: auto;
+}
+
+.service-hair .service-image,
+.service-nails .service-image,
+.service-makeup .service-image,
+.service-skin .service-image {
+  aspect-ratio: 1.15 / 1;
+}
+
+.service-makeup,
+.service-skin {
+  margin-top: 0;
+}
+
+.service-skin {
+  grid-column: auto;
+}
+
+.service-caption {
+  gap: 1rem;
+}
+
+.service-caption h3 {
+  font-size: clamp(1.85rem, 3vw, 2.75rem);
+}
+
+.gallery-composition {
+  height: clamp(30rem, 58vw, 46rem);
+  gap: clamp(0.75rem, 1.7vw, 1.5rem);
+}
+
+.transformation-inner {
+  grid-template-columns: minmax(15rem, 0.75fr) minmax(0, 1.25fr);
+  gap: clamp(2.5rem, 7vw, 6rem);
+}
+
+.booking-inner {
+  padding-inline: 1rem;
+}
+
+.site-footer {
+  padding-top: clamp(3.5rem, 7vw, 5.5rem);
+}
+
+.footer-top {
+  padding-bottom: clamp(3rem, 6vw, 5rem);
+}
+
+/* Interior pages */
+.page-hero {
+  padding-block: clamp(3rem, 6vw, 5.5rem);
+}
+
+.page-hero-inner {
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: clamp(2rem, 6vw, 5rem);
+}
+
+.page-hero h1,
+.contact-hero h1 {
+  font-size: clamp(3.75rem, 7vw, 7rem);
+  line-height: 0.96;
+}
+
+.page-hero h1 {
+  margin-top: 1.25rem;
+}
+
+.page-hero p {
+  margin-top: 1.5rem;
+  max-width: 34rem;
+  font-size: 1rem;
+  line-height: 1.75;
+}
+
+.page-hero-image {
+  aspect-ratio: 1.08 / 1;
+  max-height: 35rem;
+}
+
+.filter-bar {
+  gap: 0.65rem;
+  padding-block: 2rem 1rem;
+  scrollbar-width: thin;
+  scrollbar-color: var(--lilac-deep) transparent;
+}
+
+.filter-bar .chip {
+  min-height: 2.75rem;
+}
+
+.svc-cat {
+  padding-block: clamp(3.5rem, 7vw, 5.75rem);
+}
+
+.svc-cat-inner {
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: clamp(2rem, 6vw, 5rem);
+}
+
+.svc-cat-image {
+  aspect-ratio: 1 / 1.12;
+  max-height: 38rem;
+}
+
+.svc-cat-body h2 {
+  font-size: clamp(3rem, 5.4vw, 5.25rem);
+  line-height: 0.98;
+}
+
+.svc-items {
+  margin-block: 1.75rem 1rem;
+}
+
+.svc-items li {
+  gap: 1rem;
+  padding-block: 1rem;
+}
+
+.svc-items h3 {
+  font-size: clamp(1.35rem, 2.2vw, 1.8rem);
+}
+
+.svc-book {
+  min-height: 2.75rem;
+  padding-inline: 1rem;
+}
+
+.story,
+.featured,
+.more-work,
+.stories,
+.visit,
+.message-section {
+  padding-block: clamp(4rem, 8vw, 7rem);
+}
+
+.story-lead {
+  max-width: 58rem;
+  font-size: clamp(2.5rem, 4.6vw, 4.375rem);
+}
+
+.story-cols {
+  gap: clamp(1.5rem, 4vw, 3.5rem);
+  margin-top: clamp(2rem, 4vw, 3.5rem);
+}
+
+.about-split {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.about-split figure {
+  min-height: 0;
+  aspect-ratio: 1 / 1;
+}
+
+.about-split-copy {
+  padding: clamp(2.5rem, 6vw, 6rem);
+}
+
+.featured-grid {
+  grid-template-rows: repeat(2, minmax(15rem, 1fr));
+  min-height: 38rem;
+  gap: clamp(0.75rem, 1.8vw, 1.5rem);
+}
+
+.masonry {
+  columns: initial;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
+  gap: clamp(0.75rem, 1.8vw, 1.5rem);
+}
+
+.masonry-item {
+  margin: 0;
+}
+
+.stories-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(1.5rem, 4vw, 3.5rem);
+}
+
+.contact-hero {
+  padding-block: clamp(3.5rem, 7vw, 6rem);
+}
+
+.contact-grid {
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: clamp(2rem, 6vw, 5rem);
+}
+
+.channels li {
+  grid-template-columns: 1.5rem minmax(6rem, 7rem) minmax(0, 1fr);
+  gap: 0.75rem;
+}
+
+.visit {
+  grid-template-columns: minmax(0, 1.15fr) minmax(16rem, 0.85fr);
+  gap: clamp(2rem, 6vw, 5rem);
+}
+
+.message-inner {
+  grid-template-columns: minmax(14rem, 0.8fr) minmax(0, 1.2fr);
+  gap: clamp(2rem, 6vw, 5rem);
+}
+
+/* Booking and shared controls */
+.booking-page {
+  grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.22fr);
+  min-height: min(54rem, calc(100svh - var(--site-header-height)));
+}
+
+.booking-panel {
+  padding: clamp(2.5rem, 5vw, 4.5rem) clamp(1.5rem, 5vw, 5rem);
+}
+
+.booking-panel h1 {
+  font-size: clamp(3.25rem, 5.5vw, 5.375rem);
+  line-height: 0.98;
+}
+
+.booking-visual-copy {
+  left: max(var(--site-gutter), calc((100vw - var(--site-max-width)) / 2));
+  bottom: clamp(2rem, 5vw, 3.5rem);
+}
+
+.stepper {
+  gap: 0.5rem;
+}
+
+.stepper li {
+  min-width: 0;
+}
+
+.btn,
+.chip,
+.date-cell,
+.stepper button,
+.option,
+.lb-btn {
+  min-height: 2.75rem;
+}
+
+.wiz-form input,
+.wiz-form textarea {
+  min-height: 2.75rem;
+}
+
+.step-nav {
+  margin-top: 2rem;
+}
+
+.home-page a:focus-visible,
+.home-page button:focus-visible,
+.home-page input:focus-visible,
+.home-page select:focus-visible,
+.home-page textarea:focus-visible {
+  outline: 2px solid var(--orchid);
+  outline-offset: 3px;
+}
+
+@media (max-width: 1024px) {
+  :root {
+    --site-header-height: 4.5rem;
+  }
+
+  .site-header {
+    padding-inline: var(--site-gutter);
+  }
+
+  .desktop-nav {
+    display: none;
+  }
+
+  .menu-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .mobile-nav {
+    position: fixed;
+    inset: var(--site-header-height) 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: clamp(1.25rem, 5vw, 2.5rem) var(--site-gutter) max(2rem, env(safe-area-inset-bottom));
+    background: var(--background);
+    box-shadow: 0 1rem 2rem color-mix(in oklab, var(--ink) 12%, transparent);
+  }
+
+  .mobile-nav a:not(.mobile-book) {
+    min-height: 3.75rem;
+    padding-block: 0.75rem;
+    font-size: clamp(1.65rem, 4vw, 2rem);
+  }
+
+  .mobile-nav .mobile-book {
+    min-height: 3.25rem;
+    margin-top: 1.5rem;
+  }
+
+  .page-hero-inner,
+  .svc-cat-inner,
+  .contact-grid,
+  .visit,
+  .message-inner {
+    gap: clamp(1.75rem, 4vw, 3rem);
+  }
+
+  .booking-page {
+    grid-template-columns: minmax(15rem, 0.7fr) minmax(0, 1.3fr);
+  }
+
+  .booking-panel {
+    padding-inline: clamp(1.5rem, 4vw, 3rem);
+  }
+}
+
+@media (max-width: 760px) {
+  :root {
+    --site-gutter: 1.375rem;
+    --site-header-height: 4.25rem;
+  }
+
+  .site-header {
+    gap: 0.75rem;
+  }
+
+  .brand-mark {
+    gap: 0.5rem;
+  }
+
+  .brand-mark img {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+
+  .brand-mark span {
+    font-size: 1.55rem;
+  }
+
+  .brand-mark small {
+    font-size: 0.42rem;
+  }
+
+  .header-actions {
+    gap: 0.5rem;
+  }
+
+  .nav-book {
+    min-height: 2.75rem;
+    padding: 0.65rem 0.8rem;
+    font-size: 0.625rem;
+    letter-spacing: 0.08em;
+  }
+
+  .menu-button {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+
+  .home-hero {
+    height: min(48rem, calc(100svh - var(--site-header-height)));
+    min-height: 38rem;
+  }
+
+  .home-hero-image {
+    object-position: 78% center;
+  }
+
+  .home-hero-shade {
+    background: linear-gradient(0deg, color-mix(in oklab, var(--plum-dark) 90%, transparent) 0%, color-mix(in oklab, var(--plum-dark) 60%, transparent) 52%, color-mix(in oklab, var(--plum-dark) 12%, transparent) 100%);
+  }
+
+  .hero-content {
+    top: auto;
+    bottom: clamp(4.5rem, 12vh, 6.5rem);
+    left: var(--site-gutter);
+  }
+
+  .home-hero h1 {
+    max-width: 9ch;
+    font-size: clamp(3.6rem, 12vw, 5.75rem);
+  }
+
+  .hero-overline {
+    margin-bottom: 1rem;
+  }
+
+  .hero-copy {
+    max-width: 22rem;
+    margin-top: 1.25rem;
+    font-size: 0.9rem;
+  }
+
+  .hero-actions {
+    align-items: flex-start;
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  .hero-actions .btn {
+    white-space: normal;
+  }
+
+  .hero-scroll {
+    bottom: 1.25rem;
+    left: var(--site-gutter);
+  }
+
+  .hero-image-note {
+    right: var(--site-gutter);
+    bottom: 1.4rem;
+    font-size: 0.55rem;
+  }
+
+  .intro-section {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+    padding-block: 4.5rem;
+  }
+
+  .intro-line {
+    display: none;
+  }
+
+  .intro-main h2,
+  .section-heading h2,
+  .transformation-copy h2,
+  .booking-inner h2 {
+    font-size: clamp(2.75rem, 9vw, 4.25rem);
+  }
+
+  .intro-bottom {
+    display: grid;
+    justify-items: start;
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+  }
+
+  .intro-bottom p {
+    font-size: 0.95rem;
+  }
+
+  .section-heading {
+    display: grid;
+    justify-items: start;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .section-heading .overline {
+    margin-bottom: 1rem;
+  }
+
+  .section-heading > p {
+    max-width: 32rem;
+    margin: 0;
+  }
+
+  .services-section,
+  .gallery-section,
+  .transformation-section,
+  .booking-section {
+    padding-block: 4.5rem;
+  }
+
+  .services-grid {
+    gap: 1.5rem 1rem;
+  }
+
+  .service-caption {
+    gap: 0.5rem;
+    padding-block: 0.75rem;
+  }
+
+  .service-caption h3 {
+    font-size: clamp(1.45rem, 6vw, 2rem);
+  }
+
+  .service-caption p {
+    font-size: 0.7rem;
+    line-height: 1.45;
+  }
+
+  .service-caption svg {
+    width: 1rem;
+    flex: none;
+  }
+
+  .service-index {
+    font-size: 0.55rem;
+  }
+
+  .service-end,
+  .gallery-end {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  .gallery-composition {
+    height: clamp(23rem, 108vw, 34rem);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr);
+    grid-template-rows: minmax(0, 1.1fr) minmax(0, 0.9fr);
+    gap: 0.65rem;
+  }
+
+  .gallery-one {
+    grid-row: 1 / 3;
+  }
+
+  .gallery-two {
+    grid-column: 2;
+  }
+
+  .gallery-three {
+    grid-column: 2;
+  }
+
+  .gallery-word {
+    left: 20%;
+    bottom: 4%;
+    font-size: clamp(7.5rem, 28vw, 11rem);
+  }
+
+  .transformation-inner {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2rem;
+  }
+
+  .transformation-copy h2,
+  .transformation-copy p {
+    margin-top: 1.25rem;
+  }
+
+  .transformation-copy .editorial-link {
+    margin-top: 1.5rem;
+  }
+
+  .comparison {
+    aspect-ratio: 1 / 0.82;
+  }
+
+  .booking-inner h2 {
+    margin-top: 1.25rem;
+  }
+
+  .booking-inner p {
+    max-width: 32rem;
+    line-height: 1.7;
+  }
+
+  .footer-top {
+    display: grid;
+    justify-items: start;
+    gap: 1.5rem;
+    padding-bottom: 2.5rem;
+  }
+
+  .footer-top p {
+    font-size: clamp(3.5rem, 12vw, 5rem);
+  }
+
+  .footer-top .btn {
+    margin: 0;
+  }
+
+  .footer-bottom {
+    display: grid;
+    gap: 1.5rem;
+    padding-block: 1.5rem 2rem;
+  }
+
+  .footer-bottom nav {
+    gap: 0.25rem 1.25rem;
+  }
+
+  .footer-contact {
+    margin: 0;
+  }
+
+  .footer-last {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .page-hero {
+    padding-block: 3.5rem;
+  }
+
+  .page-hero-inner {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.75rem;
+  }
+
+  .page-hero h1,
+  .contact-hero h1 {
+    font-size: clamp(3.5rem, 12vw, 5.5rem);
+    line-height: 0.98;
+  }
+
+  .page-hero p {
+    margin-top: 1.25rem;
+    font-size: 0.95rem;
+  }
+
+  .page-hero-image {
+    aspect-ratio: 1.45 / 1;
+    max-height: 26rem;
+  }
+
+  .filter-bar {
+    width: 100%;
+    gap: 0.5rem;
+    padding: 1.25rem var(--site-gutter) 0.75rem;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scroll-snap-type: x proximity;
+  }
+
+  .filter-bar .chip {
+    min-height: 2.75rem;
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+  }
+
+  .svc-cat {
+    padding-block: 3.5rem;
+  }
+
+  .svc-cat-inner {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.5rem;
+  }
+
+  .svc-flip .svc-cat-image {
+    order: 0;
+  }
+
+  .svc-cat-image {
+    aspect-ratio: 1.55 / 1;
+    max-height: 23rem;
+  }
+
+  .svc-cat-body h2 {
+    margin-top: 0.75rem;
+    font-size: clamp(2.75rem, 10vw, 4rem);
+  }
+
+  .svc-items {
+    margin-top: 1.5rem;
+  }
+
+  .svc-items li {
+    gap: 0.75rem;
+    padding-block: 0.85rem;
+  }
+
+  .svc-items h3 {
+    font-size: clamp(1.2rem, 5vw, 1.5rem);
+  }
+
+  .svc-items li > div > span {
+    display: inline-block;
+    margin-top: 0.25rem;
+    font-size: 0.68rem;
+  }
+
+  .svc-book {
+    min-height: 2.75rem;
+    gap: 0.35rem;
+    padding-inline: 0.75rem;
+    font-size: 0.625rem;
+  }
+
+  .story,
+  .featured,
+  .more-work,
+  .stories,
+  .visit,
+  .message-section {
+    padding-block: 4rem;
+  }
+
+  .story-lead {
+    margin-top: 1.25rem;
+    font-size: clamp(2.25rem, 8.5vw, 3.5rem);
+  }
+
+  .story-cols {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+    margin-top: 1.75rem;
+    font-size: 0.95rem;
+  }
+
+  .about-split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .about-split figure {
+    aspect-ratio: 1.45 / 1;
+  }
+
+  .about-split-copy {
+    padding: 2.25rem var(--site-gutter) 3rem;
+  }
+
+  .about-split ol {
+    margin-block: 1.25rem 2rem;
+  }
+
+  .about-split li {
+    gap: 1rem;
+    padding-block: 1rem;
+  }
+
+  .about-split h3 {
+    font-size: 1.8rem;
+  }
+
+  .featured-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: minmax(14rem, 1.2fr) minmax(10rem, 0.8fr);
+    min-height: 0;
+    gap: 0.65rem;
+  }
+
+  .f-a {
+    grid-row: auto;
+    grid-column: 1 / -1;
+  }
+
+  .featured-grid figcaption {
+    left: 0.5rem;
+    bottom: 0.5rem;
+    max-width: calc(100% - 1rem);
+    padding: 0.5rem 0.65rem;
+    font-size: 0.65rem;
+  }
+
+  .more-work .section-heading {
+    margin-bottom: 0;
+  }
+
+  .masonry {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem;
+    margin-top: 1.25rem;
+  }
+
+  .masonry-item {
+    min-width: 0;
+  }
+
+  .masonry-item span {
+    left: 0.65rem;
+    bottom: 0.65rem;
+    font-size: 1.1rem;
+  }
+
+  .stories-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.75rem;
+    margin-block: 1.5rem;
+  }
+
+  .contact-hero {
+    padding-block: 3.5rem;
+  }
+
+  .contact-grid,
+  .visit,
+  .message-inner {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2rem;
+  }
+
+  .contact-lead {
+    margin-top: 1.25rem;
+  }
+
+  .channels {
+    margin-top: 1.5rem;
+  }
+
+  .channels li {
+    grid-template-columns: 1.5rem minmax(5.5rem, 7rem) minmax(0, 1fr);
+    gap: 0.65rem;
+    padding-block: 0.9rem;
+  }
+
+  .contact-image {
+    aspect-ratio: 1.45 / 1;
+  }
+
+  .map-placeholder {
+    aspect-ratio: 1.35 / 1;
+  }
+
+  .visit h2,
+  .message-section h2 {
+    font-size: clamp(2.75rem, 10vw, 4.25rem);
+  }
+
+  .hours {
+    margin-bottom: 1.75rem;
+  }
+
+  .wiz-form {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.25rem;
+  }
+
+  .wiz-form .full {
+    grid-column: auto;
+  }
+
+  .booking-page {
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 0;
+  }
+
+  .booking-visual {
+    height: clamp(11rem, 44vw, 17rem);
+  }
+
+  .booking-visual img {
+    object-position: center 42%;
+  }
+
+  .booking-visual-copy {
+    left: var(--site-gutter);
+    bottom: 1.25rem;
+  }
+
+  .booking-visual-copy p {
+    margin-top: 0.5rem;
+    font-size: clamp(2.5rem, 9vw, 3.5rem);
+  }
+
+  .booking-panel {
+    padding: 2.25rem var(--site-gutter) 3rem;
+  }
+
+  .booking-panel h1 {
+    margin-top: 0.75rem;
+    font-size: clamp(2.9rem, 10vw, 4.25rem);
+  }
+
+  .stepper {
+    gap: 0.35rem;
+    margin-block: 1.75rem 1.5rem;
+  }
+
+  .stepper button {
+    gap: 0.35rem;
+    padding-top: 0.6rem;
+    font-size: 0.58rem;
+    letter-spacing: 0.035em;
+  }
+
+  .stepper button span {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+
+  .step-body {
+    min-height: 0;
+  }
+
+  .option {
+    gap: 0.75rem;
+    padding: 0.85rem 0.75rem;
+  }
+
+  .opt-name {
+    font-size: 0.9rem;
+  }
+
+  .opt-meta {
+    font-size: 0.68rem;
+  }
+
+  .date-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+
+  .date-cell {
+    min-width: 0;
+    padding: 0.7rem 0.25rem;
+  }
+
+  .date-cell strong {
+    font-size: 1.6rem;
+  }
+
+  .summary div {
+    gap: 0.75rem;
+    padding-block: 0.75rem;
+  }
+
+  .manage {
+    padding: 1.25rem;
+  }
+
+  .manage-actions {
+    gap: 0.75rem;
+  }
+
+  .step-nav {
+    margin-top: 1.5rem;
+    padding-top: 1.25rem;
+  }
+
+  .step-nav .btn {
+    padding-inline: 1rem;
+    white-space: normal;
+  }
+
+  .lightbox {
+    padding: 4.5rem 0.75rem 5.5rem;
+  }
+
+  .lb-btn {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+
+  .lb-close {
+    top: 0.75rem;
+    right: 0.75rem;
+  }
+}
+
+@media (max-width: 380px) {
+  :root {
+    --site-gutter: 1.125rem;
+  }
+
+  .nav-book {
+    padding-inline: 0.65rem;
+    font-size: 0.58rem;
+  }
+
+  .nav-book svg {
+    width: 0.8rem;
+  }
+
+  .brand-mark img {
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+
+  .brand-mark span {
+    font-size: 1.4rem;
+  }
+
+  .home-hero h1 {
+    font-size: clamp(3.25rem, 12vw, 4rem);
+  }
+
+  .hero-actions {
+    gap: 0.75rem;
+  }
+
+  .hero-actions .btn {
+    padding-inline: 0.85rem;
+    font-size: 0.62rem;
+  }
+
+  .service-caption {
+    align-items: flex-start;
+  }
+
+  .service-caption h3 {
+    font-size: 1.35rem;
+  }
+
+  .stepper button {
+    font-size: 0;
+    justify-content: center;
+  }
+
+  .stepper .is-current {
+    flex: 2.2;
+  }
+
+  .stepper .is-current button {
+    justify-content: flex-start;
+    font-size: 0.62rem;
+  }
+
+  .channels li {
+    grid-template-columns: 1.25rem minmax(4.75rem, 5.5rem) minmax(0, 1fr);
+    gap: 0.5rem;
+    font-size: 0.8rem;
+  }
+
+  .hours div {
+    align-items: flex-start;
+    font-size: 0.8rem;
+  }
+
+  .date-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .summary div {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .summary dd {
+    text-align: left;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .reveal,
+  .reveal-up,
+  .masonry-item,
+  .step-body,
+  .lightbox {
+    animation: none;
+  }
+
+  .img-frame img,
+  .editorial-link,
+  .desktop-nav a,
+  .btn,
+  .chip {
+    transition: none;
+  }
+}
