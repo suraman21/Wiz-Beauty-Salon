@@ -19,10 +19,12 @@ use Wiz\Controllers\Admin\BookingController;
 use Wiz\Controllers\Admin\CategoryController;
 use Wiz\Controllers\Admin\DashboardController;
 use Wiz\Controllers\Admin\GalleryController;
+use Wiz\Controllers\Admin\MessageController;
 use Wiz\Controllers\Admin\ReviewController;
 use Wiz\Controllers\Admin\ScheduleController;
 use Wiz\Controllers\Admin\ServiceController;
 use Wiz\Controllers\Api\BookingApiController;
+use Wiz\Controllers\Api\MessageApiController;
 use Wiz\Controllers\PublicBookingController;
 use Wiz\Core\App;
 use Wiz\Core\Auth;
@@ -44,6 +46,7 @@ use Wiz\Repositories\BookingSlotRepository;
 use Wiz\Repositories\BusinessHoursRepository;
 use Wiz\Repositories\CategoryRepository;
 use Wiz\Repositories\ClosureRepository;
+use Wiz\Repositories\MessageRepository;
 use Wiz\Repositories\RateLimitRepository;
 use Wiz\Repositories\SettingsRepository;
 use Wiz\Repositories\GalleryRepository;
@@ -128,6 +131,10 @@ $app->singleton(BookingSlotRepository::class, static fn (App $a): BookingSlotRep
 ));
 
 $app->singleton(BookingRepository::class, static fn (App $a): BookingRepository => new BookingRepository(
+    $a->get(Database::class),
+));
+
+$app->singleton(MessageRepository::class, static fn (App $a): MessageRepository => new MessageRepository(
     $a->get(Database::class),
 ));
 
@@ -286,6 +293,20 @@ $app->singleton(PublicBookingController::class, static fn (App $a): PublicBookin
     $a->get(AvailabilityService::class),
     $a->get(SignedLink::class),
     $a->get(Session::class),
+));
+
+$app->singleton(MessageController::class, static fn (App $a): MessageController => new MessageController(
+    $a->get(View::class),
+    $a->get(MessageRepository::class),
+    $a->get(Session::class),
+));
+
+$app->singleton(MessageApiController::class, static fn (App $a): MessageApiController => new MessageApiController(
+    $a->get(MessageRepository::class),
+    $a->get(RateLimitRepository::class),
+    $a->get(Mailer::class),
+    (string) ($a->config('app.url') ?? ''),
+    (string) ($a->config('mail.salon_email') ?? $a->config('mail.from_email') ?? ''),
 ));
 
 $app->singleton(ReviewController::class, static fn (App $a): ReviewController => new ReviewController(

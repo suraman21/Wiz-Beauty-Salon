@@ -14,6 +14,7 @@ use Wiz\Controllers\Admin\BookingController;
 use Wiz\Controllers\Admin\CategoryController;
 use Wiz\Controllers\Admin\DashboardController;
 use Wiz\Controllers\Admin\GalleryController;
+use Wiz\Controllers\Admin\MessageController;
 use Wiz\Controllers\Admin\ReviewController;
 use Wiz\Controllers\Admin\ScheduleController;
 use Wiz\Controllers\Admin\ServiceController;
@@ -86,6 +87,12 @@ return static function (Router $router, App $app): void {
     $router->post('/admin/bookings/{id}/status', [BookingController::class, 'transition'], ['auth']);
     $router->post('/admin/bookings/{id}/reschedule', [BookingController::class, 'reschedule'], ['auth']);
     $router->post('/admin/bookings/{id}/notes', [BookingController::class, 'notes'], ['auth']);
+
+    // -------------------------------------------------------------- messages
+    $router->get('/admin/messages', [MessageController::class, 'index'], ['auth']);
+    $router->post('/admin/messages/read-all', [MessageController::class, 'readAll'], ['auth']);
+    $router->post('/admin/messages/{id}/toggle', [MessageController::class, 'toggle'], ['auth']);
+    $router->post('/admin/messages/{id}/delete', [MessageController::class, 'destroy'], ['auth']);
 
     // -------------------------------------------------------------- schedule
     $router->get('/admin/schedule', [ScheduleController::class, 'index'], ['auth']);

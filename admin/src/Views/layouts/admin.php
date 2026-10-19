@@ -48,7 +48,10 @@ $signedIn = $user ?? current_user() ?? [];
             <span class="nav__dot" aria-hidden="true"></span>
             Opening hours
         </a>
-        <span class="nav__item is-muted">Messages <em class="pill">Soon</em></span>
+        <a class="nav__item<?= ($active ?? '') === 'messages' ? ' is-active' : '' ?>" href="/admin/messages">
+            <span class="nav__dot" aria-hidden="true"></span>
+            Messages
+        </a>
 
         <p class="nav__heading">Administration</p>
         <span class="nav__item is-muted">Team <em class="pill">Soon</em></span>

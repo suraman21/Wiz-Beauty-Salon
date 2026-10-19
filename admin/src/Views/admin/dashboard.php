@@ -82,7 +82,8 @@ $cards = [
             <li class="is-done">Automatic deployment</li>
             <li class="is-done">Services, gallery and reviews</li>
             <li>Bookings and calendar <em class="pill">Next</em></li>
-            <li>Messages, team and settings <em class="pill">Later</em></li>
+            <li class="is-done">Contact form and message inbox</li>
+            <li>Team and settings <em class="pill">Later</em></li>
         </ul>
 
         <p class="card__note">

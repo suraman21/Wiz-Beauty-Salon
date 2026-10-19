@@ -1,8 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { Clock, Mail, MapPin, MessageCircle, Phone, Instagram, Music2 } from "lucide-react";
 import { EditorialLink, SiteLayout } from "@/components/site/SiteChrome";
 import { contact, images } from "@/data/wiz";
+import { ApiError } from "@/lib/api";
+import { sendMessage } from "@/lib/contact-api";
 
 export const Route = createFileRoute("/contact")({
   head: () => ({
@@ -33,8 +35,40 @@ const channels = [
   { icon: Music2, label: "TikTok", value: contact.tiktok },
 ];
 
+type FormState = { name: string; contact: string; message: string };
+
+const emptyForm: FormState = { name: "", contact: "", message: "" };
+
 function Contact() {
+  const [form, setForm] = useState<FormState>(emptyForm);
   const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState("");
+
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (sending) return;
+
+    setSending(true);
+    setError("");
+
+    try {
+      await sendMessage({
+        name: form.name.trim(),
+        contact: form.contact.trim(),
+        message: form.message.trim(),
+      });
+      setSent(true);
+      setForm(emptyForm);
+    } catch (err) {
+      setError(
+        err instanceof ApiError ? err.message : "The message could not be sent. Please try again.",
+      );
+    } finally {
+      setSending(false);
+    }
+  };
   return (
     <SiteLayout>
       <section className="contact-hero">
@@ -116,35 +150,53 @@ function Contact() {
             <div className="form-done" role="status">
               <h3>Thank you.</h3>
               <p>
-                This is a demo form — messages are not sent yet. Once WIZ's email is connected, your
-                note will reach the salon.
+                Your message is with the salon. We will get back to you by email or phone — usually
+                the same day.
               </p>
               <button className="btn btn-ink" onClick={() => setSent(false)}>
                 Write another
               </button>
             </div>
           ) : (
-            <form
-              className="wiz-form"
-              onSubmit={(e) => {
-                e.preventDefault();
-                setSent(true);
-              }}
-            >
+            <form className="wiz-form" onSubmit={(e) => void submit(e)}>
               <label>
                 Name
-                <input required name="name" autoComplete="name" />
+                <input
+                  required
+                  name="name"
+                  autoComplete="name"
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                />
               </label>
               <label>
                 Email or phone
-                <input required name="contact" />
+                <input
+                  required
+                  name="contact"
+                  value={form.contact}
+                  onChange={(e) => setForm({ ...form, contact: e.target.value })}
+                />
               </label>
               <label className="full">
                 Message
-                <textarea required name="message" rows={4} />
+                <textarea
+                  required
+                  name="message"
+                  rows={4}
+                  value={form.message}
+                  onChange={(e) => setForm({ ...form, message: e.target.value })}
+                />
               </label>
-              <button type="submit" className="btn btn-ink">
-                Send message
+
+              {error !== "" && (
+                <p className="form-error full" role="alert">
+                  {error}
+                </p>
+              )}
+
+              <button type="submit" className="btn btn-ink" disabled={sending}>
+                {sending ? "Sending…" : "Send message"}
               </button>
             </form>
           )}

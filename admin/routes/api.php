@@ -4,7 +4,7 @@ declare(strict_types=1);
 /**
  * JSON API consumed by the React site.
  *
- * Only four endpoints are public: the service catalogue, the times a service is
+ * Only five endpoints are public: the service catalogue, the times a service is
  * available on one date, the same answer for a run of days, and asking for a
  * booking. Everything else stays
  * behind the admin session.
@@ -15,6 +15,7 @@ declare(strict_types=1);
  */
 
 use Wiz\Controllers\Api\BookingApiController;
+use Wiz\Controllers\Api\MessageApiController;
 use Wiz\Core\App;
 use Wiz\Core\Router;
 
@@ -23,4 +24,5 @@ return static function (Router $router, App $app): void {
     $router->get('/api/v1/availability', [BookingApiController::class, 'availability']);
     $router->get('/api/v1/calendar', [BookingApiController::class, 'calendar']);
     $router->post('/api/v1/bookings', [BookingApiController::class, 'store']);
+    $router->post('/api/v1/messages', [MessageApiController::class, 'store']);
 };

@@ -6,13 +6,11 @@ import { SiteLayout } from "@/components/site/SiteChrome";
 import { Button } from "@/components/ui/button";
 import { images } from "@/data/wiz";
 import { bookingDetailsSchema, findBookableService } from "@/data/services";
+import { ApiError, formatPrice, isoToday } from "@/lib/api";
 import {
-  BookingError,
   createBooking,
   fetchCalendar,
   fetchServices,
-  formatPrice,
-  isoToday,
   type ApiService,
   type CalendarDay,
 } from "@/lib/booking-api";
@@ -101,7 +99,7 @@ function Booking() {
         if (error instanceof DOMException && error.name === "AbortError") return;
         setServices([]);
         setLoadError(
-          error instanceof BookingError
+          error instanceof ApiError
             ? error.message
             : "The booking calendar is not available right now.",
         );
@@ -143,7 +141,7 @@ function Booking() {
         if (error instanceof DOMException && error.name === "AbortError") return;
         setCalendar([]);
         setCalendarError(
-          error instanceof BookingError ? error.message : "We could not load the available times.",
+          error instanceof ApiError ? error.message : "We could not load the available times.",
         );
       })
       .finally(() => setCalendarBusy(false));
@@ -225,7 +223,7 @@ function Booking() {
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (error) {
       const message =
-        error instanceof BookingError
+        error instanceof ApiError
           ? error.message
           : "The request could not be sent. Please try again.";
 
@@ -233,7 +231,7 @@ function Booking() {
 
       // A taken slot means the calendar is stale: reload it and send the
       // customer back to the time step with the message in front of them.
-      if (error instanceof BookingError && error.status === 422) {
+      if (error instanceof ApiError && error.status === 422) {
         setTime("");
         setStep(2);
         void loadCalendar(serviceId);

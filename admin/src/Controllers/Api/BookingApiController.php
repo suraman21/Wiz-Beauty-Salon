@@ -11,6 +11,7 @@ use Wiz\Repositories\RateLimitRepository;
 use Wiz\Repositories\ServiceRepository;
 use Wiz\Services\AvailabilityService;
 use Wiz\Services\BookingService;
+use Wiz\Support\Origin;
 use Wiz\Support\SignedLink;
 
 /**
@@ -134,7 +135,7 @@ final class BookingApiController
      */
     public function store(Request $request, array $params = []): Response
     {
-        $this->assertSameOrigin($request);
+        Origin::assertSame($request, $this->appOrigin);
 
         $ip = $request->ip();
 
@@ -208,27 +209,5 @@ final class BookingApiController
             'manage_url' => $token === null ? null : rtrim($this->appOrigin, '/') . '/booking/manage/' . $token,
             'message' => 'Thank you. The salon will confirm your appointment shortly.',
         ], 201);
-    }
-
-    /**
-     * A browser sends Origin on every cross-site POST. If it names another site,
-     * the request did not come from the salon's own pages, whatever the body
-     * says. Requests without an Origin (curl, server-to-server) are allowed:
-     * they cannot ride a visitor's cookies because this endpoint has none.
-     */
-    private function assertSameOrigin(Request $request): void
-    {
-        $origin = $request->header('Origin');
-
-        if ($origin === null || $origin === '' || $this->appOrigin === '') {
-            return;
-        }
-
-        $allowed = parse_url($this->appOrigin, PHP_URL_HOST);
-        $given = parse_url($origin, PHP_URL_HOST);
-
-        if (!is_string($allowed) || !is_string($given) || strcasecmp($given, $allowed) !== 0) {
-            throw HttpException::forbidden('Requests must come from the salon website.');
-        }
     }
 }

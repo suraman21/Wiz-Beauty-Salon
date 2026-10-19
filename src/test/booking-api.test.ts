@@ -1,11 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import {
-  BookingError,
-  createBooking,
-  fetchCalendar,
-  fetchServices,
-  formatPrice,
-} from "@/lib/booking-api";
+import { ApiError, formatPrice } from "@/lib/api";
+import { createBooking, fetchCalendar, fetchServices } from "@/lib/booking-api";
 
 const jsonResponse = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -110,7 +105,7 @@ describe("booking API client", () => {
         notes: "",
       }),
     ).rejects.toMatchObject({
-      name: "BookingError",
+      name: "ApiError",
       status: 422,
       message: "That time is no longer available. Please choose another.",
     });
@@ -119,7 +114,7 @@ describe("booking API client", () => {
   it("explains a dead connection in words a customer understands", async () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("failed to fetch")));
 
-    await expect(fetchServices()).rejects.toBeInstanceOf(BookingError);
+    await expect(fetchServices()).rejects.toBeInstanceOf(ApiError);
     await expect(fetchServices()).rejects.toThrow(/could not reach the salon/i);
   });
 
