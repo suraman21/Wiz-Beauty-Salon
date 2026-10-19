@@ -83,9 +83,29 @@ rsync -a --delete \
     --exclude 'uploads/' \
     "$REPO_DIR/site/" "$DOCROOT/"
 
-# ---------------------------------------------------------------- front controller + rules
-install -m 0644 "$APPDIR/deploy/index.php" "$DOCROOT/index.php" 2>/dev/null || true
-install -m 0644 "$APPDIR/deploy/htaccess"  "$DOCROOT/.htaccess" 2>/dev/null || true
+# ---------------------------------------------------------------- front controller
+install -m 0644 "$APPDIR/deploy/index.php" "$DOCROOT/index.php"
+
+# ---------------------------------------------------------------- rewrite rules
+# Merge our block into the existing .htaccess instead of replacing it: cPanel
+# writes PHP handler directives there and must keep them.
+HT="$DOCROOT/.htaccess"
+BLOCK="$APPDIR/deploy/htaccess"
+if [ -f "$BLOCK" ]; then
+    if [ -f "$HT" ] && grep -q '# BEGIN WIZ APP' "$HT"; then
+        # strip the previous block, keep everything else
+        awk '/^# BEGIN WIZ APP$/{skip=1} !skip{print} /^# END WIZ APP$/{skip=0}' "$HT" > "$HT.tmp"
+        cat "$BLOCK" >> "$HT.tmp"
+    elif [ -f "$HT" ]; then
+        cat "$HT" > "$HT.tmp"
+        printf '\n' >> "$HT.tmp"
+        cat "$BLOCK" >> "$HT.tmp"
+    else
+        cat "$BLOCK" > "$HT.tmp"
+    fi
+    mv "$HT.tmp" "$HT"
+    chmod 644 "$HT"
+fi
 
 # ---------------------------------------------------------------- migrations
 if [ -f "$APPDIR/database/migrate.php" ] && [ -f "$APPDIR/vendor/autoload.php" ]; then
