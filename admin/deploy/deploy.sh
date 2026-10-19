@@ -59,12 +59,17 @@ fi
 
 # ---------------------------------------------------------------- self-update
 # The release ships the current version of this script; adopt it so a stale
-# local copy can never hold the pipeline back. Safe: the running process keeps
-# its own inode.
+# local copy can never hold the pipeline back. The swap is a rename, so the
+# running process keeps executing the file it started with.
 if [ -f "$REPO_DIR/admin/deploy/deploy.sh" ] && \
    ! cmp -s "$REPO_DIR/admin/deploy/deploy.sh" "$REPO_DIR/deploy.sh"; then
-    cp "$REPO_DIR/admin/deploy/deploy.sh" "$REPO_DIR/deploy.sh"
-    chmod +x "$REPO_DIR/deploy.sh"
+    # Replace by rename, never in place: `cp` over a running script rewrites the
+    # same inode, and bash reads its own source as it executes — the run then
+    # dies at a random line with a quoting error. A rename gives the new file a
+    # new inode, so the running shell keeps reading the old one in full.
+    cp "$REPO_DIR/admin/deploy/deploy.sh" "$REPO_DIR/deploy.sh.new"
+    chmod +x "$REPO_DIR/deploy.sh.new"
+    mv -f "$REPO_DIR/deploy.sh.new" "$REPO_DIR/deploy.sh"
     log "deploy script updated — new version applies from the next run"
 fi
 
@@ -147,13 +152,13 @@ if [ -f "$BLOCK" ]; then
 fi
 
 # ---------------------------------------------------------------- migrations
-MIGRATION_FAILED=0
+DEPLOY_FAILED=0
 if [ -f "$APPDIR/database/migrate.php" ]; then
     if ( cd "$APPDIR" && "$PHP_BIN" database/migrate.php migrate ); then
         log "migrations: up to date"
     else
         log "ERROR: migrations failed — /admin may be serving an older schema"
-        MIGRATION_FAILED=1
+        DEPLOY_FAILED=1
     fi
 fi
 
@@ -176,8 +181,22 @@ else
     log "WARNING: origin returned $CODE after deploy"
 fi
 
+# The admin sign-in screen proves the PHP app, its autoloader and its templates
+# are all in place. It answers 200 without touching the database, so a broken
+# deploy is what this catches — not a slow query.
+APPCODE="$(curl -s -o /dev/null -w '%{http_code}' -m 15 \
+    -H "Host: wiz.arkeonethiopia.com" \
+    "http://127.0.0.1/admin/login?cb=$STAMP")"
+
+if [ "$APPCODE" = "200" ]; then
+    log "admin health check: 200 OK"
+else
+    log "WARNING: /admin/login returned $APPCODE after deploy"
+    [ "$DEPLOY_FAILED" -eq 0 ] && DEPLOY_FAILED=2
+fi
+
 log "done — $(cat "$REPO_DIR/RELEASE" 2>/dev/null || echo "$REMOTE_SHA")"
 
-if [ "$MIGRATION_FAILED" -ne 0 ]; then
+if [ "$DEPLOY_FAILED" -ne 0 ]; then
     exit 1
 fi
