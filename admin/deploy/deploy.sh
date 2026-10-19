@@ -24,6 +24,14 @@ LOCK="/tmp/wiz-deploy.lock"
 log() { printf '[%s] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*"; }
 fail() { log "ERROR: $*"; exit 1; }
 
+FORCE=0
+for arg in "$@"; do
+    case "$arg" in
+        --force|-f) FORCE=1 ;;
+        *) fail "unknown argument: $arg" ;;
+    esac
+done
+
 # ---------------------------------------------------------------- single run
 exec 9>"$LOCK"
 if ! flock -n 9; then
@@ -38,13 +46,15 @@ git fetch --quiet origin "$BRANCH" || fail "git fetch failed"
 REMOTE_SHA="$(git rev-parse "origin/$BRANCH")"
 LOCAL_SHA="$(git rev-parse HEAD 2>/dev/null || echo none)"
 
-if [ "$REMOTE_SHA" = "$LOCAL_SHA" ]; then
+if [ "$REMOTE_SHA" = "$LOCAL_SHA" ] && [ "$FORCE" -eq 0 ]; then
     exit 0                      # nothing new
 fi
 
 log "deploying $LOCAL_SHA -> $REMOTE_SHA"
 
-git reset --hard --quiet "origin/$BRANCH" || fail "git reset failed"
+if [ "$LOCAL_SHA" != "$REMOTE_SHA" ]; then
+    git reset --hard --quiet "origin/$BRANCH" || fail "git reset failed"
+fi
 
 # ---------------------------------------------------------------- sanity
 [ -d "$REPO_DIR/site" ]  || fail "release has no site/ directory"
@@ -60,8 +70,8 @@ if [ -d "$APPDIR" ]; then
         --exclude='storage' -C "$APPDIR" . 2>/dev/null || true
 fi
 # keep the last 10 of each
-ls -1t /home/arkeonet/backups/wiz/site-*.tar.gz 2>/dev/null | tail -n +11 | xargs -r rm -f
-ls -1t /home/arkeonet/backups/wiz/app-*.tar.gz  2>/dev/null | tail -n +11 | xargs -r rm -f
+ls -1t /home/arkeonet/backups/wiz/site-*.tar.gz 2>/dev/null | tail -n +11 | xargs -r rm -f || true
+ls -1t /home/arkeonet/backups/wiz/app-*.tar.gz  2>/dev/null | tail -n +11 | xargs -r rm -f || true
 
 # ---------------------------------------------------------------- app (outside webroot)
 mkdir -p "$APPDIR"
@@ -88,23 +98,28 @@ install -m 0644 "$APPDIR/deploy/index.php" "$DOCROOT/index.php"
 
 # ---------------------------------------------------------------- rewrite rules
 # Merge our block into the existing .htaccess instead of replacing it: cPanel
-# writes PHP handler directives there and must keep them.
+# writes PHP handler directives there and must keep them. Any previous WIZ
+# block — including the legacy "static site" one — is stripped first so the
+# rules cannot double up or shadow each other.
 HT="$DOCROOT/.htaccess"
 BLOCK="$APPDIR/deploy/htaccess"
 if [ -f "$BLOCK" ]; then
-    if [ -f "$HT" ] && grep -q '# BEGIN WIZ APP' "$HT"; then
-        # strip the previous block, keep everything else
-        awk '/^# BEGIN WIZ APP$/{skip=1} !skip{print} /^# END WIZ APP$/{skip=0}' "$HT" > "$HT.tmp"
-        cat "$BLOCK" >> "$HT.tmp"
-    elif [ -f "$HT" ]; then
-        cat "$HT" > "$HT.tmp"
+    if [ -f "$HT" ]; then
+        awk '
+            /^# BEGIN WIZ static site$/ {skip=1}
+            /^# BEGIN WIZ APP$/        {skip=1}
+            !skip                      {print}
+            /^# END WIZ static site$/  {skip=0}
+            /^# END WIZ APP$/          {skip=0}
+        ' "$HT" > "$HT.tmp"
         printf '\n' >> "$HT.tmp"
-        cat "$BLOCK" >> "$HT.tmp"
     else
-        cat "$BLOCK" > "$HT.tmp"
+        : > "$HT.tmp"
     fi
+    cat "$BLOCK" >> "$HT.tmp"
     mv "$HT.tmp" "$HT"
     chmod 644 "$HT"
+    log "rewrite rules merged into $HT"
 fi
 
 # ---------------------------------------------------------------- migrations
@@ -114,11 +129,19 @@ if [ -f "$APPDIR/database/migrate.php" ] && [ -f "$APPDIR/vendor/autoload.php" ]
 fi
 
 # ---------------------------------------------------------------- health check
-CODE="$(curl -s -o /dev/null -w '%{http_code}' -m 20 "https://wiz.arkeonethiopia.com/?cb=$STAMP")"
-if [ "$CODE" != "200" ]; then
-    log "WARNING: home page returned $CODE after deploy"
-else
+# The frontend is served from a directory that rsync rewrites, so a request can
+# land in the middle of the swap. Retry briefly before reporting a problem.
+CODE="000"
+for attempt in 1 2 3 4 5; do
+    CODE="$(curl -s -o /dev/null -w '%{http_code}' -m 20 "https://wiz.arkeonethiopia.com/?cb=$STAMP-$attempt")"
+    [ "$CODE" = "200" ] && break
+    sleep 3
+done
+
+if [ "$CODE" = "200" ]; then
     log "home page 200 OK"
+else
+    log "WARNING: home page returned $CODE after deploy"
 fi
 
 log "done — $(cat "$REPO_DIR/RELEASE" 2>/dev/null || echo "$REMOTE_SHA")"
