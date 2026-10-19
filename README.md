@@ -1,29 +1,61 @@
-# Welcome to your Lovable project
+# WIZ Beauty Salon
 
-This project was built with [Lovable](https://lovable.dev).
+Marketing site for WIZ Beauty Salon — a bilingual (English / አማርኛ) salon experience with a
+service catalog, gallery, and a guided booking flow.
 
-## Build with Lovable
+## Stack
 
-Open your project in the [Lovable editor](https://lovable.dev) and keep building.
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: connect the project to GitHub and every change made in Lovable is committed straight to your repository.
-- **Full ownership**: this code is yours. Push to your repository and your changes sync back into Lovable, ready for your next prompt.
+- **TanStack Start** (SSR) + **TanStack Router** (file-based routes)
+- **React 19** + **TypeScript**
+- **Tailwind CSS 4** with a custom design system in `src/styles.css`
+- **Vite 8** / **Vitest** / **Bun**
 
 ## Development
 
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+Requires Node.js 20+ and [Bun](https://bun.sh).
 
 ```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
+bun install
+bun run dev      # dev server on http://localhost:8080
+bun run build    # production build (Nitro)
+bun run preview  # preview the production build
 ```
 
-## Built with
+Quality gates:
 
-- TanStack Start
-- TypeScript
-- React
-- Tailwind CSS
+```sh
+bun run lint     # ESLint + Prettier
+bun run format   # apply formatting
+bun run test     # Vitest (29 tests)
+bunx tsc --noEmit
+```
+
+## Project structure
+
+```
+src/
+  routes/          # one file per page: index, services, about, gallery, booking, contact
+  components/
+    site/          # SiteChrome: shared header, footer and layout
+    ui/            # shadcn/ui primitives
+  data/
+    wiz.ts         # navigation, gallery, testimonials, contact, demo time slots
+    services.ts    # confirmed bilingual service catalog + booking validation (shared)
+  lib/             # error capture, error page, utilities
+  styles.css       # design system + page styles
+```
+
+`src/data/services.ts` is the single source of truth for the service catalog: 14 categories,
+78 bookable options, Amharic labels, an "undecided" option, and the Zod schema used to
+validate booking details. Both the Services page and the Booking flow read from it.
+
+## Content status
+
+The catalog structure is confirmed. Customers' names, prices, photos, testimonials, contact
+details and opening hours are still placeholders and are labelled as such in the UI. The
+booking flow currently completes client-side only — no request is sent or stored yet.
+
+## Deployment
+
+The production build targets a Nitro server output. See `WIZ-DEPLOYMENT.md` in the parent
+workspace for the hosting plan and access notes.
