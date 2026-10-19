@@ -24,6 +24,7 @@ use Wiz\Controllers\Admin\ReviewController;
 use Wiz\Controllers\Admin\ScheduleController;
 use Wiz\Controllers\Admin\ServiceController;
 use Wiz\Controllers\Api\BookingApiController;
+use Wiz\Controllers\Api\ContentApiController;
 use Wiz\Controllers\Api\MessageApiController;
 use Wiz\Controllers\PublicBookingController;
 use Wiz\Core\App;
@@ -299,6 +300,12 @@ $app->singleton(MessageController::class, static fn (App $a): MessageController 
     $a->get(View::class),
     $a->get(MessageRepository::class),
     $a->get(Session::class),
+));
+
+$app->singleton(ContentApiController::class, static fn (App $a): ContentApiController => new ContentApiController(
+    $a->get(GalleryRepository::class),
+    $a->get(ReviewRepository::class),
+    (string) ($a->config('app.upload_url') ?? '/uploads'),
 ));
 
 $app->singleton(MessageApiController::class, static fn (App $a): MessageApiController => new MessageApiController(

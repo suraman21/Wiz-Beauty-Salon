@@ -1,8 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { BeforeAfter, BookingBand, PageHero, SiteLayout } from "@/components/site/SiteChrome";
 import { categories, galleryWork, images, stories, type CategoryId } from "@/data/wiz";
+import {
+  fetchGallery,
+  fetchReviews,
+  type GalleryPhoto,
+  type PublicReview,
+} from "@/lib/content-api";
 
 export const Route = createFileRoute("/gallery")({
   head: () => ({
@@ -24,10 +30,61 @@ export const Route = createFileRoute("/gallery")({
   component: Gallery,
 });
 
+type Item = {
+  key: string;
+  image: string;
+  alt: string;
+  title: string;
+  tall: boolean;
+  category?: CategoryId;
+};
+
 function Gallery() {
   const [filter, setFilter] = useState<CategoryId | "all">("all");
   const [open, setOpen] = useState<number | null>(null);
-  const shown = filter === "all" ? galleryWork : galleryWork.filter((g) => g.category === filter);
+
+  const [photos, setPhotos] = useState<GalleryPhoto[] | null>(null);
+  const [reviews, setReviews] = useState<PublicReview[]>([]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    fetchGallery(controller.signal)
+      .then(setPhotos)
+      .catch(() => setPhotos([]));
+
+    fetchReviews(controller.signal)
+      .then(setReviews)
+      .catch(() => setReviews([]));
+
+    return () => controller.abort();
+  }, []);
+
+  const live = photos !== null && photos.length > 0;
+
+  // The salon's own photos when there are any, the demo set until then.
+  const items = useMemo<Item[]>(() => {
+    if (live) {
+      return photos.map((photo, index) => ({
+        key: `photo-${photo.id}`,
+        image: photo.url,
+        alt: photo.title !== "" ? photo.title : "Work by WIZ Beauty Salon",
+        title: photo.title !== "" ? photo.title : "WIZ Beauty Salon",
+        tall: index % 3 === 1,
+      }));
+    }
+
+    return galleryWork.map((work) => ({
+      key: work.id,
+      image: work.image,
+      alt: work.alt,
+      title: work.title,
+      tall: work.tall ?? false,
+      category: work.category,
+    }));
+  }, [live, photos]);
+
+  const shown = filter === "all" || live ? items : items.filter((i) => i.category === filter);
 
   useEffect(() => {
     if (open === null) return;
@@ -52,7 +109,11 @@ function Gallery() {
             <em>everywhere.</em>
           </>
         }
-        copy="Featured looks, transformations and the stories behind them. All images are temporary demo material."
+        copy={
+          live
+            ? "Recent work from the salon, shared with our clients' permission."
+            : "Featured looks, transformations and the stories behind them. All images are temporary demo material."
+        }
         image={images.hair}
         alt="Demo hair styling detail"
       />
@@ -67,7 +128,7 @@ function Gallery() {
               <em>we love.</em>
             </h2>
           </div>
-          <p>Demo imagery — not WIZ client work.</p>
+          <p>{live ? "From the salon's own album." : "Demo imagery — not WIZ client work."}</p>
         </div>
         <div className="featured-grid">
           <figure className="img-frame f-a">
@@ -115,23 +176,27 @@ function Gallery() {
             </h2>
           </div>
         </div>
-        <div className="filter-bar" role="tablist" aria-label="Filter gallery">
-          {[{ id: "all", name: "All" }, ...categories].map((c) => (
-            <button
-              key={c.id}
-              role="tab"
-              aria-selected={filter === c.id}
-              className={`chip ${filter === c.id ? "is-active" : ""}`}
-              onClick={() => setFilter(c.id as CategoryId | "all")}
-            >
-              {c.name}
-            </button>
-          ))}
-        </div>
+
+        {!live && (
+          <div className="filter-bar" role="tablist" aria-label="Filter gallery">
+            {[{ id: "all", name: "All" }, ...categories].map((c) => (
+              <button
+                key={c.id}
+                role="tab"
+                aria-selected={filter === c.id}
+                className={`chip ${filter === c.id ? "is-active" : ""}`}
+                onClick={() => setFilter(c.id as CategoryId | "all")}
+              >
+                {c.name}
+              </button>
+            ))}
+          </div>
+        )}
+
         <div className="masonry">
           {shown.map((g, i) => (
             <button
-              key={g.id}
+              key={g.key}
               className={`masonry-item img-frame ${g.tall ? "tall" : ""}`}
               onClick={() => setOpen(i)}
               aria-label={`Open ${g.title}`}
@@ -141,24 +206,42 @@ function Gallery() {
             </button>
           ))}
         </div>
+
+        {live && (
+          <span className="demo-note">
+            Photos published from the salon's panel. New work appears here automatically.
+          </span>
+        )}
       </section>
 
       <section className="stories">
         <div className="section-wrap">
           <span className="overline">04 / Client stories</span>
           <div className="stories-grid">
-            {stories.map((s) => (
-              <blockquote key={s.id}>
-                <p>“{s.quote}”</p>
-                <footer>
-                  {s.who} · {s.service}
-                </footer>
-              </blockquote>
-            ))}
+            {reviews.length > 0
+              ? reviews.slice(0, 3).map((review) => (
+                  <blockquote key={review.id}>
+                    <p>“{review.body}”</p>
+                    <footer>
+                      {review.name}
+                      {review.service ? ` · ${review.service}` : ""}
+                    </footer>
+                  </blockquote>
+                ))
+              : stories.map((s) => (
+                  <blockquote key={s.id}>
+                    <p>“{s.quote}”</p>
+                    <footer>
+                      {s.who} · {s.service}
+                    </footer>
+                  </blockquote>
+                ))}
           </div>
-          <span className="demo-note">
-            Placeholder stories — real client words will be added only with permission.
-          </span>
+          {reviews.length === 0 && (
+            <span className="demo-note">
+              Placeholder stories — real client words will be added only with permission.
+            </span>
+          )}
         </div>
       </section>
 
@@ -187,7 +270,7 @@ function Gallery() {
           </button>
           <figure onClick={(e) => e.stopPropagation()}>
             <img src={shown[open].image} alt={shown[open].alt} />
-            <figcaption>{shown[open].title} · Demo image</figcaption>
+            <figcaption>{shown[open].title}</figcaption>
           </figure>
           <button
             className="lb-btn lb-next"

@@ -29,6 +29,24 @@ final class ReviewRepository
         );
     }
 
+    /**
+     * What the public site is allowed to show: approved words only, newest
+     * first, with the service name attached when it still exists.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function approved(int $limit = 12): array
+    {
+        return $this->db->all(
+            'SELECT r.id, r.customer_name, r.rating, r.body, r.created_at, s.name AS service_name
+               FROM reviews r
+          LEFT JOIN services s ON s.id = r.service_id
+              WHERE r.is_approved = 1
+           ORDER BY r.created_at DESC, r.id DESC
+              LIMIT ' . max(1, min(50, $limit)),
+        );
+    }
+
     /** @return array<string, mixed>|null */
     public function find(int $id): ?array
     {
