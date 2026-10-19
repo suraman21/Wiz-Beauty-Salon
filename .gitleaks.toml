@@ -1,15 +1,18 @@
 # gitleaks configuration.
 #
 # The default ruleset is kept — this only says where not to look. The email
-# design studio's JavaScript is a minified build of GrapesJS; its variable
-# names match the generic-api-key heuristic and produce two findings on every
-# run. The file is generated from admin/assets-src by `npm run build:email-editor`
-# and contains no secrets of ours.
+# design studio's JavaScript is a minified build of GrapesJS; two of its
+# variable names match the generic-api-key heuristic, so every run reports
+# "leaks" in a file that contains nothing but library code. The file is
+# generated from admin/assets-src by `npm run build:email-editor`.
+#
+# `[allowlist]` (singular) is the form this version honours when the default
+# ruleset is extended; `[[allowlists]]` is silently ignored here.
 
 [extend]
 useDefault = true
 
-[[allowlists]]
+[allowlist]
 description = "Generated editor bundle"
 paths = [
   '''admin/public/assets/email-editor\.js''',
