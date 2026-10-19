@@ -80,8 +80,8 @@ $cards = [
             <li class="is-done">Secure sign-in with staff accounts</li>
             <li class="is-done">Audit trail of every sign-in</li>
             <li class="is-done">Automatic deployment</li>
+            <li class="is-done">Services, gallery and reviews</li>
             <li>Bookings and calendar <em class="pill">Next</em></li>
-            <li>Services, gallery and reviews <em class="pill">Next</em></li>
             <li>Messages, team and settings <em class="pill">Later</em></li>
         </ul>
 

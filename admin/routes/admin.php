@@ -9,7 +9,11 @@ declare(strict_types=1);
  */
 
 use Wiz\Controllers\Admin\AuthController;
+use Wiz\Controllers\Admin\CategoryController;
 use Wiz\Controllers\Admin\DashboardController;
+use Wiz\Controllers\Admin\GalleryController;
+use Wiz\Controllers\Admin\ReviewController;
+use Wiz\Controllers\Admin\ServiceController;
 use Wiz\Core\App;
 use Wiz\Core\Router;
 use Wiz\Core\Response;
@@ -36,6 +40,26 @@ return static function (Router $router, App $app): void {
         return Response::file($app->basePath('public/assets/' . $file), $types[$extension]);
     });
 
+    // --------------------------------------------------------------- uploads
+    // In production the web server serves these files directly because they sit
+    // in the docroot; this route is what makes the same paths work when PHP
+    // handles every request (local development, or a misconfigured docroot).
+    $router->get('/uploads/{file}', static function (\Wiz\Core\Request $request, array $params) use ($app): Response {
+        $name = basename((string) ($params['file'] ?? ''));
+
+        // Only names this application generates: 24 hex characters + extension.
+        if (preg_match('/^[a-f0-9]{24}\.(jpg|png|webp)$/', $name) !== 1) {
+            return Response::html('Not found', 404);
+        }
+
+        $types = ['jpg' => 'image/jpeg', 'png' => 'image/png', 'webp' => 'image/webp'];
+        $extension = pathinfo($name, PATHINFO_EXTENSION);
+
+        $directory = (string) ($app->config('app.upload_path') ?? $app->basePath('storage/uploads'));
+
+        return Response::file(rtrim($directory, '/') . '/' . $name, $types[$extension]);
+    });
+
     // ------------------------------------------------------------------ auth
     $router->get('/admin/login', [AuthController::class, 'showLogin'], ['guest']);
     $router->post('/admin/login', [AuthController::class, 'login'], ['guest']);
@@ -43,4 +67,36 @@ return static function (Router $router, App $app): void {
 
     // ------------------------------------------------------------- dashboard
     $router->get('/admin', [DashboardController::class, 'index'], ['auth']);
+
+    // -------------------------------------------------------------- services
+    // Specific paths are registered before the {id} patterns so the router,
+    // which matches in order, never mistakes "new" for an id.
+    $router->get('/admin/services', [ServiceController::class, 'index'], ['auth']);
+    $router->get('/admin/services/new', [ServiceController::class, 'create'], ['auth']);
+    $router->post('/admin/services', [ServiceController::class, 'store'], ['auth']);
+    $router->get('/admin/services/{id}/edit', [ServiceController::class, 'edit'], ['auth']);
+    $router->post('/admin/services/{id}', [ServiceController::class, 'update'], ['auth']);
+    $router->post('/admin/services/{id}/delete', [ServiceController::class, 'destroy'], ['auth']);
+    $router->post('/admin/services/{id}/toggle', [ServiceController::class, 'toggle'], ['auth']);
+    $router->post('/admin/services/{id}/move', [ServiceController::class, 'move'], ['auth']);
+
+    // ------------------------------------------------------------ categories
+    $router->get('/admin/categories', [CategoryController::class, 'index'], ['auth']);
+    $router->post('/admin/categories', [CategoryController::class, 'store'], ['auth']);
+    $router->post('/admin/categories/{id}', [CategoryController::class, 'update'], ['auth']);
+    $router->post('/admin/categories/{id}/delete', [CategoryController::class, 'destroy'], ['auth']);
+    $router->post('/admin/categories/{id}/move', [CategoryController::class, 'move'], ['auth']);
+
+    // --------------------------------------------------------------- gallery
+    $router->get('/admin/gallery', [GalleryController::class, 'index'], ['auth']);
+    $router->post('/admin/gallery', [GalleryController::class, 'store'], ['auth']);
+    $router->post('/admin/gallery/{id}/toggle', [GalleryController::class, 'toggle'], ['auth']);
+    $router->post('/admin/gallery/{id}/delete', [GalleryController::class, 'destroy'], ['auth']);
+    $router->post('/admin/gallery/{id}/move', [GalleryController::class, 'move'], ['auth']);
+
+    // --------------------------------------------------------------- reviews
+    $router->get('/admin/reviews', [ReviewController::class, 'index'], ['auth']);
+    $router->post('/admin/reviews', [ReviewController::class, 'store'], ['auth']);
+    $router->post('/admin/reviews/{id}/approve', [ReviewController::class, 'approve'], ['auth']);
+    $router->post('/admin/reviews/{id}/delete', [ReviewController::class, 'destroy'], ['auth']);
 };

@@ -61,6 +61,14 @@ final class Database
      */
     public function run(string $sql, array $params = []): PDOStatement
     {
+        // Native prepares send everything as a string, and a PHP `false` becomes
+        // '' — which strict mode rejects for an integer column. Booleans are the
+        // only type PHP will not coerce on its own, so they are mapped here once.
+        $params = array_map(
+            static fn (mixed $value): mixed => is_bool($value) ? (int) $value : $value,
+            $params,
+        );
+
         try {
             $statement = $this->pdo()->prepare($sql);
             $statement->execute($params);

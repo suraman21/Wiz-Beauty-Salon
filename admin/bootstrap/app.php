@@ -15,7 +15,11 @@ declare(strict_types=1);
  */
 
 use Wiz\Controllers\Admin\AuthController;
+use Wiz\Controllers\Admin\CategoryController;
 use Wiz\Controllers\Admin\DashboardController;
+use Wiz\Controllers\Admin\GalleryController;
+use Wiz\Controllers\Admin\ReviewController;
+use Wiz\Controllers\Admin\ServiceController;
 use Wiz\Core\App;
 use Wiz\Core\Auth;
 use Wiz\Core\Config;
@@ -30,9 +34,14 @@ use Wiz\Core\Middleware\GuestMiddleware;
 use Wiz\Core\Session;
 use Wiz\Core\View;
 use Wiz\Repositories\ActivityLogRepository;
+use Wiz\Repositories\CategoryRepository;
+use Wiz\Repositories\GalleryRepository;
 use Wiz\Repositories\LoginAttemptRepository;
+use Wiz\Repositories\ReviewRepository;
+use Wiz\Repositories\ServiceRepository;
 use Wiz\Repositories\UserRepository;
 use Wiz\Services\AuthService;
+use Wiz\Services\Uploader;
 
 $root = dirname(__DIR__);
 
@@ -70,6 +79,22 @@ $app->singleton(ActivityLogRepository::class, static fn (App $a): ActivityLogRep
     $a->get(Database::class),
 ));
 
+$app->singleton(CategoryRepository::class, static fn (App $a): CategoryRepository => new CategoryRepository(
+    $a->get(Database::class),
+));
+
+$app->singleton(ServiceRepository::class, static fn (App $a): ServiceRepository => new ServiceRepository(
+    $a->get(Database::class),
+));
+
+$app->singleton(GalleryRepository::class, static fn (App $a): GalleryRepository => new GalleryRepository(
+    $a->get(Database::class),
+));
+
+$app->singleton(ReviewRepository::class, static fn (App $a): ReviewRepository => new ReviewRepository(
+    $a->get(Database::class),
+));
+
 // -------------------------------------------------------------- services
 $app->singleton(Auth::class, static fn (App $a): Auth => new Auth(
     $a->get(Session::class),
@@ -84,6 +109,12 @@ $app->singleton(AuthService::class, static fn (App $a): AuthService => new AuthS
     $a->get(Logger::class),
     (int) ($a->config('app.login_max_attempts') ?? 5),
     (int) ($a->config('app.login_lockout_minutes') ?? 15),
+));
+
+$app->singleton(Uploader::class, static fn (App $a): Uploader => new Uploader(
+    (string) ($a->config('app.upload_path') ?? $a->basePath('storage/uploads')),
+    (string) ($a->config('app.upload_url') ?? '/uploads'),
+    (int) ($a->config('app.upload_max_bytes') ?? 5_242_880),
 ));
 
 // ----------------------------------------------------------- middleware
@@ -117,6 +148,34 @@ $app->singleton(DashboardController::class, static fn (App $a): DashboardControl
     $a->get(Database::class),
     $a->get(ActivityLogRepository::class),
     $a->get(UserRepository::class),
+));
+
+$app->singleton(ServiceController::class, static fn (App $a): ServiceController => new ServiceController(
+    $a->get(View::class),
+    $a->get(ServiceRepository::class),
+    $a->get(CategoryRepository::class),
+    $a->get(Uploader::class),
+    $a->get(Session::class),
+));
+
+$app->singleton(CategoryController::class, static fn (App $a): CategoryController => new CategoryController(
+    $a->get(View::class),
+    $a->get(CategoryRepository::class),
+    $a->get(Session::class),
+));
+
+$app->singleton(GalleryController::class, static fn (App $a): GalleryController => new GalleryController(
+    $a->get(View::class),
+    $a->get(GalleryRepository::class),
+    $a->get(Uploader::class),
+    $a->get(Session::class),
+));
+
+$app->singleton(ReviewController::class, static fn (App $a): ReviewController => new ReviewController(
+    $a->get(View::class),
+    $a->get(ReviewRepository::class),
+    $a->get(ServiceRepository::class),
+    $a->get(Session::class),
 ));
 
 return $app;

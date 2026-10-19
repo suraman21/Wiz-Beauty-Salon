@@ -16,6 +16,11 @@ return [
     'session_secure' => Env::bool('SESSION_SECURE', true),
     'session_path' => dirname(__DIR__) . '/storage/sessions',
 
+    // Where uploaded images are written. In production this is the docroot's
+    // uploads/ directory so the web server serves them directly; the PHP app
+    // itself stays outside the webroot.
+    'upload_path' => Env::get('UPLOAD_PATH', dirname(__DIR__) . '/storage/uploads'),
+    'upload_url' => Env::get('UPLOAD_URL', '/uploads'),
     'upload_max_bytes' => Env::int('UPLOAD_MAX_BYTES', 5 * 1024 * 1024),
 
     // Failed logins allowed per email/IP inside the window.

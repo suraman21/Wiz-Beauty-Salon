@@ -11,7 +11,8 @@ admin/
 ├── public/           front controller + assets (only public/ would ever be web-facing)
 ├── routes/           admin.php, api.php
 ├── src/
-│   ├── Controllers/  one class per screen
+│   ├── Controllers/  one class per screen (auth, dashboard, services,
+│   │                 categories, gallery, reviews)
 │   ├── Core/         App, Router, Request, Response, View, Session, Csrf, ...
 │   ├── Database/     migration contract
 │   ├── Domain/       enums shared with the public API
@@ -49,6 +50,19 @@ composer quality   # all of the above, plus composer audit
 
 CI runs the same suite on every push, plus the migrations against a real
 MariaDB 11.4 instance.
+
+## Screens
+
+| Screen | What staff do there |
+|---|---|
+| Dashboard | Today's numbers and the audit trail |
+| Services | Add, edit, reorder, hide or delete a service; set price and duration |
+| Categories | Group the services list ("Hair", "Nails", "Skin") |
+| Gallery | Upload photos, write captions, publish or hide them |
+| Reviews | Approve what appears on the website, or type in a review received in person |
+
+Uploaded images go to `UPLOAD_PATH` (the docroot's `uploads/` directory in
+production) under a random filename; the database stores only that name.
 
 ## Conventions
 
