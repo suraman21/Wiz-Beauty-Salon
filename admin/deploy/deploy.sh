@@ -93,13 +93,11 @@ ls -1t /home/arkeonet/backups/wiz/app-*.tar.gz  2>/dev/null | tail -n +11 | xarg
 # ---------------------------------------------------------------- app (outside webroot)
 mkdir -p "$APPDIR"
 # never overwrite runtime state
+# --delete cleans the release tree, but storage/ holds live sessions, logs and
+# uploads: excluding the directory itself keeps rsync out of it entirely.
 rsync -a --delete \
     --exclude '.env' \
-    --exclude 'storage/logs/*' \
-    --exclude 'storage/cache/*' \
-    --exclude 'storage/sessions/*' \
-    --exclude 'storage/uploads/*' \
-    --exclude 'storage/backups/*' \
+    --exclude 'storage/' \
     --exclude 'vendor/' \
     "$REPO_DIR/admin/" "$APPDIR/"
 
@@ -163,20 +161,31 @@ if [ -f "$APPDIR/database/migrate.php" ]; then
 fi
 
 # ---------------------------------------------------------------- health check
-# Checked against the origin directly with a Host header. Going out through the
-# public hostname would route back through Cloudflare, whose bot rules can
-# answer the server's own request with 403 and make a good deploy look broken.
+# Probed against the origin, never through Cloudflare: the server's own request
+# to its public hostname is answered by the CDN's bot rules, not by this site.
+#
+# 127.0.0.1 is not the answer either — cPanel's default vhost answers that
+# address regardless of the Host header, so a dead site still looks healthy.
+# Resolving the domain to this machine's own IP overrides DNS while keeping the
+# real hostname (and therefore the correct SNI and vhost).
+ORIGIN_IP="$(hostname -I 2>/dev/null | awk '{print $1}')"
+[ -n "$ORIGIN_IP" ] || ORIGIN_IP="$(hostname -i 2>/dev/null | awk '{print $1}')"
+
+probe() {
+    curl -s -o /dev/null -w '%{http_code}' -m 15 \
+        --resolve "wiz.arkeonethiopia.com:443:$ORIGIN_IP" \
+        "https://wiz.arkeonethiopia.com$1?cb=$STAMP"
+}
+
 CODE="000"
 for attempt in 1 2 3 4 5; do
-    CODE="$(curl -s -o /dev/null -w '%{http_code}' -m 15 \
-        -H "Host: wiz.arkeonethiopia.com" \
-        "http://127.0.0.1/?cb=$STAMP-$attempt")"
+    CODE="$(probe '/')"
     [ "$CODE" = "200" ] && break
     sleep 3
 done
 
 if [ "$CODE" = "200" ]; then
-    log "origin health check: 200 OK"
+    log "origin health check: 200 OK (via $ORIGIN_IP)"
 else
     log "WARNING: origin returned $CODE after deploy"
 fi
@@ -184,9 +193,12 @@ fi
 # The admin sign-in screen proves the PHP app, its autoloader and its templates
 # are all in place. It answers 200 without touching the database, so a broken
 # deploy is what this catches — not a slow query.
-APPCODE="$(curl -s -o /dev/null -w '%{http_code}' -m 15 \
-    -H "Host: wiz.arkeonethiopia.com" \
-    "http://127.0.0.1/admin/login?cb=$STAMP")"
+APPCODE="000"
+for attempt in 1 2 3 4 5; do
+    APPCODE="$(probe '/admin/login')"
+    [ "$APPCODE" = "200" ] && break
+    sleep 3
+done
 
 if [ "$APPCODE" = "200" ]; then
     log "admin health check: 200 OK"
@@ -194,8 +206,6 @@ else
     log "WARNING: /admin/login returned $APPCODE after deploy"
     [ "$DEPLOY_FAILED" -eq 0 ] && DEPLOY_FAILED=2
 fi
-
-log "done — $(cat "$REPO_DIR/RELEASE" 2>/dev/null || echo "$REMOTE_SHA")"
 
 if [ "$DEPLOY_FAILED" -ne 0 ]; then
     exit 1
