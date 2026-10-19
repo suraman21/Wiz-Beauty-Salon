@@ -15,6 +15,7 @@ use Wiz\Repositories\BookingSlotRepository;
 use Wiz\Repositories\BusinessHoursRepository;
 use Wiz\Repositories\ClosureRepository;
 use Wiz\Repositories\ServiceRepository;
+use Wiz\Repositories\UserRepository;
 use Wiz\Repositories\SettingsRepository;
 use Wiz\Services\AvailabilityService;
 use Wiz\Services\BookingService;
@@ -39,6 +40,9 @@ final class BookingFlowTest extends TestCase
     private int $serviceId;
 
     private string $date;
+
+    /** The staff member the tests record as the person making each change. */
+    private int $userId = 0;
 
     protected function setUp(): void
     {
@@ -75,6 +79,19 @@ final class BookingFlowTest extends TestCase
                 [':opens' => '09:00:00', ':closes' => '19:00:00', ':day' => $day],
             );
         }
+
+        // The history table points at users, and CI starts with an empty
+        // database, so make sure there is somebody to attribute changes to.
+        $existing = $this->db->first('SELECT id FROM users ORDER BY id LIMIT 1');
+
+        $this->userId = $existing !== null
+            ? (int) $existing['id']
+            : (new UserRepository($this->db))->create(
+                'Booking Test',
+                'booking-test-' . bin2hex(random_bytes(4)) . '@example.test',
+                password_hash('not-a-real-password', PASSWORD_DEFAULT),
+                'admin',
+            );
 
         $this->services = new ServiceRepository($this->db);
         $this->repository = new BookingRepository($this->db);
@@ -129,7 +146,7 @@ final class BookingFlowTest extends TestCase
             'date' => $this->date,
             'time' => $time,
             'notes' => null,
-        ], $overrides), 1, '127.0.0.1');
+        ], $overrides), $this->userId, '127.0.0.1');
     }
 
     public function testBooksAFreeSlot(): void
@@ -192,7 +209,7 @@ final class BookingFlowTest extends TestCase
     {
         $id = (int) $this->book()['id'];
 
-        self::assertTrue($this->bookings->transition($id, BookingStatus::Confirmed, 1)['ok']);
+        self::assertTrue($this->bookings->transition($id, BookingStatus::Confirmed, $this->userId)['ok']);
 
         self::assertSame('confirmed', $this->repository->find($id)['status']);
         self::assertFalse($this->book('10:00')['ok'], 'a confirmed booking still holds its time');
@@ -202,7 +219,7 @@ final class BookingFlowTest extends TestCase
     {
         $id = (int) $this->book()['id'];
 
-        self::assertTrue($this->bookings->transition($id, BookingStatus::Cancelled, 1)['ok']);
+        self::assertTrue($this->bookings->transition($id, BookingStatus::Cancelled, $this->userId)['ok']);
 
         $again = $this->book('10:00');
 
@@ -213,7 +230,7 @@ final class BookingFlowTest extends TestCase
     {
         $id = (int) $this->book()['id'];
 
-        $result = $this->bookings->transition($id, BookingStatus::Completed, 1);
+        $result = $this->bookings->transition($id, BookingStatus::Completed, $this->userId);
 
         self::assertFalse($result['ok']);
         self::assertSame('requested', $this->repository->find($id)['status']);
@@ -222,16 +239,16 @@ final class BookingFlowTest extends TestCase
     public function testCompletedBookingsAreFinal(): void
     {
         $id = (int) $this->book()['id'];
-        $this->bookings->transition($id, BookingStatus::Confirmed, 1);
+        $this->bookings->transition($id, BookingStatus::Confirmed, $this->userId);
 
-        self::assertTrue($this->bookings->transition($id, BookingStatus::Completed, 1)['ok']);
-        self::assertFalse($this->bookings->transition($id, BookingStatus::Cancelled, 1)['ok']);
+        self::assertTrue($this->bookings->transition($id, BookingStatus::Completed, $this->userId)['ok']);
+        self::assertFalse($this->bookings->transition($id, BookingStatus::Cancelled, $this->userId)['ok']);
     }
 
     public function testWritesAHistoryEntryForEveryChange(): void
     {
         $id = (int) $this->book()['id'];
-        $this->bookings->transition($id, BookingStatus::Confirmed, 1, 'Called to confirm');
+        $this->bookings->transition($id, BookingStatus::Confirmed, $this->userId, 'Called to confirm');
 
         $history = $this->repository->history($id);
 
@@ -245,7 +262,7 @@ final class BookingFlowTest extends TestCase
     {
         $id = (int) $this->book('10:00')['id'];
 
-        $result = $this->bookings->reschedule($id, $this->date, '14:00', 1);
+        $result = $this->bookings->reschedule($id, $this->date, '14:00', $this->userId);
 
         self::assertTrue($result['ok']);
         self::assertSame('14:00:00', $this->repository->find($id)['start_time']);
@@ -259,7 +276,7 @@ final class BookingFlowTest extends TestCase
         $first = (int) $this->book('10:00')['id'];
         self::assertTrue($this->book('14:00')['ok']);
 
-        $result = $this->bookings->reschedule($first, $this->date, '14:00', 1);
+        $result = $this->bookings->reschedule($first, $this->date, '14:00', $this->userId);
 
         self::assertFalse($result['ok']);
         self::assertSame('10:00:00', $this->repository->find($first)['start_time'], 'the original slot survives a failed move');

@@ -311,10 +311,10 @@ function Booking() {
           <div className="step-body" key={step}>
             {step === 0 && (
               <>
-                {services === null && <p className="step-hint">Loading services…</p>}
+                {services === null && <p className="step-note">Loading services…</p>}
 
                 {services !== null && services.length === 0 && loadError === "" && (
-                  <p className="step-hint">
+                  <p className="step-note">
                     Online booking is not open just yet. Please contact the salon and we will find
                     you a time.
                   </p>
@@ -370,10 +370,10 @@ function Booking() {
 
             {step === 1 && (
               <>
-                {calendarBusy && <p className="step-hint">Checking the calendar…</p>}
+                {calendarBusy && <p className="step-note">Checking the calendar…</p>}
 
                 {calendarError !== "" && (
-                  <p className="step-hint" role="alert">
+                  <p className="step-note" role="alert">
                     {calendarError}{" "}
                     <button
                       type="button"
@@ -426,7 +426,7 @@ function Booking() {
                 <p className="step-hint">{date && fmt(date)}</p>
 
                 {submitError !== "" && (
-                  <p className="step-hint" role="alert">
+                  <p className="step-note" role="alert">
                     {submitError}
                   </p>
                 )}
@@ -448,7 +448,7 @@ function Booking() {
                     ))}
                   </div>
                 ) : (
-                  <p className="step-hint">
+                  <p className="step-note">
                     {date === "" ? "Choose a day first." : "No times are left on that day."}{" "}
                     <button type="button" className="editorial-link" onClick={() => setStep(1)}>
                       Pick another day

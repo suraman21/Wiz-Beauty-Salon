@@ -18,6 +18,17 @@ $id = (int) $booking['id'];
 $canMove = $status !== null && $status->occupiesSlot();
 $date = (string) $booking['booking_date'];
 
+$actionLabel = static function (BookingStatus $target): string {
+    return match ($target) {
+        BookingStatus::Confirmed => 'Confirm booking',
+        BookingStatus::Declined => 'Decline request',
+        BookingStatus::Completed => 'Mark as completed',
+        BookingStatus::Cancelled => 'Cancel booking',
+        BookingStatus::NoShow => 'Mark as no-show',
+        BookingStatus::Requested => 'Reopen as new',
+    };
+};
+
 $actionStyle = static function (BookingStatus $target): string {
     return match ($target) {
         BookingStatus::Confirmed => 'btn btn--primary',
@@ -101,7 +112,7 @@ $actionStyle = static function (BookingStatus $target): string {
                         <?= csrf_field() ?>
                         <input type="hidden" name="status" value="<?= e($target->value) ?>">
                         <button type="submit" class="<?= e($actionStyle($target)) ?>">
-                            <?= e($target->label()) ?>
+                            <?= e($actionLabel($target)) ?>
                         </button>
                     </form>
                 <?php endforeach; ?>
