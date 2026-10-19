@@ -6,7 +6,12 @@ import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: ["dist", ".output", ".vinxi"] },
+  {
+    // Built and vendored trees: the email editor bundle is 1.5 MB of minified
+    // library code on a single line, which linting cannot say anything useful
+    // about and takes minutes to parse.
+    ignores: ["dist", ".output", ".vinxi", "admin/public/assets/**", "admin/vendor/**", "admin/node_modules/**"],
+  },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ["**/*.{ts,tsx}"],
