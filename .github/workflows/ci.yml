@@ -1,0 +1,175 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# Cancel superseded runs on the same ref
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # ---------------------------------------------------------------------
+  # React site: lint, typecheck, test, build
+  # ---------------------------------------------------------------------
+  site:
+    name: Site — lint, types, tests, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Lint
+        run: bun run lint
+
+      - name: Typecheck
+        run: bunx tsc --noEmit
+
+      - name: Test
+        run: bun run test
+
+      - name: Build
+        run: bun run build
+
+      - name: Upload site artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-build
+          path: .output/public
+          retention-days: 7
+
+  # ---------------------------------------------------------------------
+  # PHP admin: syntax, static analysis, tests, dependency audit
+  # ---------------------------------------------------------------------
+  admin:
+    name: Admin — syntax, PHPStan, PHPUnit, audit
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: admin
+
+    services:
+      mariadb:
+        image: mariadb:11.4
+        env:
+          MARIADB_ROOT_PASSWORD: root
+          MARIADB_DATABASE: wiz_test
+          MARIADB_USER: wiz
+          MARIADB_PASSWORD: wiz
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_mysql, gd, mbstring, sodium, fileinfo, intl, zip
+          coverage: none
+          tools: composer:v2
+
+      - name: Validate composer.json
+        run: composer validate --strict --no-check-publish
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Syntax check
+        run: composer lint
+
+      - name: Static analysis
+        run: composer analyse
+        continue-on-error: true
+
+      - name: Tests
+        run: composer unit
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_NAME: wiz_test
+          DB_USER: wiz
+          DB_PASS: wiz
+
+      - name: Dependency audit
+        run: composer audit --locked --no-interaction
+        continue-on-error: true
+
+  # ---------------------------------------------------------------------
+  # Security: dependency and secret scanning across both stacks
+  # ---------------------------------------------------------------------
+  security:
+    name: Security — dependency scans
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Node dependency audit
+        run: bun install --frozen-lockfile && bun audit || true
+
+      - name: Secret scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ---------------------------------------------------------------------
+  # Deploy: build artifacts and publish the `deploy` branch
+  # The server pulls that branch on a cron (no private key in GitHub).
+  # ---------------------------------------------------------------------
+  publish:
+    name: Publish deploy branch
+    needs: [site, admin, security]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Build site
+        run: bun install --frozen-lockfile && bun run build
+
+      - name: Assemble release tree
+        run: |
+          mkdir -p release
+          cp -a .output/public/. release/site/
+          rsync -a --exclude-from=admin/.gitignore admin/ release/admin/ || cp -a admin release/admin
+          rm -rf release/admin/tests release/admin/.env
+          find release -name '.gitkeep' -delete
+          echo "${{ github.sha }}" > release/RELEASE
+
+      - name: Publish to deploy branch
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./release
+          publish_branch: deploy
+          force_orphan: true
+          commit_message: "deploy ${{ github.sha }}"

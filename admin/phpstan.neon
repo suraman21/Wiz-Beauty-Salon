@@ -1,0 +1,9 @@
+parameters:
+    level: 6
+    paths:
+        - src
+        - config
+        - database
+    excludePaths:
+        - src/Views/*
+    treatPhpDocTypesAsCertain: false
