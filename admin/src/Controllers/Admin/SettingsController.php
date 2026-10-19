@@ -61,6 +61,7 @@ final class SettingsController
                 'from_email' => $this->mail->fromEmail(),
                 'salon_email' => $this->mail->salonEmail(),
                 'password_saved' => $this->mail->passwordSaved(),
+                'readiness' => $this->mail->readiness(),
             ],
             'test_recipient' => (string) ($user['email'] ?? ''),
             'test_left' => $this->testsLeft(),

@@ -175,6 +175,47 @@ final class MailSettingsTest extends TestCase
         $mail->savePassword('s3cret');
     }
 
+    public function testReadinessIsGreenOnlyWhenEverySmtpFieldIsPresent(): void
+    {
+        self::assertSame('smtp', $this->mail()->readiness()['state']);
+        self::assertSame([], $this->mail()->readiness()['missing']);
+    }
+
+    public function testReadinessNamesWhatIsMissingInsteadOfClaimingSmtp(): void
+    {
+        $file = $this->config;
+        $file['host'] = '';
+        $file['username'] = '';
+        $file['password'] = '';
+
+        $mail = new MailSettings($this->settings, $file, 'test-app-key');
+
+        self::assertSame('incomplete', $mail->readiness()['state']);
+        self::assertSame(
+            ['mail server', 'mailbox username', 'mailbox password'],
+            $mail->readiness()['missing'],
+        );
+    }
+
+    public function testReadinessFollowsTheWebHostDriverEvenWithBlankSmtpFields(): void
+    {
+        $this->mail()->save([
+            'driver' => 'mail',
+            'host' => '',
+            'port' => 587,
+            'encryption' => 'tls',
+            'username' => '',
+            'from_name' => 'WIZ Beauty Salon',
+            'from_email' => 'no-reply@wiz.test',
+            'salon_email' => 'admin@wiz.test',
+        ]);
+
+        $fresh = $this->mail();
+
+        self::assertSame('mail', $fresh->readiness()['state']);
+        self::assertSame([], $fresh->readiness()['missing']);
+    }
+
     private function mail(): MailSettings
     {
         return new MailSettings($this->settings, $this->config, 'test-app-key');

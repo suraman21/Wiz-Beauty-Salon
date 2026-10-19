@@ -109,6 +109,41 @@ final class MailSettings
     }
 
     /**
+     * What will actually happen when something tries to send.
+     *
+     * The chosen driver alone is not the answer: "mail server" with a blank
+     * host, username or password cannot send anything, and a screen that says
+     * "SMTP" at that moment is lying to the person who has to fix it.
+     *
+     * @return array{state: 'smtp'|'mail'|'incomplete', missing: list<string>}
+     */
+    public function readiness(): array
+    {
+        if ($this->driver() === 'mail') {
+            return ['state' => 'mail', 'missing' => []];
+        }
+
+        $missing = [];
+
+        if ($this->host() === '') {
+            $missing[] = 'mail server';
+        }
+
+        if ($this->username() === '') {
+            $missing[] = 'mailbox username';
+        }
+
+        if (! $this->passwordSaved()) {
+            $missing[] = 'mailbox password';
+        }
+
+        return [
+            'state' => $missing === [] ? 'smtp' : 'incomplete',
+            'missing' => $missing,
+        ];
+    }
+
+    /**
      * Store the visible fields. The password is handled separately because an
      * empty box means "keep the one already saved".
      *

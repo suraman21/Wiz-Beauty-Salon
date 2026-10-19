@@ -2,14 +2,24 @@
 /**
  * Panel settings: email delivery.
  *
- * @var array{driver: string, host: string, port: int, encryption: string, username: string, from_name: string, from_email: string, salon_email: string, password_saved: bool} $mail
+ * @var array{driver: string, host: string, port: int, encryption: string, username: string, from_name: string, from_email: string, salon_email: string, password_saved: bool, readiness: array{state: string, missing: list<string>}} $mail
  * @var string $test_recipient
  * @var int $test_left
  */
 
-$driver = $mail['driver'] === 'smtp'
-    ? ['label' => 'Sending through your mail server (SMTP)', 'class' => 'badge--green']
-    : ['label' => 'Sending through the web host', 'class' => 'badge--warn'];
+// The chosen driver is not the whole story: "mail server" with a blank host
+// or password cannot send anything, so the screen reports the effective state
+// rather than the intention.
+$driver = match ($mail['readiness']['state']) {
+    'smtp' => ['label' => 'Sending through your mail server (SMTP)', 'class' => 'badge--green'],
+    'mail' => ['label' => "Sending through the web host's mail service", 'class' => 'badge--warn'],
+    default => [
+        'label' => 'Not set up yet — missing ' . implode(', ', $mail['readiness']['missing']),
+        'class' => 'badge--warn',
+    ],
+};
+
+$canTest = $test_left > 0 && $mail['readiness']['state'] !== 'incomplete';
 ?>
 
 <div class="columns columns--detail">
@@ -115,9 +125,15 @@ $driver = $mail['driver'] === 'smtp'
                 Each attempt gets a reference, so you can match the panel, the log and the message.
             </p>
 
+            <?php if ($mail['readiness']['state'] === 'incomplete'): ?>
+                <p class="field__hint">
+                    Fill in the missing details above first — a test now would fail.
+                </p>
+            <?php endif; ?>
+
             <form method="post" action="/admin/settings/test">
                 <?= csrf_field() ?>
-                <button type="submit" class="btn btn--primary" <?= $test_left <= 0 ? 'disabled' : '' ?>>
+                <button type="submit" class="btn btn--primary" <?= $canTest ? '' : 'disabled' ?>>
                     Send a test email
                 </button>
             </form>
