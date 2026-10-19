@@ -3,7 +3,7 @@
   "private": true,
   "description": "Build-only sources for self-hosted admin assets. Nothing here runs on the server.",
   "scripts": {
-    "build:email-editor": "esbuild assets-src/email-editor-entry.js --bundle --minify --legal-comments=none --target=es2020 --format=iife --outfile=public/assets/vendor/email-editor.js && cp node_modules/grapesjs/dist/css/grapes.min.css public/assets/vendor/email-editor.css"
+    "build:email-editor": "esbuild assets-src/email-editor-entry.js --bundle --minify --legal-comments=none --target=es2020 --format=iife --outfile=public/assets/email-editor.js && cp node_modules/grapesjs/dist/css/grapes.min.css public/assets/email-editor.css"
   },
   "devDependencies": {
     "esbuild": "0.28.2",
