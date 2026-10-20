@@ -136,16 +136,20 @@ a { color: var(--brand); }
 .app { display: flex; min-height: 100vh; }
 
 .sidebar {
+    /* Fixed, not sticky: the document body is exactly 100vh tall (html, body
+       height: 100%), so a sticky column has no containing block to travel in
+       and scrolls away with the content. Fixed takes it out of that argument. */
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
     width: 232px;
-    flex: 0 0 232px;
     display: flex;
     flex-direction: column;
+    overflow-y: auto;
     background: var(--sidebar);
     color: var(--sidebar-ink);
     padding: 24px 16px 18px;
-    position: sticky;
-    top: 0;
-    height: 100vh;
 }
 
 .sidebar__brand { padding: 0 8px 22px; }
@@ -225,6 +229,7 @@ a.nav__item:hover { background: rgba(255, 255, 255, .06); color: #fff; }
     min-width: 0;
     display: flex;
     flex-direction: column;
+    margin-left: 232px; /* clears the fixed sidebar */
     padding: 0 34px;
 }
 
@@ -1463,10 +1468,13 @@ a.nav__item:hover { background: rgba(255, 255, 255, .06); color: #fff; }
     .sidebar {
         position: static;
         height: auto;
-        width: 100%;
+        width: auto;
+        overflow-y: visible;
         flex: none;
         padding: 16px;
     }
+
+    .main { margin-left: 0; }
 
     .sidebar__brand { padding-bottom: 12px; }
 
@@ -1804,3 +1812,20 @@ summary:focus-visible {
 }
 
 .disclosure { margin-top: 16px; }
+
+/* A disabled button has to look disabled; the test button depends on it. */
+.btn:disabled,
+.btn[disabled] {
+    opacity: .5;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.btn:disabled:hover,
+.btn[disabled]:hover { filter: none; }
+
+/* On a phone the settings column is full width; the hint cards belong under
+   the form, not beside it. */
+@media (max-width: 900px) {
+    .columns--detail > aside { margin-top: 16px; }
+}
