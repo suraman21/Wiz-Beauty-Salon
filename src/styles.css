@@ -3809,7 +3809,197 @@ body {
   gap: 0.4rem;
 }
 
-/* 7. General focus: booking selects already handled globally */
+/* 7. Booking confirmation — Manage card (Fix hidden link) */
+.confirmation {
+  gap: 1.25rem;
+}
+
+.confirm-banner {
+  display: flex;
+  gap: 0.85rem;
+  align-items: flex-start;
+  padding: 0.9rem 1rem;
+  background: color-mix(in oklab, var(--mist) 88%, white);
+  border: 1px solid color-mix(in oklab, var(--plum) 18%, transparent);
+  border-radius: 10px;
+}
+
+.confirm-banner svg {
+  color: var(--plum);
+  flex: none;
+  margin-top: 2px;
+}
+
+.confirm-banner strong {
+  display: block;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.confirm-banner span {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.82rem;
+  color: var(--muted-foreground);
+  line-height: 1.5;
+}
+
+.manage-card {
+  padding: 1.25rem;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px color-mix(in oklab, var(--ink) 6%, transparent);
+}
+
+.manage-card--muted {
+  background: color-mix(in oklab, var(--mist) 50%, white);
+  box-shadow: none;
+}
+
+.manage-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.6rem;
+}
+
+.manage-card-head h3 {
+  font: 600 1rem var(--font-sans);
+  color: var(--ink);
+}
+
+.manage-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.5rem;
+  background: var(--ink);
+  color: var(--color-on-dark);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-radius: 999px;
+}
+
+.manage-card-copy {
+  font-size: 0.85rem;
+  color: var(--muted-foreground);
+  line-height: 1.6;
+  margin-bottom: 0.85rem;
+}
+
+.manage-link-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 0.85rem;
+}
+
+.manage-link-url {
+  flex: 1;
+  min-width: 0;
+  padding: 0.65rem 0.75rem;
+  background: var(--mist);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font: 500 0.72rem/1.4 var(--font-mono, ui-monospace, monospace);
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.manage-copy-btn {
+  flex: none;
+  min-height: 2.5rem;
+  padding-inline: 0.85rem;
+  font-size: 0.78rem;
+  gap: 0.35rem;
+}
+
+.manage-actions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  margin-bottom: 0.6rem;
+}
+
+.manage-actions-grid--2 {
+  margin-bottom: 0.75rem;
+}
+
+.manage-primary {
+  background: var(--ink);
+  color: var(--color-on-dark);
+  border-color: var(--ink);
+}
+
+.manage-primary:hover {
+  background: color-mix(in oklab, var(--ink) 90%, white);
+}
+
+.manage-policy {
+  font-size: 0.72rem;
+  color: var(--muted-foreground);
+  line-height: 1.6;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--border);
+}
+
+.recover-card {
+  padding: 1rem;
+  background: color-mix(in oklab, var(--mist) 65%, white);
+  border: 1px dashed color-mix(in oklab, var(--plum) 22%, var(--border));
+  border-radius: 10px;
+}
+
+.recover-card h4 {
+  font: 600 0.9rem var(--font-sans);
+  color: var(--ink);
+  margin-bottom: 0.35rem;
+}
+
+.recover-card p {
+  font-size: 0.82rem;
+  color: var(--muted-foreground);
+  line-height: 1.6;
+}
+
+.recover-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.recover-hint {
+  font-size: 0.72rem;
+  color: var(--muted-foreground);
+  padding: 0.3rem 0.6rem;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+
+@media (max-width: 520px) {
+  .manage-actions-grid {
+    grid-template-columns: 1fr;
+  }
+  .manage-link-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .manage-link-url {
+    white-space: normal;
+    word-break: break-all;
+  }
+}
+
+/* 8. General focus: booking selects already handled globally */
 
 @media (prefers-reduced-motion: reduce) {
   html {

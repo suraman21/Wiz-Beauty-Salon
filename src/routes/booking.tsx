@@ -1,6 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, Check, Clock3, Sparkles } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  CalendarPlus,
+  Check,
+  Clock3,
+  Copy,
+  ExternalLink,
+  MessageCircle,
+  ShieldCheck,
+  Sparkles,
+} from "lucide-react";
 import { z } from "zod";
 import { SiteLayout } from "@/components/site/SiteChrome";
 import { Button } from "@/components/ui/button";
@@ -86,6 +97,7 @@ function Booking() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [confirmed, setConfirmed] = useState<Confirmed | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const service = useMemo(
     () => services?.find((s) => s.id === serviceId) ?? null,
@@ -276,6 +288,74 @@ function Booking() {
         <em>appointment.</em>
       </>
     );
+  })();
+
+  const copyManageLink = async () => {
+    if (!confirmed?.manageUrl) return;
+    try {
+      await navigator.clipboard.writeText(confirmed.manageUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      window.prompt("Copy this link:", confirmed.manageUrl);
+    }
+  };
+
+  const whatsAppHref =
+    confirmed?.manageUrl && confirmed
+      ? `https://wa.me/?text=${encodeURIComponent(`My WIZ booking ${confirmed.reference}: ${confirmed.manageUrl}`)}`
+      : "";
+
+  const buildIcs = () => {
+    if (!confirmed) return;
+    const svc = services?.find((s) => s.id === confirmed.serviceId) ?? null;
+    const duration = svc?.duration_minutes ?? 60;
+    const start = new Date(`${confirmed.date}T${confirmed.time}:00`);
+    const end = new Date(start.getTime() + duration * 60000);
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const fmtIcs = (d: Date) =>
+      `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00`;
+    const ics = [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//WIZ Beauty Salon//Booking//EN",
+      "BEGIN:VEVENT",
+      `UID:${confirmed.reference}@wiz.arkeonethiopia.com`,
+      `DTSTAMP:${fmtIcs(new Date())}`,
+      `DTSTART:${fmtIcs(start)}`,
+      `DTEND:${fmtIcs(end)}`,
+      `SUMMARY:WIZ Beauty Salon - ${svc?.name ?? "Appointment"}`,
+      `DESCRIPTION:Reference ${confirmed.reference} - Manage: ${confirmed.manageUrl ?? ""}`,
+      `LOCATION:WIZ Beauty Salon, Addis Ababa`,
+      "END:VEVENT",
+      "END:VCALENDAR",
+    ].join("\r\n");
+    const blob = new Blob([ics], { type: "text/calendar" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `WIZ-${confirmed.reference}.ics`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const googleCalendarHref = (() => {
+    if (!confirmed) return "";
+    const svc = services?.find((s) => s.id === confirmed.serviceId) ?? null;
+    const duration = svc?.duration_minutes ?? 60;
+    const start = new Date(`${confirmed.date}T${confirmed.time}:00`);
+    const end = new Date(start.getTime() + duration * 60000);
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const fmtG = (d: Date) =>
+      `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00`;
+    const params = new URLSearchParams({
+      action: "TEMPLATE",
+      text: `WIZ Beauty Salon - ${svc?.name ?? "Appointment"} (${confirmed.reference})`,
+      dates: `${fmtG(start)}/${fmtG(end)}`,
+      details: `Reference ${confirmed.reference} - Manage: ${confirmed.manageUrl ?? ""}`,
+      location: "WIZ Beauty Salon, Addis Ababa",
+    });
+    return `https://calendar.google.com/calendar/render?${params.toString()}`;
   })();
 
   // Group services by category for the "All" view
@@ -610,16 +690,97 @@ function Booking() {
                   time={confirmed.time}
                   details={confirmed.details}
                 />
-                <p className="demo-note">
-                  Your request is with the salon. We will call you to confirm the appointment — it
-                  is not booked until we do.
-                </p>
-                {confirmed.manageUrl && (
-                  <p className="demo-note">
-                    Keep this link to change or cancel it:{" "}
-                    <a href={confirmed.manageUrl}>manage this booking</a>
-                  </p>
+
+                <div className="confirm-banner">
+                  <ShieldCheck size={18} />
+                  <div>
+                    <strong>Request received — we’ll call to confirm</strong>
+                    <span>It is not booked until the salon confirms. You can manage it below.</span>
+                  </div>
+                </div>
+
+                {confirmed.manageUrl ? (
+                  <div className="manage-card">
+                    <div className="manage-card-head">
+                      <h3>Keep your manage link</h3>
+                      <span className="manage-badge">
+                        <ShieldCheck size={12} /> Valid 24 hours
+                      </span>
+                    </div>
+                    <p className="manage-card-copy">
+                      This signed link lets you reschedule or cancel without calling. Save it — it
+                      works even if you close this page.
+                    </p>
+                    <div className="manage-link-row">
+                      <code className="manage-link-url" title={confirmed.manageUrl}>
+                        {confirmed.manageUrl}
+                      </code>
+                      <Button
+                        variant="ghost"
+                        type="button"
+                        className="btn btn-outline h-auto rounded-md manage-copy-btn"
+                        onClick={copyManageLink}
+                      >
+                        {copied ? <Check size={14} /> : <Copy size={14} />}{" "}
+                        {copied ? "Copied" : "Copy"}
+                      </Button>
+                    </div>
+                    <div className="manage-actions-grid">
+                      <a href={confirmed.manageUrl} className="btn btn-ink manage-primary">
+                        <ExternalLink size={14} /> Open manage page
+                      </a>
+                      <a
+                        href={whatsAppHref}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="btn btn-outline"
+                      >
+                        <MessageCircle size={14} /> Share on WhatsApp
+                      </a>
+                    </div>
+                    <div className="manage-actions-grid manage-actions-grid--2">
+                      <button type="button" className="btn btn-outline" onClick={buildIcs}>
+                        <CalendarPlus size={14} /> Add to calendar (.ics)
+                      </button>
+                      <a
+                        href={googleCalendarHref}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="btn btn-outline"
+                      >
+                        <CalendarPlus size={14} /> Google Calendar
+                      </a>
+                    </div>
+                    <p className="manage-policy">
+                      Free to change or cancel until 24 hours before your time. After that, please
+                      call the salon.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="manage-card manage-card--muted">
+                    <h3>Manage link unavailable</h3>
+                    <p>
+                      We couldn’t create a manage link for this request. Check your email/SMS or
+                      call the salon and give your reference.
+                    </p>
+                  </div>
                 )}
+
+                <div className="recover-card">
+                  <h4>Lost your link?</h4>
+                  <p>
+                    You can recover any booking with your phone number — no password needed. For
+                    now, keep your reference <strong>{confirmed.reference}</strong> and call the
+                    salon if you need to make a change.
+                  </p>
+                  <div className="recover-actions">
+                    <Link to="/contact" className="editorial-link">
+                      Contact salon <ArrowRight size={14} />
+                    </Link>
+                    <span className="recover-hint">Recover via phone — coming soon</span>
+                  </div>
+                </div>
+
                 <div className="manage-actions">
                   <Button
                     variant="ghost"
