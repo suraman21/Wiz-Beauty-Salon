@@ -2,13 +2,15 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { BeforeAfter, BookingBand, PageHero, SiteLayout } from "@/components/site/SiteChrome";
-import { categories, galleryWork, images, stories, type CategoryId } from "@/data/wiz";
+import { categories, galleryWork, stories, type CategoryId } from "@/data/wiz";
 import {
-  fetchGallery,
+  fetchGalleryPage,
   fetchReviews,
+  type GalleryCategory,
   type GalleryPhoto,
   type PublicReview,
 } from "@/lib/content-api";
+import { useSiteImages } from "@/lib/site-content";
 
 export const Route = createFileRoute("/gallery")({
   head: () => ({
@@ -35,22 +37,29 @@ type Item = {
   image: string;
   alt: string;
   title: string;
+  caption: string | undefined;
   tall: boolean;
-  category?: CategoryId;
+  /** The filter chip this photo belongs to, by slug — gallery photos and demo items alike. */
+  category: string | undefined;
 };
 
 function Gallery() {
-  const [filter, setFilter] = useState<CategoryId | "all">("all");
+  const images = useSiteImages();
+  const [filter, setFilter] = useState<string>("all");
   const [open, setOpen] = useState<number | null>(null);
 
   const [photos, setPhotos] = useState<GalleryPhoto[] | null>(null);
+  const [filters, setFilters] = useState<GalleryCategory[]>([]);
   const [reviews, setReviews] = useState<PublicReview[]>([]);
 
   useEffect(() => {
     const controller = new AbortController();
 
-    fetchGallery(controller.signal)
-      .then(setPhotos)
+    fetchGalleryPage(controller.signal)
+      .then((page) => {
+        setPhotos(page.photos);
+        setFilters(page.categories);
+      })
       .catch(() => setPhotos([]));
 
     fetchReviews(controller.signal)
@@ -70,7 +79,9 @@ function Gallery() {
         image: photo.url,
         alt: photo.title !== "" ? photo.title : "Work by WIZ Beauty Salon",
         title: photo.title !== "" ? photo.title : "WIZ Beauty Salon",
+        caption: photo.category ?? undefined,
         tall: index % 3 === 1,
+        category: photo.category_slug ?? undefined,
       }));
     }
 
@@ -79,12 +90,59 @@ function Gallery() {
       image: work.image,
       alt: work.alt,
       title: work.title,
+      caption: undefined,
       tall: work.tall ?? false,
       category: work.category,
     }));
   }, [live, photos]);
 
-  const shown = filter === "all" || live ? items : items.filter((i) => i.category === filter);
+  // The panel decides which filters exist: only categories with a published
+  // photo, so a chip can never open an empty wall.
+  const filterList: { id: string; name: string }[] = live
+    ? [{ id: "all", name: "All" }, ...filters.map((c) => ({ id: c.slug, name: c.name }))]
+    : [
+        { id: "all", name: "All" },
+        ...categories.map((c) => ({ id: c.id as string, name: c.name })),
+      ];
+
+  const active = filterList.some((c) => c.id === filter) ? filter : "all";
+  const shown = active === "all" ? items : items.filter((i) => i.category === active);
+
+  // The three large tiles at the top: the salon's newest published photos, or
+  // the design's own three when the panel has none yet.
+  const featured = useMemo<Item[]>(() => {
+    if (live) return items.slice(0, 3);
+
+    return [
+      {
+        key: "f-a",
+        image: images.makeup.url,
+        alt: images.makeup.alt,
+        title: "Evening glow",
+        caption: "Makeup",
+        tall: false,
+        category: undefined,
+      },
+      {
+        key: "f-b",
+        image: images.after.url,
+        alt: images.after.alt,
+        title: "Long waves",
+        caption: "Hair",
+        tall: false,
+        category: undefined,
+      },
+      {
+        key: "f-c",
+        image: images.skin.url,
+        alt: images.skin.alt,
+        title: "Fresh skin",
+        caption: "Skin",
+        tall: false,
+        category: undefined,
+      },
+    ];
+  }, [live, items, images]);
 
   useEffect(() => {
     if (open === null) return;
@@ -114,8 +172,8 @@ function Gallery() {
             ? "Recent work from the salon, shared with our clients' permission."
             : "Featured looks, transformations and the stories behind them. All images are temporary demo material."
         }
-        image={images.hair}
-        alt="Demo hair styling detail"
+        image={images.hair.url}
+        alt={images.hair.alt}
       />
 
       <section className="featured section-wrap">
@@ -131,18 +189,15 @@ function Gallery() {
           <p>{live ? "From the salon's own album." : "Demo imagery — not WIZ client work."}</p>
         </div>
         <div className="featured-grid">
-          <figure className="img-frame f-a">
-            <img src={images.makeup} alt="Demo featured makeup look" loading="lazy" />
-            <figcaption>Evening glow · Makeup</figcaption>
-          </figure>
-          <figure className="img-frame f-b">
-            <img src={images.after} alt="Demo featured hair look" loading="lazy" />
-            <figcaption>Long waves · Hair</figcaption>
-          </figure>
-          <figure className="img-frame f-c">
-            <img src={images.skin} alt="Demo featured skin look" loading="lazy" />
-            <figcaption>Fresh skin · Skin</figcaption>
-          </figure>
+          {featured.map((tile, index) => (
+            <figure className={`img-frame ${["f-a", "f-b", "f-c"][index] ?? "f-a"}`} key={tile.key}>
+              <img src={tile.image} alt={tile.alt} loading="lazy" />
+              <figcaption>
+                {tile.title}
+                {tile.caption !== undefined ? ` · ${tile.caption}` : ""}
+              </figcaption>
+            </figure>
+          ))}
         </div>
       </section>
 
@@ -161,7 +216,7 @@ function Gallery() {
             </p>
             <span className="demo-note">Illustrative demo only — not a WIZ client result.</span>
           </div>
-          <BeforeAfter before={images.before} after={images.after} />
+          <BeforeAfter before={images.before.url} after={images.after.url} />
         </div>
       </section>
 
@@ -177,15 +232,15 @@ function Gallery() {
           </div>
         </div>
 
-        {!live && (
+        {filterList.length > 1 && (
           <div className="filter-bar" role="tablist" aria-label="Filter gallery">
-            {[{ id: "all", name: "All" }, ...categories].map((c) => (
+            {filterList.map((c) => (
               <button
                 key={c.id}
                 role="tab"
-                aria-selected={filter === c.id}
-                className={`chip ${filter === c.id ? "is-active" : ""}`}
-                onClick={() => setFilter(c.id as CategoryId | "all")}
+                aria-selected={active === c.id}
+                className={`chip ${active === c.id ? "is-active" : ""}`}
+                onClick={() => setFilter(c.id)}
               >
                 {c.name}
               </button>

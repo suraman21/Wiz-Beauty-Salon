@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { BookingBand, PageHero, SiteLayout } from "@/components/site/SiteChrome";
 import { Button } from "@/components/ui/button";
-import { images } from "@/data/wiz";
+import { useSiteImages } from "@/lib/site-content";
 import { fetchCatalogue } from "@/lib/booking-api";
 import {
   PRICE_UNDISCLOSED,
@@ -35,6 +35,7 @@ export const Route = createFileRoute("/services")({
 });
 
 function Services() {
+  const images = useSiteImages();
   const [filter, setFilter] = useState<string>("all");
 
   // The panel's catalogue arrives after the first paint; until then (and if the
@@ -73,8 +74,8 @@ function Services() {
           </>
         }
         copy="Hair, nails, makeup and more — choose a category, then select your appointment."
-        image={images.makeup}
-        alt="Demo makeup portrait"
+        image={images.makeup.url}
+        alt={images.makeup.alt}
       />
 
       <div className="filter-bar section-wrap" role="tablist" aria-label="Service categories">
@@ -124,9 +125,14 @@ function Services() {
                 <ul className="svc-items">
                   {c.items.map((item) => (
                     <li key={item.id}>
-                      <div className="min-w-0 break-words">
-                        <h3>{item.name}</h3>
-                        <span>{item.price === "" ? PRICE_UNDISCLOSED : item.price}</span>
+                      <div className="svc-item-text">
+                        {item.image !== null && (
+                          <img className="svc-thumb" src={item.image} alt="" loading="lazy" />
+                        )}
+                        <div className="min-w-0 break-words">
+                          <h3>{item.name}</h3>
+                          <span>{item.price === "" ? PRICE_UNDISCLOSED : item.price}</span>
+                        </div>
                       </div>
                       <Link
                         to="/booking"

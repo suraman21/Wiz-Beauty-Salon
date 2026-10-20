@@ -47,7 +47,7 @@ final class CategoryRepository extends OrderedRepository
     public function published(): array
     {
         return $this->db->all(
-            'SELECT id, name, amharic, slug, description, sort_order
+            'SELECT id, name, amharic, slug, description, image_path, sort_order
                FROM service_categories
               WHERE is_active = 1
            ORDER BY sort_order ASC, name ASC',
@@ -98,6 +98,14 @@ final class CategoryRepository extends OrderedRepository
                 ':description' => $description,
                 ':active' => $active ? 1 : 0,
             ],
+        );
+    }
+
+    public function setImage(int $id, string $path): void
+    {
+        $this->db->execute(
+            'UPDATE service_categories SET image_path = :path WHERE id = :id',
+            [':path' => $path, ':id' => $id],
         );
     }
 

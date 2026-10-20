@@ -20,10 +20,12 @@ use Wiz\Repositories\ClosureRepository;
 use Wiz\Repositories\GalleryRepository;
 use Wiz\Repositories\RateLimitRepository;
 use Wiz\Repositories\ReviewRepository;
+use Wiz\Repositories\SiteImageRepository;
 use Wiz\Repositories\ServiceRepository;
 use Wiz\Repositories\SettingsRepository;
 use Wiz\Services\AvailabilityService;
 use Wiz\Services\BookingService;
+use Wiz\Support\MediaUsage;
 use Wiz\Support\SalonDetails;
 use Wiz\Support\SignedLink;
 
@@ -185,6 +187,7 @@ final class PublicContentTest extends TestCase
         $controller = new ContentApiController(
             new GalleryRepository($this->db),
             new ReviewRepository($this->db),
+            new SiteImageRepository($this->db),
             $this->salon,
             new BusinessHoursRepository($this->db),
             new ClosureRepository($this->db),
@@ -219,6 +222,7 @@ final class PublicContentTest extends TestCase
             (new ContentApiController(
                 new GalleryRepository($this->db),
                 new ReviewRepository($this->db),
+                new SiteImageRepository($this->db),
                 $this->salon,
                 new BusinessHoursRepository($this->db),
                 new ClosureRepository($this->db),
@@ -231,6 +235,106 @@ final class PublicContentTest extends TestCase
         self::assertSame('', $body['contact']['phone']);
         self::assertSame('', $body['contact']['email']);
         self::assertTrue($this->salon->isEmpty());
+    }
+
+    public function testImagesEndpointPublishesEverySlotTheLayoutUses(): void
+    {
+        $this->db->execute("DELETE FROM site_images");
+        $this->db->execute(
+            "INSERT INTO site_images (slot, label, image_path, alt, sort_order)
+             VALUES ('hero', 'Home page hero', 'aaaaaaaaaaaaaaaaaaaaaaaa.jpg', 'Hero portrait', 10),
+                    ('before', 'Before the change', '', 'Before', 20)",
+        );
+
+        $body = json_decode($this->contentApi()->images(new Request('GET', '/api/v1/images'))->body(), true, 512, JSON_THROW_ON_ERROR);
+
+        self::assertArrayHasKey('hero', $body['images']);
+        self::assertSame('/uploads/aaaaaaaaaaaaaaaaaaaaaaaa.jpg', $body['images']['hero']['url']);
+        self::assertSame('Hero portrait', $body['images']['hero']['alt']);
+        self::assertArrayNotHasKey('before', $body['images'], 'An empty slot falls back to the bundled picture.');
+    }
+
+    public function testGalleryPublishesCategoriesSoTheFilterWorksOnLivePhotos(): void
+    {
+        $categoryId = $this->categories->create('Nail', 'nail', null, true, 'ጥፍር');
+
+        $this->db->execute('DELETE FROM gallery_items');
+        $this->db->execute(
+            'INSERT INTO gallery_items (image_path, category_id, title, caption, is_published, sort_order)
+             VALUES (:path, :category, :title, NULL, 1, 10)',
+            [':path' => 'bbbbbbbbbbbbbbbbbbbbbbbb.jpg', ':category' => $categoryId, ':title' => 'Quiet polish'],
+        );
+
+        $body = json_decode($this->contentApi()->gallery(new Request('GET', '/api/v1/gallery'))->body(), true, 512, JSON_THROW_ON_ERROR);
+
+        self::assertSame('Nail', $body['photos'][0]['category']);
+        self::assertSame('nail', $body['photos'][0]['category_slug']);
+        self::assertSame('Nail', $body['categories'][0]['name']);
+        self::assertSame(1, $body['categories'][0]['photo_count']);
+    }
+
+    public function testServiceAndCategoryPhotosReachTheWebsite(): void
+    {
+        $categoryId = $this->categories->create('Braids', 'braids', null, true, null);
+        $this->categories->setImage($categoryId, 'cccccccccccccccccccccccc.jpg');
+
+        $this->services->create([
+            'category_id' => $categoryId,
+            'name' => 'Box braids',
+            'slug' => 'box-braids',
+            'short_description' => null,
+            'description' => null,
+            'price_cents' => null,
+            'duration_minutes' => 120,
+            'image_path' => 'dddddddddddddddddddddddd.jpg',
+            'is_active' => 1,
+            'is_featured' => 0,
+        ]);
+
+        $body = json_decode($this->bookingApi()->services(new Request('GET', '/api/v1/services'))->body(), true, 512, JSON_THROW_ON_ERROR);
+
+        self::assertSame('/uploads/cccccccccccccccccccccccc.jpg', $body['categories'][0]['image_url']);
+        self::assertSame('/uploads/dddddddddddddddddddddddd.jpg', $body['services'][0]['image_url']);
+    }
+
+    public function testAFileSharedByTwoScreensIsNotDeletedWithOne(): void
+    {
+        $categoryId = $this->categories->create('Nail', 'nail', null, true, null);
+        $this->categories->setImage($categoryId, 'eeeeeeeeeeeeeeeeeeeeeeee.jpg');
+
+        $this->db->execute('DELETE FROM gallery_items');
+        $this->db->execute(
+            'INSERT INTO gallery_items (image_path, category_id, title, caption, is_published, sort_order)
+             VALUES (:path, :category, :title, NULL, 1, 10)',
+            [':path' => 'eeeeeeeeeeeeeeeeeeeeeeee.jpg', ':category' => $categoryId, ':title' => 'Shared'],
+        );
+
+        $usage = new MediaUsage($this->db);
+        $galleryId = (int) $this->db->scalar('SELECT id FROM gallery_items LIMIT 1');
+
+        self::assertTrue(
+            $usage->usedElsewhere('eeeeeeeeeeeeeeeeeeeeeeee.jpg', 'gallery_items', $galleryId),
+            'The category still needs the file, so deleting the photo must keep it.',
+        );
+
+        $this->db->execute('DELETE FROM gallery_items WHERE id = :id', [':id' => $galleryId]);
+
+        self::assertFalse(
+            $usage->usedElsewhere('eeeeeeeeeeeeeeeeeeeeeeee.jpg', 'service_categories', $categoryId),
+            'Once nothing else points at it, the file is free to delete.',
+        );
+    }
+
+    private function contentApi(): ContentApiController
+    {
+        return new ContentApiController(
+            new GalleryRepository($this->db),
+            new ReviewRepository($this->db),
+            new SiteImageRepository($this->db),
+            $this->salon,
+            new BusinessHoursRepository($this->db),
+            new ClosureRepository($this->db),
+        );
     }
 
     private function bookingApi(): BookingApiController
@@ -260,6 +364,7 @@ final class PublicContentTest extends TestCase
             $this->categories,
             new RateLimitRepository($this->db),
             '',
+            '/uploads',
             null,
         );
     }

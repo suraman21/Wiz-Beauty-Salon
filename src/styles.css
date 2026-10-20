@@ -1207,6 +1207,30 @@ tokens it uses. */
 .svc-items li:hover {
   padding-inline: 10px;
 }
+.closures {
+  margin-block: 12px 0;
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+.closures li::before {
+  content: "— ";
+}
+.svc-item-text {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+.svc-thumb {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  object-fit: cover;
+  border-radius: 999px;
+  background: var(--border);
+}
 .svc-items h3 {
   font-size: 28px;
   line-height: 1.05;
@@ -2010,7 +2034,31 @@ tokens it uses. */
   .message-section {
     padding-block: 70px;
   }
-  .svc-items h3 {
+  .closures {
+  margin-block: 12px 0;
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+.closures li::before {
+  content: "— ";
+}
+.svc-item-text {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+.svc-thumb {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  object-fit: cover;
+  border-radius: 999px;
+  background: var(--border);
+}
+.svc-items h3 {
     font-size: 23px;
   }
   .story-cols {
@@ -2456,6 +2504,30 @@ body {
   padding-block: 1rem;
 }
 
+.closures {
+  margin-block: 12px 0;
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+.closures li::before {
+  content: "— ";
+}
+.svc-item-text {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+.svc-thumb {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  object-fit: cover;
+  border-radius: 999px;
+  background: var(--border);
+}
 .svc-items h3 {
   font-size: clamp(1.35rem, 2.2vw, 1.8rem);
 }
@@ -3014,7 +3086,31 @@ body {
     padding-block: 0.85rem;
   }
 
-  .svc-items h3 {
+  .closures {
+  margin-block: 12px 0;
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+.closures li::before {
+  content: "— ";
+}
+.svc-item-text {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+.svc-thumb {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  object-fit: cover;
+  border-radius: 999px;
+  background: var(--border);
+}
+.svc-items h3 {
     font-size: clamp(1.2rem, 5vw, 1.5rem);
   }
 

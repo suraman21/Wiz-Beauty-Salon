@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { BookingBand, EditorialLink, PageHero, SiteLayout } from "@/components/site/SiteChrome";
-import { images } from "@/data/wiz";
+import { useSiteImages } from "@/lib/site-content";
 
 export const Route = createFileRoute("/about")({
   head: () => ({
@@ -38,6 +38,8 @@ const values = [
 ];
 
 function About() {
+  const images = useSiteImages();
+
   return (
     <SiteLayout>
       <PageHero
@@ -51,8 +53,8 @@ function About() {
           </>
         }
         copy="WIZ is a space for your own expression of beauty — from the smallest detail to a whole new look."
-        image={images.portrait}
-        alt="Demo editorial portrait"
+        image={images.portrait.url}
+        alt={images.portrait.alt}
       />
 
       <section className="story section-wrap">
@@ -74,11 +76,7 @@ function About() {
 
       <section className="about-split">
         <figure className="img-frame">
-          <img
-            src={images.space}
-            alt="Demo salon-inspired interior, not the WIZ location"
-            loading="lazy"
-          />
+          <img src={images.space.url} alt={images.space.alt} loading="lazy" />
         </figure>
         <div className="about-split-copy">
           <span className="overline">What we stand for</span>

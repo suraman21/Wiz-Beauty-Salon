@@ -1,19 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { Clock, Mail, MapPin, MessageCircle, Phone, Instagram, Music2 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { EditorialLink, SiteLayout } from "@/components/site/SiteChrome";
-import { contact, images } from "@/data/wiz";
+import { contact } from "@/data/wiz";
 import { ApiError } from "@/lib/api";
 import { sendMessage } from "@/lib/contact-api";
 import {
-  fetchSalon,
+  closureLabel,
   hasDetails,
   hoursRows,
   whatsappHref,
   type SalonContact,
-  type SalonInfo,
 } from "@/lib/salon-api";
+import { useSalonInfo, useSiteImages } from "@/lib/site-content";
 
 export const Route = createFileRoute("/contact")({
   head: () => ({
@@ -89,19 +89,8 @@ type FormState = { name: string; contact: string; message: string };
 const emptyForm: FormState = { name: "", contact: "", message: "" };
 
 function Contact() {
-  const [salon, setSalon] = useState<SalonInfo | null>(null);
-
-  useEffect(() => {
-    const controller = new AbortController();
-
-    fetchSalon(controller.signal)
-      .then(setSalon)
-      .catch(() => {
-        // The page keeps its placeholder copy; nothing for the visitor to fix.
-      });
-
-    return () => controller.abort();
-  }, []);
+  const images = useSiteImages();
+  const salon = useSalonInfo();
 
   const published = salon !== null && hasDetails(salon.contact);
   const channels = published && salon !== null ? channelsFor(salon.contact) : placeholderChannels;
@@ -110,6 +99,7 @@ function Contact() {
       ? salon.contact.address
       : contact.address;
   const hours = salon !== null && salon.hours.length > 0 ? hoursRows(salon.hours) : contact.hours;
+  const closures = salon?.closures ?? [];
 
   const [form, setForm] = useState<FormState>(emptyForm);
   const [sent, setSent] = useState(false);
@@ -176,7 +166,7 @@ function Contact() {
             )}
           </div>
           <figure className="contact-image img-frame reveal">
-            <img src={images.skin} alt="Demo skincare portrait" />
+            <img src={images.skin.url} alt={images.skin.alt} />
           </figure>
         </div>
       </section>
@@ -207,6 +197,13 @@ function Contact() {
               </div>
             ))}
           </dl>
+          {closures.length > 0 && (
+            <ul className="closures">
+              {closures.slice(0, 3).map((closure) => (
+                <li key={`${closure.from}-${closure.to}`}>Closed {closureLabel(closure)}</li>
+              ))}
+            </ul>
+          )}
           <EditorialLink to="/booking">Book an appointment</EditorialLink>
         </div>
       </section>

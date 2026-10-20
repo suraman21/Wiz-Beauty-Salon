@@ -10,8 +10,10 @@ use Wiz\Core\Response;
 use Wiz\Core\Session;
 use Wiz\Core\Validator;
 use Wiz\Core\View;
+use Wiz\Repositories\CategoryRepository;
 use Wiz\Repositories\GalleryRepository;
 use Wiz\Services\Uploader;
+use Wiz\Support\MediaUsage;
 
 /**
  * The photo gallery.
@@ -25,7 +27,9 @@ final class GalleryController
     public function __construct(
         private readonly View $view,
         private readonly GalleryRepository $gallery,
+        private readonly CategoryRepository $categories,
         private readonly Uploader $uploader,
+        private readonly MediaUsage $usage,
         private readonly Session $session,
     ) {
     }
@@ -41,6 +45,7 @@ final class GalleryController
             'subheading' => 'Photos shown on the website. Only published photos are visible.',
             'active' => 'gallery',
             'items' => $this->gallery->all(),
+            'categories' => $this->categories->active(),
             'uploads' => $this->uploader,
             'error' => $this->session->flash('error'),
         ]);
@@ -126,10 +131,38 @@ final class GalleryController
             throw HttpException::notFound('That photo no longer exists.');
         }
 
+        $path = is_string($item['image_path'] ?? null) ? $item['image_path'] : '';
+
         $this->gallery->delete((int) $item['id']);
-        $this->uploader->delete(is_string($item['image_path'] ?? null) ? $item['image_path'] : null);
+
+        // The same file may also be a category illustration or a hero image;
+        // delete the bytes only when nothing else points at them.
+        if ($path !== '' && !$this->usage->usedElsewhere($path)) {
+            $this->uploader->delete($path);
+        }
 
         $this->session->flash('success', 'Photo deleted.');
+
+        throw new RedirectException('/admin/gallery');
+    }
+
+    /**
+     * Change which service category a photo belongs to — this is what the
+     * filter on the public gallery uses.
+     *
+     * @param array<string, string> $params
+     */
+    public function setCategory(Request $request, array $params = []): Response
+    {
+        $item = $this->gallery->find((int) ($params['id'] ?? 0));
+
+        if ($item === null) {
+            throw HttpException::notFound('That photo no longer exists.');
+        }
+
+        $this->gallery->setCategory((int) $item['id'], $this->category($request));
+
+        $this->session->flash('success', 'Photo category saved.');
 
         throw new RedirectException('/admin/gallery');
     }
@@ -142,6 +175,23 @@ final class GalleryController
         $this->gallery->move((int) ($params['id'] ?? 0), $request->string('direction') === 'down' ? 'down' : 'up');
 
         throw new RedirectException('/admin/gallery');
+    }
+
+    private function category(Request $request): ?int
+    {
+        $id = (int) $request->string('category_id');
+
+        if ($id <= 0) {
+            return null;
+        }
+
+        foreach ($this->categories->active() as $category) {
+            if ((int) $category['id'] === $id) {
+                return $id;
+            }
+        }
+
+        return null;
     }
 
     private function nullable(mixed $value): ?string

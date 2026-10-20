@@ -28,6 +28,10 @@ export default defineConfig({
        */
       proxy: {
         "/api": { target: "http://127.0.0.1:8080", changeOrigin: false },
+        // Pictures staff upload in the panel. In production they sit in the
+        // docroot next to the site, so Apache serves them; `bun dev` has to ask
+        // the PHP server for them.
+        "/uploads": { target: "http://127.0.0.1:8080", changeOrigin: false },
       },
     },
   },

@@ -22,6 +22,7 @@ use Wiz\Controllers\Admin\CategoryController;
 use Wiz\Controllers\Admin\DashboardController;
 use Wiz\Controllers\Admin\EmailTemplateController;
 use Wiz\Controllers\Admin\GalleryController;
+use Wiz\Controllers\Admin\WebsiteImagesController;
 use Wiz\Controllers\Admin\MessageController;
 use Wiz\Controllers\Admin\ReviewController;
 use Wiz\Controllers\Admin\ScheduleController;
@@ -52,6 +53,7 @@ use Wiz\Repositories\BookingSlotRepository;
 use Wiz\Repositories\BusinessHoursRepository;
 use Wiz\Repositories\CategoryRepository;
 use Wiz\Repositories\ClosureRepository;
+use Wiz\Repositories\SiteImageRepository;
 use Wiz\Repositories\MessageRepository;
 use Wiz\Repositories\RateLimitRepository;
 use Wiz\Repositories\SettingsRepository;
@@ -71,6 +73,7 @@ use Wiz\Services\BookingNotifier;
 use Wiz\Services\EmailTemplateService;
 use Wiz\Services\Uploader;
 use Wiz\Support\MailSettings;
+use Wiz\Support\MediaUsage;
 use Wiz\Support\SalonDetails;
 use Wiz\Support\SignedLink;
 
@@ -286,14 +289,34 @@ $app->singleton(ServiceController::class, static fn (App $a): ServiceController 
 $app->singleton(CategoryController::class, static fn (App $a): CategoryController => new CategoryController(
     $a->get(View::class),
     $a->get(CategoryRepository::class),
+    $a->get(Uploader::class),
+    $a->get(MediaUsage::class),
     $a->get(Session::class),
 ));
 
 $app->singleton(GalleryController::class, static fn (App $a): GalleryController => new GalleryController(
     $a->get(View::class),
     $a->get(GalleryRepository::class),
+    $a->get(CategoryRepository::class),
     $a->get(Uploader::class),
+    $a->get(MediaUsage::class),
     $a->get(Session::class),
+));
+
+$app->singleton(WebsiteImagesController::class, static fn (App $a): WebsiteImagesController => new WebsiteImagesController(
+    $a->get(View::class),
+    $a->get(SiteImageRepository::class),
+    $a->get(Uploader::class),
+    $a->get(MediaUsage::class),
+    $a->get(Session::class),
+));
+
+$app->singleton(SiteImageRepository::class, static fn (App $a): SiteImageRepository => new SiteImageRepository(
+    $a->get(Database::class),
+));
+
+$app->singleton(MediaUsage::class, static fn (App $a): MediaUsage => new MediaUsage(
+    $a->get(Database::class),
 ));
 
 $app->singleton(BookingController::class, static fn (App $a): BookingController => new BookingController(
@@ -321,6 +344,7 @@ $app->singleton(BookingApiController::class, static fn (App $a): BookingApiContr
     $a->get(CategoryRepository::class),
     $a->get(RateLimitRepository::class),
     (string) ($a->config('app.url') ?? ''),
+    (string) ($a->config('app.upload_url') ?? '/uploads'),
     $a->get(SignedLink::class),
 ));
 
@@ -342,6 +366,7 @@ $app->singleton(MessageController::class, static fn (App $a): MessageController 
 $app->singleton(ContentApiController::class, static fn (App $a): ContentApiController => new ContentApiController(
     $a->get(GalleryRepository::class),
     $a->get(ReviewRepository::class),
+    $a->get(SiteImageRepository::class),
     $a->get(SalonDetails::class),
     $a->get(BusinessHoursRepository::class),
     $a->get(ClosureRepository::class),

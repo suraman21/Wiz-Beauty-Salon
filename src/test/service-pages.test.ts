@@ -18,6 +18,7 @@ const catalogue: ServiceCatalogue = {
       amharic: "ጋሻ",
       description: "",
       sort_order: 0,
+      image_url: null,
     },
     {
       id: 2,
@@ -26,6 +27,7 @@ const catalogue: ServiceCatalogue = {
       amharic: "ጥፍር",
       description: "Hands and feet",
       sort_order: 10,
+      image_url: null,
     },
   ],
   services: [
@@ -38,6 +40,7 @@ const catalogue: ServiceCatalogue = {
       duration_minutes: 120,
       price_cents: 250000,
       featured: false,
+      image_url: null,
     },
     {
       id: 7,
@@ -48,6 +51,7 @@ const catalogue: ServiceCatalogue = {
       duration_minutes: 45,
       price_cents: null,
       featured: true,
+      image_url: null,
     },
     {
       id: 8,
@@ -58,6 +62,7 @@ const catalogue: ServiceCatalogue = {
       duration_minutes: 45,
       price_cents: 120050,
       featured: false,
+      image_url: null,
     },
   ],
 };
@@ -77,8 +82,8 @@ describe("service pages", () => {
     const nail = pages.find((page) => page.id === "nail");
 
     expect(nail?.items).toEqual([
-      { id: "7", slug: "nail-shellac", name: "Shellac", price: "" },
-      { id: "8", slug: "nail-manicure", name: "Manicure", price: "ETB 1,200.50" },
+      { id: "7", slug: "nail-shellac", name: "Shellac", price: "", image: null },
+      { id: "8", slug: "nail-manicure", name: "Manicure", price: "ETB 1,200.50", image: null },
     ]);
     expect(hasUnpricedItems(pages)).toBe(true);
   });
@@ -103,6 +108,7 @@ describe("service pages", () => {
           duration_minutes: 60,
           price_cents: null,
           featured: false,
+          image_url: null,
         },
       ],
     });
@@ -129,5 +135,63 @@ describe("service pages", () => {
   it("uses the placeholder wording the page prints", () => {
     expect(PRICE_UNDISCLOSED).toBe("Price · to be confirmed");
     expect(taglineFor(buildServicePages(catalogue)[1]!)).toBe("Hands and feet");
+  });
+});
+
+describe("category and service pictures", () => {
+  it("prefers the picture staff chose in the panel", () => {
+    const pages = buildServicePages({
+      categories: [
+        {
+          id: 1,
+          name: "Nail",
+          slug: "nail",
+          amharic: "ጥፍር",
+          description: "",
+          sort_order: 0,
+          image_url: "/uploads/category.jpg",
+        },
+      ],
+      services: [
+        {
+          id: 5,
+          name: "Shellac",
+          slug: "nail-shellac",
+          category: "Nail",
+          description: "",
+          duration_minutes: 45,
+          price_cents: null,
+          featured: false,
+          image_url: "/uploads/service.jpg",
+        },
+      ],
+    });
+
+    expect(pages[0]?.image).toBe("/uploads/category.jpg");
+    expect(pages[0]?.fromPanel).toBe(true);
+    expect(pages[0]?.items[0]?.image).toBe("/uploads/service.jpg");
+  });
+
+  it("keeps the bundled illustration when the panel has no picture", () => {
+    const pages = buildServicePages({
+      categories: [],
+      services: [
+        {
+          id: 9,
+          name: "Manicure",
+          slug: "nail-manicure",
+          category: "Nail",
+          description: "",
+          duration_minutes: 45,
+          price_cents: null,
+          featured: false,
+          image_url: null,
+        },
+      ],
+    });
+
+    expect(pages[0]?.fromPanel).toBe(false);
+    expect(pages[0]?.image).not.toBe("");
+    expect(pages[0]?.items[0]?.image).toBeNull();
   });
 });

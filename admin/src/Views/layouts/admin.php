@@ -65,6 +65,7 @@ $navItem = static function (string $key, string $href, string $label, int $badge
         <?= $navItem('bookings', '/admin/bookings', 'Bookings', $navPending) ?>
         <?= $navItem('services', '/admin/services', 'Services') ?>
         <?= $navItem('gallery', '/admin/gallery', 'Gallery') ?>
+        <?= $navItem('images', '/admin/images', 'Website images') ?>
         <?= $navItem('reviews', '/admin/reviews', 'Reviews') ?>
         <?= $navItem('schedule', '/admin/schedule', 'Opening hours') ?>
         <?= $navItem('messages', '/admin/messages', 'Messages', $navUnread) ?>

@@ -17,6 +17,8 @@ export type ApiService = {
   duration_minutes: number;
   price_cents: number | null;
   featured: boolean;
+  /** The photo staff uploaded for this service, if any. */
+  image_url: string | null;
 };
 
 export type CalendarDay = {
@@ -51,6 +53,8 @@ export type ApiCategory = {
   amharic: string;
   description: string;
   sort_order: number;
+  /** The illustration the salon chose for this category, if any. */
+  image_url: string | null;
 };
 
 export type ServiceCatalogue = {

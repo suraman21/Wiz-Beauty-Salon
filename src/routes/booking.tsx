@@ -4,7 +4,7 @@ import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { z } from "zod";
 import { SiteLayout } from "@/components/site/SiteChrome";
 import { Button } from "@/components/ui/button";
-import { images } from "@/data/wiz";
+import { useSiteImages } from "@/lib/site-content";
 import { bookingDetailsSchema, findBookableService } from "@/data/services";
 import { ApiError, formatPrice, isoToday } from "@/lib/api";
 import {
@@ -60,6 +60,7 @@ const fmt = (iso: string) =>
   parseIso(iso).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
 
 function Booking() {
+  const images = useSiteImages();
   const search = Route.useSearch();
   const appliedSearch = useRef(false);
 
@@ -277,7 +278,7 @@ function Booking() {
     <SiteLayout>
       <section className="booking-page">
         <aside className="booking-visual">
-          <img src={images.portrait} alt="Demo editorial beauty portrait" />
+          <img src={images.portrait.url} alt={images.portrait.alt} />
           <div className="booking-visual-copy">
             <span className="overline">Book your moment</span>
             <p>

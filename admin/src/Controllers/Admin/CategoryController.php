@@ -11,6 +11,8 @@ use Wiz\Core\Session;
 use Wiz\Core\Validator;
 use Wiz\Core\View;
 use Wiz\Repositories\CategoryRepository;
+use Wiz\Services\Uploader;
+use Wiz\Support\MediaUsage;
 use Wiz\Support\Slug;
 
 /**
@@ -24,6 +26,8 @@ final class CategoryController
     public function __construct(
         private readonly View $view,
         private readonly CategoryRepository $categories,
+        private readonly Uploader $uploader,
+        private readonly MediaUsage $usage,
         private readonly Session $session,
     ) {
     }
@@ -47,6 +51,7 @@ final class CategoryController
             'active' => 'services',
             'categories' => $this->categories->allWithCounts(),
             'editing' => $editing,
+            'uploads' => $this->uploader,
             'error' => $this->session->flash('error'),
         ]);
     }
@@ -65,14 +70,25 @@ final class CategoryController
         }
 
         $base = Slug::make($data['name'], 'category');
+        $image = $this->storeImage($request);
 
-        $this->categories->create(
+        if ($image['ok'] !== true) {
+            $this->session->flash('error', (string) $image['error']);
+
+            throw new RedirectException('/admin/categories');
+        }
+
+        $id = $this->categories->create(
             $data['name'],
             Slug::unique($base, fn (string $slug): bool => $this->categories->slugExists($slug)),
             $data['description'],
             $data['is_active'],
             $data['amharic'],
         );
+
+        if (is_string($image['path']) && $image['path'] !== '') {
+            $this->categories->setImage($id, $image['path']);
+        }
 
         $this->session->flash('success', sprintf('“%s” was added.', $data['name']));
 
@@ -98,7 +114,26 @@ final class CategoryController
             throw new RedirectException('/admin/categories?edit=' . $id);
         }
 
+        $previous = $this->categories->find($id);
+        $image = $this->storeImage($request);
+
+        if ($image['ok'] !== true) {
+            $this->session->flash('error', (string) $image['error']);
+
+            throw new RedirectException('/admin/categories?edit=' . $id);
+        }
+
         $this->categories->update($id, $data['name'], $data['description'], $data['is_active'], $data['amharic']);
+
+        if (is_string($image['path']) && $image['path'] !== '') {
+            $this->categories->setImage($id, $image['path']);
+
+            $old = is_string($previous['image_path'] ?? null) ? (string) $previous['image_path'] : '';
+
+            if ($old !== '' && !$this->usage->usedElsewhere($old, 'service_categories', $id)) {
+                $this->uploader->delete($old);
+            }
+        }
 
         $this->session->flash('success', sprintf('“%s” was saved.', $data['name']));
 
@@ -135,6 +170,26 @@ final class CategoryController
         $this->categories->move((int) ($params['id'] ?? 0), $request->string('direction') === 'down' ? 'down' : 'up');
 
         throw new RedirectException('/admin/categories');
+    }
+
+    /**
+     * @return array{ok: bool, path: ?string, error: ?string}
+     */
+    private function storeImage(Request $request): array
+    {
+        $file = $request->file('image');
+
+        if ($file === [] || (int) ($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+            return ['ok' => true, 'path' => null, 'error' => null];
+        }
+
+        $result = $this->uploader->store($file);
+
+        if ($result['ok'] !== true) {
+            return ['ok' => false, 'path' => null, 'error' => (string) ($result['error'] ?? 'The image could not be saved.')];
+        }
+
+        return ['ok' => true, 'path' => (string) ($result['path'] ?? ''), 'error' => null];
     }
 
     /**

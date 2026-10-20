@@ -24,6 +24,8 @@ export type ServiceListItem = {
   name: string;
   /** Formatted price, or "" when the salon has not published one. */
   price: string;
+  /** The service's own photo when the panel has one. */
+  image: string | null;
 };
 
 export type ServicePage = {
@@ -33,6 +35,8 @@ export type ServicePage = {
   description: string;
   image: string;
   alt: string;
+  /** True when the picture came from the panel rather than the bundle. */
+  fromPanel: boolean;
   items: ServiceListItem[];
 };
 
@@ -107,6 +111,7 @@ export function buildServicePages(catalogue: ServiceCatalogue): ServicePage[] {
       slug: service.slug !== "" ? service.slug : String(service.id),
       name: service.name,
       price: formatPrice(service.price_cents),
+      image: service.image_url ?? null,
     };
 
     if (page !== undefined) {
@@ -114,7 +119,12 @@ export function buildServicePages(catalogue: ServiceCatalogue): ServicePage[] {
       continue;
     }
 
-    const { image, alt } = imageFor(slug, category?.name ?? service.category);
+    const categoryName = category?.name ?? service.category;
+    const panelImage = category?.image_url ?? null;
+    const own = panelImage !== null && panelImage !== "" ? panelImage : null;
+    const illustration = imageFor(slug, categoryName);
+    const image = own ?? illustration.image;
+    const alt = own === null ? illustration.alt : categoryName;
 
     pages.set(slug, {
       id: slug,
@@ -123,6 +133,7 @@ export function buildServicePages(catalogue: ServiceCatalogue): ServicePage[] {
       description: (category?.description ?? "").trim(),
       image,
       alt,
+      fromPanel: own !== null,
       items: [item],
     });
   }
@@ -148,11 +159,13 @@ export function localServicePages(): ServicePage[] {
     description: "",
     image: category.image,
     alt: category.alt,
+    fromPanel: false,
     items: category.items.map((item) => ({
       id: item.id,
       slug: item.id,
       name: item.name,
       price: "",
+      image: null,
     })),
   }));
 }

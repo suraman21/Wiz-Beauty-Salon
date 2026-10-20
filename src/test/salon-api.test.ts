@@ -1,5 +1,12 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { fetchSalon, hasDetails, hoursRows, whatsappHref, type SalonHour } from "@/lib/salon-api";
+import {
+  closureLabel,
+  fetchSalon,
+  hasDetails,
+  hoursRows,
+  whatsappHref,
+  type SalonHour,
+} from "@/lib/salon-api";
 
 const jsonResponse = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -124,5 +131,23 @@ describe("WhatsApp links", () => {
 
   it("returns nothing when there is no number", () => {
     expect(whatsappHref("")).toBe("");
+  });
+});
+
+describe("closure labels", () => {
+  it("prints a run of days once", () => {
+    expect(closureLabel({ from: "2026-12-25", to: "2026-12-26", reason: "Holiday" })).toBe(
+      "25 Dec – 26 Dec · Holiday",
+    );
+  });
+
+  it("does not repeat a single day", () => {
+    expect(closureLabel({ from: "2027-01-07", to: "2027-01-07", reason: "" })).toBe("7 Jan");
+  });
+
+  it("keeps the reason when there is one", () => {
+    expect(closureLabel({ from: "2027-03-01", to: "2027-03-01", reason: "  Training  " })).toBe(
+      "1 Mar · Training",
+    );
   });
 });

@@ -66,6 +66,16 @@ foreach ($catalogue as $order => $category) {
 
     $categoryId = $existing === null ? null : (int) $existing['id'];
 
+    // A category created before the Amharic column existed has no Amharic name.
+    // Fill only the empty ones — a name staff typed in the panel always wins.
+    if ($categoryId !== null && $category['amharic'] !== '') {
+        $db->execute(
+            'UPDATE service_categories SET amharic = :amharic
+              WHERE id = :id AND (amharic IS NULL OR amharic = \'\')',
+            [':amharic' => $category['amharic'], ':id' => $categoryId],
+        );
+    }
+
     foreach ($category['items'] as $index => $name) {
         $serviceSlug = $slug . '-' . Slug::make($name);
 

@@ -17,6 +17,7 @@ use Wiz\Controllers\Admin\CategoryController;
 use Wiz\Controllers\Admin\DashboardController;
 use Wiz\Controllers\Admin\EmailTemplateController;
 use Wiz\Controllers\Admin\GalleryController;
+use Wiz\Controllers\Admin\WebsiteImagesController;
 use Wiz\Controllers\Admin\MessageController;
 use Wiz\Controllers\Admin\ReviewController;
 use Wiz\Controllers\Admin\ScheduleController;
@@ -142,6 +143,11 @@ return static function (Router $router, App $app): void {
     $router->post('/admin/gallery/{id}/toggle', [GalleryController::class, 'toggle'], ['auth']);
     $router->post('/admin/gallery/{id}/delete', [GalleryController::class, 'destroy'], ['auth']);
     $router->post('/admin/gallery/{id}/move', [GalleryController::class, 'move'], ['auth']);
+    $router->post('/admin/gallery/{id}/category', [GalleryController::class, 'setCategory'], ['auth']);
+
+    // --------------------------------------------------------- website images
+    $router->get('/admin/images', [WebsiteImagesController::class, 'index'], ['auth']);
+    $router->post('/admin/images/{id}', [WebsiteImagesController::class, 'update'], ['auth']);
 
     // ----------------------------------------------------------------- team
     // Administrators only: these screens decide who else may sign in.

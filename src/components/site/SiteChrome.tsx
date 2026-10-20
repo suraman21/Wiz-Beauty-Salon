@@ -1,16 +1,15 @@
 import { Link } from "@tanstack/react-router";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { ArrowRight, Menu, X } from "lucide-react";
-import logo from "@/assets/wiz-logo.png.asset.json";
 import { contact, nav } from "@/data/wiz";
+import { useSalonInfo } from "@/lib/site-content";
+import { hasDetails, whatsappHref } from "@/lib/salon-api";
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
-  const logoRef = useRef<HTMLImageElement>(null);
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
-    const logoImage = logoRef.current;
-    if (logoImage?.complete && logoImage.naturalWidth === 0) logoImage.hidden = true;
+
     return () => {
       document.body.style.overflow = "";
     };
@@ -23,14 +22,6 @@ export function SiteHeader() {
         className="brand-mark"
         onClick={() => setOpen(false)}
       >
-        <img
-          ref={logoRef}
-          src={logo.url}
-          alt=""
-          onError={(event) => {
-            event.currentTarget.hidden = true;
-          }}
-        />
         <span>
           WIZ <small>BEAUTY SALON</small>
         </span>
@@ -108,13 +99,7 @@ export function SiteFooter() {
             ))}
             <Link to="/booking">Booking</Link>
           </nav>
-          <div className="footer-contact">
-            <span>{contact.phone}</span>
-            <span>{contact.address}</span>
-            <span>
-              Instagram {contact.instagram} · TikTok {contact.tiktok}
-            </span>
-          </div>
+          <FooterContact />
         </div>
         <div className="footer-last">
           <span>© WIZ Beauty Salon</span>
@@ -122,6 +107,57 @@ export function SiteFooter() {
         </div>
       </div>
     </footer>
+  );
+}
+
+/**
+ * The footer prints what the salon published in Settings, and the placeholders
+ * only while it has published nothing — the same rule as the Contact page.
+ */
+function FooterContact() {
+  const salon = useSalonInfo();
+  const details = salon?.contact;
+  const published = details !== undefined && hasDetails(details);
+
+  if (details === undefined || !published) {
+    return (
+      <div className="footer-contact">
+        <span>{contact.phone}</span>
+        <span>{contact.address}</span>
+        <span>
+          Instagram {contact.instagram} · TikTok {contact.tiktok}
+        </span>
+      </div>
+    );
+  }
+
+  const socials = [
+    details.instagram === ""
+      ? null
+      : { label: "Instagram", href: `https://instagram.com/${details.instagram}` },
+    details.tiktok === ""
+      ? null
+      : { label: "TikTok", href: `https://tiktok.com/@${details.tiktok}` },
+  ].filter((item): item is { label: string; href: string } => item !== null);
+
+  return (
+    <div className="footer-contact">
+      {details.phone !== "" && (
+        <a href={`tel:${details.phone.replace(/[^\d+]/g, "")}`}>{details.phone}</a>
+      )}
+      {details.whatsapp !== "" && <a href={whatsappHref(details.whatsapp)}>WhatsApp</a>}
+      {details.address !== "" && <span>{details.address}</span>}
+      {details.email !== "" && <a href={`mailto:${details.email}`}>{details.email}</a>}
+      {socials.length > 0 && (
+        <span>
+          {socials.map((item) => (
+            <a key={item.label} href={item.href}>
+              {item.label}
+            </a>
+          ))}
+        </span>
+      )}
+    </div>
   );
 }
 

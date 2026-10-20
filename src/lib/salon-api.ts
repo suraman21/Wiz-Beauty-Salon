@@ -79,6 +79,27 @@ export function hasDetails(contact: SalonContact): boolean {
   return Object.values(contact).some((value) => value.trim() !== "");
 }
 
+/**
+ * "25 Dec – 26 Dec · Holiday" — the way the salon would say it out loud.
+ * A one-day closure prints once, not twice.
+ */
+export function closureLabel(closure: SalonClosure): string {
+  const format = (iso: string) => {
+    const date = new Date(`${iso}T00:00:00`);
+
+    if (Number.isNaN(date.getTime())) return iso;
+
+    return date.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+  };
+
+  const from = format(closure.from);
+  const to = format(closure.to);
+  const days = closure.from === closure.to || to === from ? from : `${from} – ${to}`;
+  const reason = closure.reason.trim();
+
+  return reason === "" ? days : `${days} · ${reason}`;
+}
+
 /** "09:00 – 20:00", or "Closed" — already 24-hour, as the salon sets it. */
 function timeFor(hour: SalonHour): string {
   if (hour.is_closed || hour.opens_at === null || hour.closes_at === null) return "Closed";

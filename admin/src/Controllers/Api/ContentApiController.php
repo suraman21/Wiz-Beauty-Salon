@@ -9,6 +9,7 @@ use Wiz\Repositories\BusinessHoursRepository;
 use Wiz\Repositories\ClosureRepository;
 use Wiz\Repositories\GalleryRepository;
 use Wiz\Repositories\ReviewRepository;
+use Wiz\Repositories\SiteImageRepository;
 use Wiz\Support\SalonDetails;
 
 /**
@@ -24,6 +25,7 @@ final class ContentApiController
     public function __construct(
         private readonly GalleryRepository $gallery,
         private readonly ReviewRepository $reviews,
+        private readonly SiteImageRepository $images,
         private readonly SalonDetails $details,
         private readonly BusinessHoursRepository $hours,
         private readonly ClosureRepository $closures,
@@ -53,10 +55,27 @@ final class ContentApiController
                 'title' => (string) ($item['title'] ?? ''),
                 'caption' => (string) ($item['caption'] ?? ''),
                 'url' => $base . '/' . rawurlencode($file),
+                'category_id' => $item['category_id'] === null ? null : (int) $item['category_id'],
+                'category' => $item['category_name'] === null ? null : (string) $item['category_name'],
+                'category_slug' => $item['category_slug'] === null ? null : (string) $item['category_slug'],
             ];
         }
 
-        return Response::json(['photos' => $out])
+        // Only categories that have a published photo: the filter can never
+        // offer a choice that comes back empty.
+        $categories = [];
+
+        foreach ($this->gallery->publishedCategories() as $row) {
+            $categories[] = [
+                'id' => (int) $row['id'],
+                'name' => (string) $row['name'],
+                'slug' => (string) $row['slug'],
+                'amharic' => (string) ($row['amharic'] ?? ''),
+                'photo_count' => (int) $row['photo_count'],
+            ];
+        }
+
+        return Response::json(['photos' => $out, 'categories' => $categories])
             ->withHeader('Cache-Control', 'public, max-age=300');
     }
 
@@ -84,6 +103,38 @@ final class ContentApiController
 
         return Response::json(['reviews' => $out])
             ->withHeader('Cache-Control', 'public, max-age=300');
+    }
+
+    /**
+     * GET /api/v1/images
+     *
+     * Every picture slot the layout uses, keyed by the name the design knows it
+     * by ("hero", "before", "after"…). The site replaces its bundled image with
+     * whatever is returned here, and keeps the bundle for any slot the salon has
+     * not filled.
+     *
+     * @param array<string, string> $params
+     */
+    public function images(Request $request, array $params = []): Response
+    {
+        $base = rtrim($this->uploadUrl, '/');
+        $out = [];
+
+        foreach ($this->images->all() as $image) {
+            $file = (string) ($image['image_path'] ?? '');
+
+            if ($file === '') {
+                continue;
+            }
+
+            $out[(string) $image['slot']] = [
+                'url' => $base . '/' . rawurlencode($file),
+                'alt' => (string) ($image['alt'] ?? ''),
+            ];
+        }
+
+        return Response::json(['images' => $out])
+            ->withHeader('Cache-Control', 'public, max-age=60');
     }
 
     /**

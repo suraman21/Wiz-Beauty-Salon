@@ -4,11 +4,13 @@
  *
  * @var list<array<string, mixed>> $categories
  * @var array<string, mixed>|null $editing
+ * @var \Wiz\Services\Uploader $uploads
  * @var string|null $error
  */
 
 $isEdit = $editing !== null;
 $action = $isEdit ? '/admin/categories/' . (int) $editing['id'] : '/admin/categories';
+$currentImage = $isEdit && is_string($editing['image_path'] ?? null) ? $editing['image_path'] : null;
 ?>
 
 <div class="columns columns--form">
@@ -87,7 +89,7 @@ $action = $isEdit ? '/admin/categories/' . (int) $editing['id'] : '/admin/catego
             <div class="alert alert--error" role="alert"><?= e($error) ?></div>
         <?php endif; ?>
 
-        <form method="post" action="<?= e($action) ?>" autocomplete="off">
+        <form method="post" action="<?= e($action) ?>" enctype="multipart/form-data" autocomplete="off">
             <?= csrf_field() ?>
 
             <div class="field">
@@ -107,6 +109,17 @@ $action = $isEdit ? '/admin/categories/' . (int) $editing['id'] : '/admin/catego
                 <label for="description">Description <span class="field__hint">optional</span></label>
                 <input type="text" id="description" name="description" maxlength="255"
                        value="<?= e($editing['description'] ?? '') ?>" placeholder="Shown under the category name">
+            </div>
+
+            <div class="field">
+                <label for="image">Photo <span class="field__hint">JPG, PNG or WebP · up to 5 MB</span></label>
+                <?php if ($currentImage !== null): ?>
+                    <div class="current-image">
+                        <img src="<?= e($uploads->url($currentImage)) ?>" alt="" width="72" height="72">
+                        <span class="field__hint">Shown beside this category on the Services page.</span>
+                    </div>
+                <?php endif; ?>
+                <input type="file" id="image" name="image" accept="image/jpeg,image/png,image/webp">
             </div>
 
             <label class="check">

@@ -31,6 +31,7 @@ final class BookingApiController
         private readonly CategoryRepository $categories,
         private readonly RateLimitRepository $limits,
         private readonly string $appOrigin = '',
+        private readonly string $uploadUrl = '/uploads',
         private readonly ?SignedLink $links = null,
     ) {
     }
@@ -52,7 +53,11 @@ final class BookingApiController
 
         $categories = [];
 
+        $base = rtrim($this->uploadUrl, '/');
+
         foreach ($this->categories->published() as $row) {
+            $image = (string) ($row['image_path'] ?? '');
+
             $categories[] = [
                 'id' => (int) $row['id'],
                 'name' => (string) $row['name'],
@@ -60,6 +65,7 @@ final class BookingApiController
                 'amharic' => (string) ($row['amharic'] ?? ''),
                 'description' => (string) ($row['description'] ?? ''),
                 'sort_order' => (int) $row['sort_order'],
+                'image_url' => $image === '' ? null : $base . '/' . rawurlencode($image),
             ];
         }
 
@@ -93,6 +99,7 @@ final class BookingApiController
                 'duration_minutes' => $duration > 0 ? $duration : $this->availability->gridMinutes(),
                 'price_cents' => $price,
                 'featured' => (int) ($row['is_featured'] ?? 0) === 1,
+                'image_url' => (($row['image_path'] ?? '') === '' ? null : $base . '/' . rawurlencode((string) $row['image_path'])),
             ];
         }
 

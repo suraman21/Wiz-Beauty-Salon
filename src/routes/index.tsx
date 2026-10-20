@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ArrowDown, ArrowRight } from "lucide-react";
 import { BeforeAfter, BookingBand, EditorialLink, SiteLayout } from "@/components/site/SiteChrome";
-import { images } from "@/data/wiz";
+import { useSiteImages } from "@/lib/site-content";
 import { fetchCatalogue } from "@/lib/booking-api";
 import {
   buildServicePages,
@@ -35,6 +35,8 @@ export const Route = createFileRoute("/")({
 const layout = ["service-hair", "service-nails", "service-makeup", "service-skin"];
 
 function Home() {
+  const images = useSiteImages();
+
   // The four cards are the first four categories in the panel's order, so the
   // salon decides what its home page leads with — no deploy needed.
   const [featured, setFeatured] = useState(() => featuredPages(localServicePages(), 4));
@@ -60,8 +62,8 @@ function Home() {
       <section className="home-hero" aria-labelledby="hero-title">
         <img
           className="home-hero-image"
-          src={images.hero}
-          alt="Editorial beauty portrait, temporary demo image"
+          src={images.hero.url}
+          alt={images.hero.alt}
           width={1536}
           height={1024}
           fetchPriority="high"
@@ -173,17 +175,13 @@ function Home() {
         </div>
         <div className="gallery-composition">
           <figure className="gallery-one img-frame">
-            <img src={images.portrait} alt="Demo editorial beauty portrait" loading="lazy" />
+            <img src={images.portrait.url} alt={images.portrait.alt} loading="lazy" />
           </figure>
           <figure className="gallery-two img-frame">
-            <img
-              src={images.space}
-              alt="Demo salon-inspired interior, not the WIZ location"
-              loading="lazy"
-            />
+            <img src={images.space.url} alt={images.space.alt} loading="lazy" />
           </figure>
           <figure className="gallery-three img-frame">
-            <img src={images.nails} alt="Demo manicure detail" loading="lazy" />
+            <img src={images.nails.url} alt={images.nails.alt} loading="lazy" />
           </figure>
           <span className="gallery-word" aria-hidden="true">
             WIZ
@@ -216,7 +214,7 @@ function Home() {
             </EditorialLink>
           </div>
           <div className="comparison-wrap">
-            <BeforeAfter before={images.before} after={images.after} />
+            <BeforeAfter before={images.before.url} after={images.after.url} />
           </div>
         </div>
       </section>

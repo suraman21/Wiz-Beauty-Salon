@@ -3,6 +3,7 @@
  * Gallery: upload at the top, photos below.
  *
  * @var list<array<string, mixed>> $items
+ * @var list<array<string, mixed>> $categories
  * @var \Wiz\Services\Uploader $uploads
  * @var string|null $error
  */
@@ -38,6 +39,16 @@ $published = count(array_filter($items, static fn (array $i): bool => (int) ($i[
         <div class="field">
             <label for="caption">Caption <span class="field__hint">optional</span></label>
             <input type="text" id="caption" name="caption" maxlength="255" placeholder="Shown under the photo">
+        </div>
+
+        <div class="field">
+            <label for="category_id">Category <span class="field__hint">optional</span></label>
+            <select id="category_id" name="category_id">
+                <option value="">No category</option>
+                <?php foreach ($categories as $category): ?>
+                    <option value="<?= (int) $category['id'] ?>"><?= e($category['name']) ?></option>
+                <?php endforeach; ?>
+            </select>
         </div>
 
         <div class="upload-form__submit">
@@ -84,6 +95,21 @@ $published = count(array_filter($items, static fn (array $i): bool => (int) ($i[
                     <?php if (!empty($item['caption'])): ?>
                         <p class="photo__caption"><?= e($item['caption']) ?></p>
                     <?php endif; ?>
+
+                    <form method="post" action="/admin/gallery/<?= $id ?>/category" class="photo__category">
+                        <?= csrf_field() ?>
+                        <label class="sr-only" for="cat-<?= $id ?>">Category for <?= e($item['title'] ?? 'this photo') ?></label>
+                        <select id="cat-<?= $id ?>" name="category_id" onchange="this.form.submit()">
+                            <option value="">No category</option>
+                            <?php foreach ($categories as $category): ?>
+                                <option value="<?= (int) $category['id'] ?>"
+                                    <?= (int) ($item['category_id'] ?? 0) === (int) $category['id'] ? 'selected' : '' ?>>
+                                    <?= e($category['name']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <noscript><button type="submit" class="btn btn--ghost btn--sm">Save category</button></noscript>
+                    </form>
 
                     <div class="photo__actions">
                         <form method="post" action="/admin/gallery/<?= $id ?>/toggle">
