@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 import { ArrowRight, Menu, X } from "lucide-react";
+import logo from "@/assets/wiz-logo.png";
 import { contact, nav } from "@/data/wiz";
 import { useSalonInfo } from "@/lib/site-content";
 import { hasDetails, whatsappHref } from "@/lib/salon-api";
@@ -22,9 +23,7 @@ export function SiteHeader() {
         className="brand-mark"
         onClick={() => setOpen(false)}
       >
-        <span>
-          WIZ <small>BEAUTY SALON</small>
-        </span>
+        <img className="brand-logo" src={logo} alt="WIZ Beauty Salon" width={56} height={56} />
       </Link>
       <nav className="desktop-nav" aria-label="Main navigation">
         {nav.map((item) => (

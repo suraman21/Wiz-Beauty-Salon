@@ -256,24 +256,6 @@
   flex: none;
   line-height: 1;
 }
-.brand-mark img {
-  width: 49px;
-  height: 49px;
-  object-fit: contain;
-}
-.brand-mark span {
-  font-family: var(--font-display);
-  font-size: 29px;
-  font-weight: 600;
-  display: flex;
-  flex-direction: column;
-}
-.brand-mark small {
-  font-family: var(--font-sans);
-  font-size: 7px;
-  letter-spacing: 0.2em;
-  margin-top: 2px;
-}
 .desktop-nav {
   display: flex;
   align-items: center;
@@ -1122,9 +1104,30 @@ tokens it uses. */
 /* Chips & filters */
 .filter-bar {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 10px;
-  padding-block: 44px 10px;
+  padding-block: 44px 14px;
+  /* One row that scrolls sideways, so fourteen categories never push the
+     page down five rows on a phone. Wide screens wrap as before. */
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.filter-bar::-webkit-scrollbar {
+  display: none;
+}
+.filter-bar > * {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+}
+@media (min-width: 1024px) {
+  .filter-bar {
+    flex-wrap: wrap;
+    overflow-x: visible;
+    scroll-snap-type: none;
+  }
 }
 .chip {
   padding: 11px 22px;
@@ -1381,17 +1384,14 @@ tokens it uses. */
   position: relative;
   margin-bottom: 18px;
   break-inside: avoid;
-  aspect-ratio: 4 / 3.4;
   cursor: zoom-in;
   animation: reveal-up 0.6s var(--ease-quiet) both;
 }
-.masonry-item.tall {
-  aspect-ratio: 4 / 5;
-}
+/* The photo decides its own height — no crop, no forced tile. */
 .masonry-item img {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  height: auto;
+  display: block;
 }
 .masonry-item span {
   position: absolute;
@@ -2035,30 +2035,30 @@ tokens it uses. */
     padding-block: 70px;
   }
   .closures {
-  margin-block: 12px 0;
-  display: grid;
-  gap: 6px;
-  font-size: 12px;
-  color: var(--muted-foreground);
-}
-.closures li::before {
-  content: "— ";
-}
-.svc-item-text {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  min-width: 0;
-}
-.svc-thumb {
-  flex: none;
-  width: 44px;
-  height: 44px;
-  object-fit: cover;
-  border-radius: 999px;
-  background: var(--border);
-}
-.svc-items h3 {
+    margin-block: 12px 0;
+    display: grid;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--muted-foreground);
+  }
+  .closures li::before {
+    content: "— ";
+  }
+  .svc-item-text {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-width: 0;
+  }
+  .svc-thumb {
+    flex: none;
+    width: 44px;
+    height: 44px;
+    object-fit: cover;
+    border-radius: 999px;
+    background: var(--border);
+  }
+  .svc-items h3 {
     font-size: 23px;
   }
   .story-cols {
@@ -2218,6 +2218,7 @@ body {
 .brand-mark img {
   width: 2.875rem;
   height: 2.875rem;
+  border-radius: 50%;
 }
 
 .desktop-nav {
@@ -3087,30 +3088,30 @@ body {
   }
 
   .closures {
-  margin-block: 12px 0;
-  display: grid;
-  gap: 6px;
-  font-size: 12px;
-  color: var(--muted-foreground);
-}
-.closures li::before {
-  content: "— ";
-}
-.svc-item-text {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  min-width: 0;
-}
-.svc-thumb {
-  flex: none;
-  width: 44px;
-  height: 44px;
-  object-fit: cover;
-  border-radius: 999px;
-  background: var(--border);
-}
-.svc-items h3 {
+    margin-block: 12px 0;
+    display: grid;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--muted-foreground);
+  }
+  .closures li::before {
+    content: "— ";
+  }
+  .svc-item-text {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-width: 0;
+  }
+  .svc-thumb {
+    flex: none;
+    width: 44px;
+    height: 44px;
+    object-fit: cover;
+    border-radius: 999px;
+    background: var(--border);
+  }
+  .svc-items h3 {
     font-size: clamp(1.2rem, 5vw, 1.5rem);
   }
 

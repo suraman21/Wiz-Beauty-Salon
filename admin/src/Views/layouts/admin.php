@@ -54,8 +54,7 @@ $navItem = static function (string $key, string $href, string $label, int $badge
 
 <aside class="sidebar">
     <div class="sidebar__brand">
-        <span class="brand-mark">WIZ</span>
-        <span class="brand-sub">Beauty Salon</span>
+        <img class="brand-logo" src="<?= e(asset('wiz-logo.png')) ?>" alt="WIZ Beauty Salon" width="44" height="44">
     </div>
 
     <nav class="nav" aria-label="Main">

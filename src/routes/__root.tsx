@@ -81,6 +81,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "WIZ Beauty Salon" },
       { name: "description", content: "WIZ Beauty Salon — a modern beauty destination." },
       { property: "og:type", content: "website" },
+      { property: "og:site_name", content: "WIZ Beauty Salon" },
+      // Absolute, because social networks do not resolve a relative path.
+      { property: "og:image", content: "https://wiz.arkeonethiopia.com/og-image.png" },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
@@ -92,6 +97,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Manrope:wght@400;500;600&display=swap",
       },
       { rel: "icon", type: "image/png", href: "/favicon.png" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
     ],
   }),
   shellComponent: RootShell,

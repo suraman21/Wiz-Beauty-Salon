@@ -200,6 +200,7 @@ final class BookingNotifier
         try {
             $html = $this->view->capture('mail.booking', [
                 'salonName' => $this->salonName,
+                'logoUrl' => $this->appUrl === '' ? '' : rtrim($this->appUrl, '/') . '/logo.png',
                 'title' => $content['title'],
                 'intro' => $content['intro'],
                 'rows' => $content['rows'],

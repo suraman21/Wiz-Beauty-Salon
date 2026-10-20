@@ -59,6 +59,19 @@ a { color: var(--brand); }
 
 .brand-mark--lg { font-size: 22px; }
 
+.brand-logo {
+    display: block;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+}
+
+.brand-logo--lg {
+    width: 76px;
+    height: 76px;
+    margin: 0 auto;
+}
+
 .brand-sub {
     display: block;
     margin-top: 2px;

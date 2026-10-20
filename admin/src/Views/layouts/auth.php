@@ -11,8 +11,7 @@
 
 <main class="auth-shell">
     <div class="auth-brand">
-        <span class="brand-mark brand-mark--lg">WIZ</span>
-        <span class="brand-sub">Beauty Salon</span>
+        <img class="brand-logo brand-logo--lg" src="<?= e(asset('wiz-logo.png')) ?>" alt="WIZ Beauty Salon" width="76" height="76">
     </div>
 
     <?= $content ?>

@@ -12,6 +12,7 @@
  * @var string $actionLabel
  * @var string $outro
  * @var string $salonName
+ * @var string $logoUrl
  */
 ?>
 <!DOCTYPE html>
@@ -29,6 +30,10 @@
 
     <tr>
         <td style="background:#211d1a;padding:20px 26px;">
+            <?php if (($logoUrl ?? '') !== ''): ?>
+                <img src="<?= e($logoUrl) ?>" width="46" height="46" alt=""
+                     style="display:block;width:46px;height:46px;border:0;border-radius:50%;margin-bottom:12px;">
+            <?php endif; ?>
             <span style="font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:#c9a173;">
                 <?= e($salonName) ?>
             </span>

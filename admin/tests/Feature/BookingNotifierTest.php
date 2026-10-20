@@ -115,6 +115,16 @@ final class BookingNotifierTest extends TestCase
         self::assertSame('hanna@example.com', $salon[0]['replyTo']);
     }
 
+    public function testTheEmailShowsTheSalonLogo(): void
+    {
+        $this->notifier->requested($this->booking());
+
+        $customer = $this->transport->to('hanna@example.com');
+
+        // Absolute, because a mail client has no page to resolve it against.
+        self::assertStringContainsString('src="https://wiz.test/logo.png"', $customer[0]['html']);
+    }
+
     public function testTheCustomerEmailCarriesTheirOwnLink(): void
     {
         $this->notifier->requested($this->booking());
