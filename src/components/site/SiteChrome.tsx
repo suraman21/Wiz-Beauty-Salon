@@ -102,7 +102,6 @@ export function SiteFooter() {
         </div>
         <div className="footer-last">
           <span>© WIZ Beauty Salon</span>
-          <span>All rights reserved.</span>
         </div>
       </div>
     </footer>
@@ -110,15 +109,14 @@ export function SiteFooter() {
 }
 
 /**
- * The footer prints what the salon published in Settings — the same rule as the
- * Contact page: a detail it has not filled in is left out, never faked.
+ * The footer prints what the salon published in Settings — and nothing it has
+ * not. An empty line of half-filled links looks broken, so it is left out.
  */
 function FooterContact() {
   const salon = useSalonInfo();
   const details = salon?.contact;
-  const published = details !== undefined && hasDetails(details);
 
-  if (details === undefined || !published) {
+  if (details === undefined || !hasDetails(details)) {
     return null;
   }
 
@@ -249,9 +247,9 @@ export function BeforeAfter({
   const [v, setV] = useState(50);
   return (
     <div className="comparison" aria-label={label}>
-      <img src={after} alt="After the transformation" loading="lazy" />
+      <img src={after} alt="After" loading="lazy" />
       <div className="comparison-before" style={{ width: `${v}%` }}>
-        <img src={before} alt="Before the transformation" loading="lazy" />
+        <img src={before} alt="Before" loading="lazy" />
       </div>
       <span className="comparison-label comparison-label-before">BEFORE</span>
       <span className="comparison-label comparison-label-after">AFTER</span>
@@ -264,7 +262,7 @@ export function BeforeAfter({
         max="100"
         value={v}
         onChange={(e) => setV(Number(e.target.value))}
-        aria-label="Reveal the before and after comparison"
+        aria-label="Reveal the before and after"
       />
     </div>
   );

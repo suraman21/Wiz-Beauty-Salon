@@ -3,6 +3,7 @@ import { useState, type FormEvent } from "react";
 import { Clock, Mail, MapPin, MessageCircle, Phone, Instagram, Music2 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { EditorialLink, SiteLayout } from "@/components/site/SiteChrome";
+import { contact } from "@/data/wiz";
 import { ApiError } from "@/lib/api";
 import { sendMessage } from "@/lib/contact-api";
 import {
@@ -82,12 +83,10 @@ function Contact() {
   const images = useSiteImages();
   const salon = useSalonInfo();
 
-  // Only what the salon published: a channel it has not filled in is left out
-  // rather than shown as a bracketed placeholder.
   const published = salon !== null && hasDetails(salon.contact);
   const channels = published && salon !== null ? channelsFor(salon.contact) : [];
-  const address = published && salon !== null ? salon.contact.address : "";
-  const hours = salon !== null && salon.hours.length > 0 ? hoursRows(salon.hours) : [];
+  const address = published && salon !== null ? salon.contact.address : contact.address;
+  const hours = salon !== null && salon.hours.length > 0 ? hoursRows(salon.hours) : contact.hours;
   const closures = salon?.closures ?? [];
 
   const [form, setForm] = useState<FormState>(emptyForm);
@@ -133,23 +132,26 @@ function Contact() {
             <p className="contact-lead">
               Questions, ideas or special requests — reach us the way that suits you.
             </p>
-            {channels.length > 0 && (
-              <ul className="channels">
-                {channels.map(({ icon: Icon, label, value, href }) => (
-                  <li key={label}>
-                    <Icon size={18} strokeWidth={1.4} />
-                    <span className="ch-label">{label}</span>
-                    {href === undefined ? (
-                      <span className="ch-value">{value}</span>
-                    ) : (
-                      <a className="ch-value" href={href} rel="noreferrer">
-                        {value}
-                      </a>
-                    )}
-                  </li>
-                ))}
-              </ul>
+            {channels.length === 0 && (
+              <a className="editorial-link contact-write" href="#message">
+                Send us a message <span aria-hidden="true">→</span>
+              </a>
             )}
+            <ul className="channels" hidden={channels.length === 0}>
+              {channels.map(({ icon: Icon, label, value, href }) => (
+                <li key={label}>
+                  <Icon size={18} strokeWidth={1.4} />
+                  <span className="ch-label">{label}</span>
+                  {href === undefined ? (
+                    <span className="ch-value">{value}</span>
+                  ) : (
+                    <a className="ch-value" href={href} rel="noreferrer">
+                      {value}
+                    </a>
+                  )}
+                </li>
+              ))}
+            </ul>
           </div>
           <figure className="contact-image img-frame reveal">
             <img src={images.skin.url} alt={images.skin.alt} />
@@ -157,9 +159,9 @@ function Contact() {
         </div>
       </section>
 
-      <section className={`visit section-wrap${address === "" ? " visit--copy-only" : ""}`}>
+      <section className={`visit section-wrap${address === "" ? " visit-solo" : ""}`}>
         {address !== "" && (
-          <div className="location-card" role="img" aria-label={`The salon is at ${address}`}>
+          <div className="map-placeholder" role="img" aria-label={`Salon location — ${address}`}>
             <MapPin size={30} strokeWidth={1.2} />
             <span>{address}</span>
           </div>
@@ -199,7 +201,7 @@ function Contact() {
         </div>
       </section>
 
-      <section className="message-section">
+      <section className="message-section" id="message">
         <div className="section-wrap message-inner">
           <div>
             <span className="overline">Send a message</span>

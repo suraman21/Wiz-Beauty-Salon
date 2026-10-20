@@ -40,11 +40,13 @@ export type ServicePage = {
   items: ServiceListItem[];
 };
 
+export const PRICE_UNDISCLOSED = "Price on request";
+
 const local = new Map(serviceCategories.map((category) => [category.id as string, category]));
 
 const fallbackImage = {
   image: images.space,
-  alt: "Service category",
+  alt: "Service category at WIZ Beauty Salon",
 };
 
 /** Format cents as the salon would say the price out loud. */

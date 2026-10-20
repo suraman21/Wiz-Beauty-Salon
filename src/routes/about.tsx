@@ -64,14 +64,13 @@ function About() {
         </p>
         <div className="story-cols">
           <p>
-            WIZ began with a simple idea: that a visit to the salon should feel like a pause, not a
-            production. A calm room, an honest conversation, and work shaped around the person in
-            the chair rather than a picture on a wall.
+            WIZ began with a simple idea: that beauty should feel personal. A place where you are
+            listened to before a single brush, comb or file is picked up.
           </p>
           <p>
-            Our approach is detail-led — the finish of a cut, the line of a braid, the way a colour
-            catches the light. Every appointment starts by listening to what you want, and ends with
-            something that feels entirely yours.
+            Every visit is shaped around you — your hair, your skin, your occasion, your mood. Our
+            team works with care and detail, and leaves you room to say what you want, and what you
+            don't.
           </p>
         </div>
       </section>

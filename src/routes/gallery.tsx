@@ -39,7 +39,7 @@ type Item = {
   title: string;
   caption: string | undefined;
   tall: boolean;
-  /** The filter chip this photo belongs to, by slug. */
+  /** The filter chip this photo belongs to, by slug — gallery photos and demo items alike. */
   category: string | undefined;
 };
 
@@ -71,7 +71,7 @@ function Gallery() {
 
   const live = photos !== null && photos.length > 0;
 
-  // The salon's own photos, or the bundled set until the panel has some.
+  // The salon's own photos when there are any, the demo set until then.
   const items = useMemo<Item[]>(() => {
     if (live) {
       return photos.map((photo, index) => ({
@@ -167,11 +167,7 @@ function Gallery() {
             <em>everywhere.</em>
           </>
         }
-        copy={
-          live
-            ? "Recent work from the salon, shared with our clients' permission."
-            : "A look at the work, the detail and the mood of the salon."
-        }
+        copy="Recent work from the salon, shared with our clients' permission."
         image={images.hair.url}
         alt={images.hair.alt}
       />
@@ -186,7 +182,7 @@ function Gallery() {
               <em>we love.</em>
             </h2>
           </div>
-          <p>{live ? "From the salon's own album." : "A closer look at the detail."}</p>
+          <p>A selection of recent looks.</p>
         </div>
         <div className="featured-grid">
           {featured.map((tile, index) => (
@@ -210,7 +206,7 @@ function Gallery() {
               <br />
               <em>&amp; after.</em>
             </h2>
-            <p>Drag the slider to compare.</p>
+            <p>Drag the slider to compare, side by side.</p>
           </div>
           <BeforeAfter before={images.before.url} after={images.after.url} />
         </div>

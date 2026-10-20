@@ -169,7 +169,7 @@ function Home() {
               <em>everywhere.</em>
             </h2>
           </div>
-          <p>A glimpse of the detail and the mood of the salon.</p>
+          <p>A glimpse of the work and the mood behind it.</p>
         </div>
         <div className="gallery-composition">
           <figure className="gallery-one img-frame">
@@ -201,7 +201,7 @@ function Home() {
             </h2>
             <p>
               Sometimes a change in the mirror changes everything. Move the slider to see the
-              difference.
+              difference side by side.
             </p>
             <EditorialLink to="/gallery" light>
               See more transformations

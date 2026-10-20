@@ -5,7 +5,12 @@ import { BookingBand, PageHero, SiteLayout } from "@/components/site/SiteChrome"
 import { Button } from "@/components/ui/button";
 import { useSiteImages } from "@/lib/site-content";
 import { fetchCatalogue } from "@/lib/booking-api";
-import { buildServicePages, localServicePages } from "@/lib/service-pages";
+import {
+  PRICE_UNDISCLOSED,
+  buildServicePages,
+  hasUnpricedItems,
+  localServicePages,
+} from "@/lib/service-pages";
 
 export const Route = createFileRoute("/services")({
   head: () => ({
@@ -56,6 +61,7 @@ function Services() {
 
   const active = filter !== "all" && pages.some((page) => page.id === filter) ? filter : "all";
   const shown = active === "all" ? pages : pages.filter((page) => page.id === active);
+  const unpriced = hasUnpricedItems(pages);
   return (
     <SiteLayout>
       <PageHero
@@ -125,7 +131,7 @@ function Services() {
                         )}
                         <div className="min-w-0 break-words">
                           <h3>{item.name}</h3>
-                          {item.price !== "" && <span>{item.price}</span>}
+                          <span>{item.price === "" ? PRICE_UNDISCLOSED : item.price}</span>
                         </div>
                       </div>
                       <Link
