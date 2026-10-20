@@ -11,9 +11,12 @@ import { ApiError, apiGet, apiPost } from "@/lib/api";
 export type ApiService = {
   id: number;
   name: string;
+  slug: string;
   category: string;
+  description: string;
   duration_minutes: number;
   price_cents: number | null;
+  featured: boolean;
 };
 
 export type CalendarDay = {
@@ -41,10 +44,33 @@ export type BookingResult = {
   manage_url?: string | null;
 };
 
+export type ApiCategory = {
+  id: number;
+  name: string;
+  slug: string;
+  amharic: string;
+  description: string;
+  sort_order: number;
+};
+
+export type ServiceCatalogue = {
+  services: ApiService[];
+  categories: ApiCategory[];
+};
+
+/**
+ * The whole public catalogue in one request: every visible service and every
+ * visible category, in the order the salon arranged them in the panel.
+ */
+export function fetchCatalogue(signal?: AbortSignal): Promise<ServiceCatalogue> {
+  return apiGet<Partial<ServiceCatalogue>>("/api/v1/services", signal).then((body) => ({
+    services: body.services ?? [],
+    categories: body.categories ?? [],
+  }));
+}
+
 export function fetchServices(signal?: AbortSignal): Promise<ApiService[]> {
-  return apiGet<{ services: ApiService[] }>("/api/v1/services", signal).then(
-    (body) => body.services,
-  );
+  return fetchCatalogue(signal).then((body) => body.services);
 }
 
 export function fetchCalendar(

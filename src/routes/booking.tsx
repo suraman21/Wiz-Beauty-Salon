@@ -108,19 +108,20 @@ function Booking() {
     return () => controller.abort();
   }, []);
 
-  // A link from the services page carries the chosen service — by database id,
-  // or by the catalogue id the older pages still use.
+  // A link from the services page carries the chosen service — by its slug,
+  // by database id, or by the catalogue id the older pages still use.
   useEffect(() => {
     if (!services || appliedSearch.current || !search.service) return;
 
     appliedSearch.current = true;
 
+    const bySlug = services.find((s) => s.slug === search.service);
     const byId = services.find((s) => String(s.id) === search.service);
     const catalogueName = findBookableService(search.service)?.name.toLowerCase();
     const byName = catalogueName
       ? services.find((s) => s.name.toLowerCase() === catalogueName)
       : undefined;
-    const match = byId ?? byName;
+    const match = bySlug ?? byId ?? byName;
 
     if (match) {
       setServiceId(match.id);

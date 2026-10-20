@@ -35,7 +35,22 @@ final class CategoryRepository extends OrderedRepository
     public function active(): array
     {
         return $this->db->all(
-            'SELECT id, name FROM service_categories WHERE is_active = 1 ORDER BY sort_order ASC, name ASC',
+            'SELECT id, name, amharic FROM service_categories WHERE is_active = 1 ORDER BY sort_order ASC, name ASC',
+        );
+    }
+
+    /**
+     * The categories the website shows, in the order staff arranged them.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function published(): array
+    {
+        return $this->db->all(
+            'SELECT id, name, amharic, slug, description, sort_order
+               FROM service_categories
+              WHERE is_active = 1
+           ORDER BY sort_order ASC, name ASC',
         );
     }
 
@@ -58,10 +73,11 @@ final class CategoryRepository extends OrderedRepository
         return (int) $this->db->scalar($sql, $params) > 0;
     }
 
-    public function create(string $name, string $slug, ?string $description, bool $active): int
+    public function create(string $name, string $slug, ?string $description, bool $active, ?string $amharic = null): int
     {
         return $this->db->insert('service_categories', [
             'name' => $name,
+            'amharic' => $amharic,
             'slug' => $slug,
             'description' => $description,
             'is_active' => $active ? 1 : 0,
@@ -69,15 +85,16 @@ final class CategoryRepository extends OrderedRepository
         ]);
     }
 
-    public function update(int $id, string $name, ?string $description, bool $active): void
+    public function update(int $id, string $name, ?string $description, bool $active, ?string $amharic = null): void
     {
         $this->db->execute(
             'UPDATE service_categories
-                SET name = :name, description = :description, is_active = :active
+                SET name = :name, amharic = :amharic, description = :description, is_active = :active
               WHERE id = :id',
             [
                 ':id' => $id,
                 ':name' => $name,
+                ':amharic' => $amharic,
                 ':description' => $description,
                 ':active' => $active ? 1 : 0,
             ],

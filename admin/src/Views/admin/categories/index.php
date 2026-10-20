@@ -48,6 +48,9 @@ $action = $isEdit ? '/admin/categories/' . (int) $editing['id'] : '/admin/catego
 
                         <td>
                             <span class="cell-title"><?= e($category['name']) ?></span>
+                            <?php if (!empty($category['amharic'])): ?>
+                                <span class="cell-sub" lang="am"><?= e($category['amharic']) ?></span>
+                            <?php endif; ?>
                             <?php if (!empty($category['description'])): ?>
                                 <p class="cell-sub"><?= e($category['description']) ?></p>
                             <?php endif; ?>
@@ -91,6 +94,13 @@ $action = $isEdit ? '/admin/categories/' . (int) $editing['id'] : '/admin/catego
                 <label for="name">Name</label>
                 <input type="text" id="name" name="name" required maxlength="120"
                        value="<?= e($editing['name'] ?? '') ?>" placeholder="e.g. Hair">
+            </div>
+
+            <div class="field">
+                <label for="amharic">Amharic name <span class="field__hint">optional</span></label>
+                <input type="text" id="amharic" name="amharic" maxlength="120" lang="am"
+                       value="<?= e($editing['amharic'] ?? '') ?>" placeholder="e.g. ጥፍር">
+                <p class="field__hint">Printed under the English name on the Services page.</p>
             </div>
 
             <div class="field">

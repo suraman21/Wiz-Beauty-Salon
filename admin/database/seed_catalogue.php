@@ -55,8 +55,8 @@ foreach ($catalogue as $order => $category) {
     if ($existing === null) {
         $db->insert('service_categories', [
             'name' => $category['name'],
+            'amharic' => $category['amharic'] === '' ? null : $category['amharic'],
             'slug' => $slug,
-            'description' => $category['amharic'],
             'sort_order' => $order * 10,
             'is_active' => 1,
         ]);

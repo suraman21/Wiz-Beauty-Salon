@@ -1,14 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { BookingBand, PageHero, SiteLayout } from "@/components/site/SiteChrome";
 import { Button } from "@/components/ui/button";
-import { images, PRICE_PLACEHOLDER } from "@/data/wiz";
+import { images } from "@/data/wiz";
+import { fetchCatalogue } from "@/lib/booking-api";
 import {
-  serviceCategories,
-  filterServiceCategories,
-  type ServiceCategoryId,
-} from "@/data/services";
+  PRICE_UNDISCLOSED,
+  buildServicePages,
+  hasUnpricedItems,
+  localServicePages,
+} from "@/lib/service-pages";
 
 export const Route = createFileRoute("/services")({
   head: () => ({
@@ -33,8 +35,32 @@ export const Route = createFileRoute("/services")({
 });
 
 function Services() {
-  const [filter, setFilter] = useState<ServiceCategoryId | "all">("all");
-  const shown = filterServiceCategories(filter);
+  const [filter, setFilter] = useState<string>("all");
+
+  // The panel's catalogue arrives after the first paint; until then (and if the
+  // request fails) the page shows the local copy rather than an empty list.
+  const [pages, setPages] = useState(localServicePages);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    fetchCatalogue(controller.signal)
+      .then((catalogue) => {
+        const live = buildServicePages(catalogue);
+
+        if (live.length > 0) setPages(live);
+      })
+      .catch(() => {
+        // Keep what is already on screen — a slow or down API is not an error
+        // the customer needs to see.
+      });
+
+    return () => controller.abort();
+  }, []);
+
+  const active = filter !== "all" && pages.some((page) => page.id === filter) ? filter : "all";
+  const shown = active === "all" ? pages : pages.filter((page) => page.id === active);
+  const unpriced = hasUnpricedItems(pages);
   return (
     <SiteLayout>
       <PageHero
@@ -55,22 +81,22 @@ function Services() {
         <Button
           variant="ghost"
           role="tab"
-          aria-selected={filter === "all"}
-          className={`chip h-auto rounded-none ${filter === "all" ? "is-active" : ""}`}
+          aria-selected={active === "all"}
+          className={`chip h-auto rounded-none ${active === "all" ? "is-active" : ""}`}
           onClick={() => setFilter("all")}
         >
           All
         </Button>
-        {serviceCategories.map((c) => (
+        {pages.map((c) => (
           <Button
             variant="ghost"
             key={c.id}
             role="tab"
-            aria-selected={filter === c.id}
-            className={`chip h-auto rounded-none flex-wrap whitespace-normal ${filter === c.id ? "is-active" : ""}`}
+            aria-selected={active === c.id}
+            className={`chip h-auto rounded-none flex-wrap whitespace-normal ${active === c.id ? "is-active" : ""}`}
             onClick={() => setFilter(c.id)}
           >
-            {c.name} <span lang="am">{c.amharic}</span>
+            {c.name} {c.amharic !== "" && <span lang="am">{c.amharic}</span>}
           </Button>
         ))}
       </div>
@@ -84,25 +110,27 @@ function Services() {
               </figure>
               <div className="svc-cat-body">
                 <span className="overline">
-                  {String(serviceCategories.indexOf(c) + 1).padStart(2, "0")} / {c.name}
+                  {String(pages.indexOf(c) + 1).padStart(2, "0")} / {c.name}
                 </span>
                 <h2 className="break-words">
                   {c.name}
                   <br />
-                  <em lang="am" className="font-sans text-2xl leading-normal not-italic">
-                    {c.amharic}
-                  </em>
+                  {c.amharic !== "" && (
+                    <em lang="am" className="font-sans text-2xl leading-normal not-italic">
+                      {c.amharic}
+                    </em>
+                  )}
                 </h2>
                 <ul className="svc-items">
                   {c.items.map((item) => (
                     <li key={item.id}>
                       <div className="min-w-0 break-words">
                         <h3>{item.name}</h3>
-                        <span>{PRICE_PLACEHOLDER}</span>
+                        <span>{item.price === "" ? PRICE_UNDISCLOSED : item.price}</span>
                       </div>
                       <Link
                         to="/booking"
-                        search={{ service: item.id }}
+                        search={{ service: item.slug }}
                         className="svc-book"
                         aria-label={`Book ${item.name}`}
                       >
@@ -112,7 +140,9 @@ function Services() {
                   ))}
                 </ul>
                 <span className="demo-note">
-                  Illustrative image only. Prices and durations to be confirmed by WIZ.
+                  {unpriced
+                    ? "Illustrative image only. Prices still to be confirmed by WIZ."
+                    : "Illustrative images only."}
                 </span>
               </div>
             </div>

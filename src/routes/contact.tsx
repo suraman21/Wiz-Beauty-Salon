@@ -1,10 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Clock, Mail, MapPin, MessageCircle, Phone, Instagram, Music2 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { EditorialLink, SiteLayout } from "@/components/site/SiteChrome";
 import { contact, images } from "@/data/wiz";
 import { ApiError } from "@/lib/api";
 import { sendMessage } from "@/lib/contact-api";
+import {
+  fetchSalon,
+  hasDetails,
+  hoursRows,
+  whatsappHref,
+  type SalonContact,
+  type SalonInfo,
+} from "@/lib/salon-api";
 
 export const Route = createFileRoute("/contact")({
   head: () => ({
@@ -27,12 +36,52 @@ export const Route = createFileRoute("/contact")({
   component: Contact,
 });
 
-const channels = [
-  { icon: Phone, label: "Phone", value: contact.phone },
-  { icon: MessageCircle, label: "WhatsApp", value: contact.whatsapp },
-  { icon: Mail, label: "Email", value: contact.email },
-  { icon: Instagram, label: "Instagram", value: contact.instagram },
-  { icon: Music2, label: "TikTok", value: contact.tiktok },
+type Channel = { icon: LucideIcon; label: string; value: string; href: string | undefined };
+
+const digits = (value: string) => value.replace(/[^\d+]/g, "");
+
+/** Only the details the salon has actually published, each one dialable. */
+const channelsFor = (salon: SalonContact): Channel[] =>
+  [
+    {
+      icon: Phone,
+      label: "Phone",
+      value: salon.phone,
+      href: salon.phone === "" ? undefined : `tel:${digits(salon.phone)}`,
+    },
+    {
+      icon: MessageCircle,
+      label: "WhatsApp",
+      value: salon.whatsapp,
+      href: whatsappHref(salon.whatsapp) === "" ? undefined : whatsappHref(salon.whatsapp),
+    },
+    {
+      icon: Mail,
+      label: "Email",
+      value: salon.email,
+      href: salon.email === "" ? undefined : `mailto:${salon.email}`,
+    },
+    {
+      icon: Instagram,
+      label: "Instagram",
+      value: salon.instagram === "" ? "" : `@${salon.instagram}`,
+      href: salon.instagram === "" ? undefined : `https://instagram.com/${salon.instagram}`,
+    },
+    {
+      icon: Music2,
+      label: "TikTok",
+      value: salon.tiktok === "" ? "" : `@${salon.tiktok}`,
+      href: salon.tiktok === "" ? undefined : `https://tiktok.com/@${salon.tiktok}`,
+    },
+  ].filter((channel) => channel.value !== "");
+
+/** Until the salon publishes its details, the page says so with placeholders. */
+const placeholderChannels: Channel[] = [
+  { icon: Phone, label: "Phone", value: contact.phone, href: undefined },
+  { icon: MessageCircle, label: "WhatsApp", value: contact.whatsapp, href: undefined },
+  { icon: Mail, label: "Email", value: contact.email, href: undefined },
+  { icon: Instagram, label: "Instagram", value: contact.instagram, href: undefined },
+  { icon: Music2, label: "TikTok", value: contact.tiktok, href: undefined },
 ];
 
 type FormState = { name: string; contact: string; message: string };
@@ -40,6 +89,28 @@ type FormState = { name: string; contact: string; message: string };
 const emptyForm: FormState = { name: "", contact: "", message: "" };
 
 function Contact() {
+  const [salon, setSalon] = useState<SalonInfo | null>(null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    fetchSalon(controller.signal)
+      .then(setSalon)
+      .catch(() => {
+        // The page keeps its placeholder copy; nothing for the visitor to fix.
+      });
+
+    return () => controller.abort();
+  }, []);
+
+  const published = salon !== null && hasDetails(salon.contact);
+  const channels = published && salon !== null ? channelsFor(salon.contact) : placeholderChannels;
+  const address =
+    published && salon !== null && salon.contact.address !== ""
+      ? salon.contact.address
+      : contact.address;
+  const hours = salon !== null && salon.hours.length > 0 ? hoursRows(salon.hours) : contact.hours;
+
   const [form, setForm] = useState<FormState>(emptyForm);
   const [sent, setSent] = useState(false);
   const [sending, setSending] = useState(false);
@@ -84,17 +155,25 @@ function Contact() {
               Questions, ideas or special requests — reach us the way that suits you.
             </p>
             <ul className="channels">
-              {channels.map(({ icon: Icon, label, value }) => (
+              {channels.map(({ icon: Icon, label, value, href }) => (
                 <li key={label}>
                   <Icon size={18} strokeWidth={1.4} />
                   <span className="ch-label">{label}</span>
-                  <span className="ch-value">{value}</span>
+                  {href === undefined ? (
+                    <span className="ch-value">{value}</span>
+                  ) : (
+                    <a className="ch-value" href={href} rel="noreferrer">
+                      {value}
+                    </a>
+                  )}
                 </li>
               ))}
             </ul>
-            <span className="demo-note">
-              All contact details are placeholders until WIZ provides them.
-            </span>
+            {!published && (
+              <span className="demo-note">
+                All contact details are placeholders until WIZ provides them.
+              </span>
+            )}
           </div>
           <figure className="contact-image img-frame reveal">
             <img src={images.skin} alt="Demo skincare portrait" />
@@ -103,14 +182,10 @@ function Contact() {
       </section>
 
       <section className="visit section-wrap">
-        <div
-          className="map-placeholder"
-          role="img"
-          aria-label="Map placeholder — location to be added"
-        >
+        <div className="map-placeholder" role="img" aria-label={`Map placeholder — ${address}`}>
           <MapPin size={30} strokeWidth={1.2} />
           <p>Map will appear here</p>
-          <span>{contact.address}</span>
+          <span>{address}</span>
         </div>
         <div className="visit-copy">
           <span className="overline">Visit us</span>
@@ -120,10 +195,10 @@ function Contact() {
             <em>&amp; hours.</em>
           </h2>
           <p className="visit-address">
-            <MapPin size={16} /> {contact.address}
+            <MapPin size={16} /> {address}
           </p>
           <dl className="hours">
-            {contact.hours.map((h) => (
+            {hours.map((h) => (
               <div key={h.day}>
                 <dt>
                   <Clock size={14} /> {h.day}

@@ -14,6 +14,7 @@ use Wiz\Core\View;
 use Wiz\Repositories\ActivityLogRepository;
 use Wiz\Repositories\RateLimitRepository;
 use Wiz\Support\MailSettings;
+use Wiz\Support\SalonDetails;
 
 /**
  * Email delivery settings, shaped like Bulbula.et's: the administrator can change
@@ -31,6 +32,7 @@ final class SettingsController
     public function __construct(
         private readonly View $view,
         private readonly MailSettings $mail,
+        private readonly SalonDetails $salon,
         private readonly MailTransport $transport,
         private readonly RateLimitRepository $limits,
         private readonly ActivityLogRepository $activity,
@@ -65,6 +67,7 @@ final class SettingsController
             ],
             'test_recipient' => (string) ($user['email'] ?? ''),
             'test_left' => $this->testsLeft(),
+            'salon' => $this->salon->all(),
         ]);
     }
 
@@ -177,6 +180,51 @@ final class SettingsController
         );
 
         $this->session->flash('success', 'Email settings saved and in use immediately. Send a test to be sure it works.');
+
+        throw new RedirectException('/admin/settings');
+    }
+
+    /**
+     * The details the Contact page prints. Anything left blank is published as
+     * blank — the site hides the row rather than inventing a number.
+     *
+     * @param array<string, string> $params
+     */
+    public function saveSalon(Request $request, array $params = []): Response
+    {
+        $values = [
+            SalonDetails::PHONE => $request->string('phone'),
+            SalonDetails::WHATSAPP => $request->string('whatsapp'),
+            SalonDetails::EMAIL => $request->string('email'),
+            SalonDetails::INSTAGRAM => $request->string('instagram'),
+            SalonDetails::TIKTOK => $request->string('tiktok'),
+            SalonDetails::ADDRESS => $request->string('address'),
+        ];
+
+        $email = trim($values[SalonDetails::EMAIL]);
+
+        if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
+            $this->fail('Enter a valid email address, or leave it blank.');
+        }
+
+        foreach ($values as $value) {
+            if (mb_strlen(trim($value)) > 190) {
+                $this->fail('One of those details is too long. Keep each under 190 characters.');
+            }
+        }
+
+        $this->salon->save($values);
+
+        $this->activity->record(
+            (int) $this->auth->id(),
+            'settings.salon_updated',
+            'settings',
+            null,
+            ['filled' => array_keys(array_filter($values, static fn (string $v): bool => trim($v) !== ''))],
+            $request->ip(),
+        );
+
+        $this->session->flash('success', 'Salon details saved. The website shows them on the Contact page straight away.');
 
         throw new RedirectException('/admin/settings');
     }

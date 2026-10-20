@@ -71,6 +71,7 @@ final class CategoryController
             Slug::unique($base, fn (string $slug): bool => $this->categories->slugExists($slug)),
             $data['description'],
             $data['is_active'],
+            $data['amharic'],
         );
 
         $this->session->flash('success', sprintf('“%s” was added.', $data['name']));
@@ -97,7 +98,7 @@ final class CategoryController
             throw new RedirectException('/admin/categories?edit=' . $id);
         }
 
-        $this->categories->update($id, $data['name'], $data['description'], $data['is_active']);
+        $this->categories->update($id, $data['name'], $data['description'], $data['is_active'], $data['amharic']);
 
         $this->session->flash('success', sprintf('“%s” was saved.', $data['name']));
 
@@ -144,13 +145,19 @@ final class CategoryController
         $validator = new Validator(
             [
                 'name' => $request->string('name'),
+                'amharic' => $request->string('amharic'),
                 'description' => $request->string('description'),
             ],
             [
                 'name' => 'required|max:120',
+                'amharic' => 'max:120',
                 'description' => 'max:255',
             ],
-            ['name' => 'Category name', 'description' => 'Description'],
+            [
+                'name' => 'Category name',
+                'amharic' => 'Amharic name',
+                'description' => 'Description',
+            ],
         );
 
         if (!$validator->validate()) {
@@ -160,8 +167,11 @@ final class CategoryController
         $input = $validator->validated();
         $description = trim((string) ($input['description'] ?? ''));
 
+        $amharic = trim((string) ($input['amharic'] ?? ''));
+
         return [
             'name' => (string) $input['name'],
+            'amharic' => $amharic === '' ? null : $amharic,
             'description' => $description === '' ? null : $description,
             'is_active' => $request->input('is_active') !== null,
         ];

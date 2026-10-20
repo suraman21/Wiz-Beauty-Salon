@@ -1,7 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { ArrowDown, ArrowRight } from "lucide-react";
 import { BeforeAfter, BookingBand, EditorialLink, SiteLayout } from "@/components/site/SiteChrome";
-import { categories, images } from "@/data/wiz";
+import { images } from "@/data/wiz";
+import { fetchCatalogue } from "@/lib/booking-api";
+import {
+  buildServicePages,
+  featuredPages,
+  localServicePages,
+  taglineFor,
+} from "@/lib/service-pages";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -27,6 +35,26 @@ export const Route = createFileRoute("/")({
 const layout = ["service-hair", "service-nails", "service-makeup", "service-skin"];
 
 function Home() {
+  // The four cards are the first four categories in the panel's order, so the
+  // salon decides what its home page leads with — no deploy needed.
+  const [featured, setFeatured] = useState(() => featuredPages(localServicePages(), 4));
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    fetchCatalogue(controller.signal)
+      .then((catalogue) => {
+        const live = buildServicePages(catalogue);
+
+        if (live.length > 0) setFeatured(featuredPages(live, 4));
+      })
+      .catch(() => {
+        // Keep the local four.
+      });
+
+    return () => controller.abort();
+  }, []);
+
   return (
     <SiteLayout>
       <section className="home-hero" aria-labelledby="hero-title">
@@ -103,8 +131,13 @@ function Home() {
             <p>Four ways to make a moment your own.</p>
           </div>
           <div className="services-grid">
-            {categories.map((c, i) => (
-              <Link to="/services" hash={c.id} className={`service-item ${layout[i]}`} key={c.id}>
+            {featured.map((c, i) => (
+              <Link
+                to="/services"
+                hash={c.id}
+                className={`service-item ${layout[i] ?? ""}`}
+                key={c.id}
+              >
                 <div className="service-image img-frame">
                   <img src={c.image} alt={c.alt} loading="lazy" />
                 </div>
@@ -112,7 +145,7 @@ function Home() {
                   <span className="service-index">0{i + 1}</span>
                   <div>
                     <h3>{c.name}</h3>
-                    <p>{c.tagline}</p>
+                    <p>{taglineFor(c)}</p>
                   </div>
                   <ArrowRight size={22} strokeWidth={1.3} />
                 </div>

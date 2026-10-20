@@ -166,6 +166,7 @@ return static function (Router $router, App $app): void {
     $router->get('/admin/settings', [SettingsController::class, 'index'], ['auth', 'admin']);
     $router->post('/admin/settings/mail', [SettingsController::class, 'saveMail'], ['auth', 'admin']);
     $router->post('/admin/settings/test', [SettingsController::class, 'sendTest'], ['auth', 'admin']);
+    $router->post('/admin/settings/salon', [SettingsController::class, 'saveSalon'], ['auth', 'admin']);
 
     // --------------------------------------------------------------- reviews
     $router->get('/admin/reviews', [ReviewController::class, 'index'], ['auth']);

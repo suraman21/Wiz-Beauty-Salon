@@ -7,6 +7,7 @@ use Wiz\Core\HttpException;
 use Wiz\Core\Request;
 use Wiz\Core\Response;
 use Wiz\Core\Validator;
+use Wiz\Repositories\CategoryRepository;
 use Wiz\Repositories\RateLimitRepository;
 use Wiz\Repositories\ServiceRepository;
 use Wiz\Services\AvailabilityService;
@@ -27,6 +28,7 @@ final class BookingApiController
         private readonly AvailabilityService $availability,
         private readonly BookingService $bookings,
         private readonly ServiceRepository $services,
+        private readonly CategoryRepository $categories,
         private readonly RateLimitRepository $limits,
         private readonly string $appOrigin = '',
         private readonly ?SignedLink $links = null,
@@ -36,9 +38,11 @@ final class BookingApiController
     /**
      * GET /api/v1/services
      *
-     * The public catalogue, as the salon has it right now. The React site uses
-     * this instead of a hard-coded list, so a service added or hidden in the
-     * panel shows up (or disappears) on the booking page immediately.
+     * The public catalogue, as the salon has it right now: the services with
+     * their prices and durations, and the categories in the order staff put
+     * them. The React site renders its Services page from this instead of a
+     * hard-coded list, so a service, price or category added, renamed or hidden
+     * in the panel shows up (or disappears) on the site immediately.
      *
      * @param array<string, string> $params
      */
@@ -46,7 +50,34 @@ final class BookingApiController
     {
         $this->guardRead('services', $request);
 
-        $rows = $this->services->activeWithCategory();
+        $categories = [];
+
+        foreach ($this->categories->published() as $row) {
+            $categories[] = [
+                'id' => (int) $row['id'],
+                'name' => (string) $row['name'],
+                'slug' => (string) $row['slug'],
+                'amharic' => (string) ($row['amharic'] ?? ''),
+                'description' => (string) ($row['description'] ?? ''),
+                'sort_order' => (int) $row['sort_order'],
+            ];
+        }
+
+        // Hiding a category in the panel hides what is filed under it — that is
+        // what "Visible on the website" promises. A service with no category at
+        // all stays: the salon can still sell it while deciding where it goes.
+        $visible = [];
+
+        foreach ($categories as $category) {
+            $visible[$category['id']] = true;
+        }
+
+        $rows = array_filter(
+            $this->services->activeWithCategory(),
+            static fn (array $row): bool => $row['category_id'] === null
+                || isset($visible[(int) $row['category_id']]),
+        );
+
         $out = [];
 
         foreach ($rows as $row) {
@@ -56,14 +87,19 @@ final class BookingApiController
             $out[] = [
                 'id' => (int) $row['id'],
                 'name' => (string) $row['name'],
+                'slug' => (string) ($row['slug'] ?? ''),
                 'category' => $row['category_name'] === null ? 'Other' : (string) $row['category_name'],
+                'description' => (string) ($row['short_description'] ?? ''),
                 'duration_minutes' => $duration > 0 ? $duration : $this->availability->gridMinutes(),
                 'price_cents' => $price,
+                'featured' => (int) ($row['is_featured'] ?? 0) === 1,
             ];
         }
 
-        return Response::json(['services' => $out])
-            ->withHeader('Cache-Control', 'public, max-age=300');
+        // A minute of caching keeps repeat page views cheap without leaving
+        // staff staring at yesterday's price after they save a change.
+        return Response::json(['services' => $out, 'categories' => $categories])
+            ->withHeader('Cache-Control', 'public, max-age=60');
     }
 
     /**

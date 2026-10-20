@@ -10,6 +10,7 @@
  * @var array{driver: string, host: string, port: int, encryption: string, username: string, from_name: string, from_email: string, salon_email: string, password_saved: bool, readiness: array{state: string, missing: list<string>}} $mail
  * @var string $test_recipient
  * @var int $test_left
+ * @var array{phone: string, whatsapp: string, email: string, instagram: string, tiktok: string, address: string} $salon
  */
 
 $state = $mail['readiness']['state'];
@@ -134,6 +135,64 @@ $isMissing = static fn (string $what): bool => in_array($what, $missing, true);
             <div class="form-actions">
                 <button type="submit" class="btn btn--primary">Save email settings</button>
                 <a class="btn btn--ghost" href="/admin/email-templates">Design the emails</a>
+            </div>
+        </form>
+
+        <form method="post" action="/admin/settings/salon" class="card">
+            <?= csrf_field() ?>
+
+            <h2 class="card__title">Salon details</h2>
+            <p class="card__sub">
+                This is what the website's Contact page prints. Leave a field blank to hide it —
+                nothing is invented for you.
+            </p>
+
+            <div class="field-row">
+                <div class="field">
+                    <label for="phone">Phone</label>
+                    <input type="text" id="phone" name="phone" value="<?= e($salon['phone']) ?>"
+                           maxlength="32" placeholder="+251 91 234 5678" autocomplete="off">
+                </div>
+
+                <div class="field">
+                    <label for="whatsapp">WhatsApp</label>
+                    <input type="text" id="whatsapp" name="whatsapp" value="<?= e($salon['whatsapp']) ?>"
+                           maxlength="32" placeholder="+251 91 234 5678" autocomplete="off">
+                    <p class="field__hint">Either form works: 0911 223 344 or +251 91 122 3344.</p>
+                </div>
+            </div>
+
+            <div class="field">
+                <label for="salon_contact_email">Email</label>
+                <input type="email" id="salon_contact_email" name="email" value="<?= e($salon['email']) ?>"
+                       maxlength="190" placeholder="hello@wiz.arkeonethiopia.com" autocomplete="off">
+            </div>
+
+            <div class="field-row">
+                <div class="field">
+                    <label for="instagram">Instagram</label>
+                    <input type="text" id="instagram" name="instagram" value="<?= e($salon['instagram']) ?>"
+                           maxlength="60" placeholder="wizbeautysalon" autocomplete="off">
+                    <p class="field__hint">The handle only. A full profile link works too.</p>
+                </div>
+
+                <div class="field">
+                    <label for="tiktok">TikTok</label>
+                    <input type="text" id="tiktok" name="tiktok" value="<?= e($salon['tiktok']) ?>"
+                           maxlength="60" placeholder="wizbeautysalon" autocomplete="off">
+                </div>
+            </div>
+
+            <div class="field">
+                <label for="address">Address</label>
+                <input type="text" id="address" name="address" value="<?= e($salon['address']) ?>"
+                       maxlength="190" placeholder="Bole, Addis Ababa" autocomplete="off">
+                <p class="field__hint">Shown on the Contact page. The map itself is drawn by the visitor's browser.</p>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn--primary">Save salon details</button>
+                <a class="btn btn--ghost" href="/#contact" target="_blank" rel="noreferrer">See the Contact page</a>
             </div>
         </form>
 

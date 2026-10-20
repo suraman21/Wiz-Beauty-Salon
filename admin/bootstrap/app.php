@@ -71,6 +71,7 @@ use Wiz\Services\BookingNotifier;
 use Wiz\Services\EmailTemplateService;
 use Wiz\Services\Uploader;
 use Wiz\Support\MailSettings;
+use Wiz\Support\SalonDetails;
 use Wiz\Support\SignedLink;
 
 $root = dirname(__DIR__);
@@ -196,6 +197,10 @@ $app->singleton(SignedLink::class, static fn (App $a): SignedLink => new SignedL
     (string) ($a->config('app.key') ?? ''),
 ));
 
+$app->singleton(SalonDetails::class, static fn (App $a): SalonDetails => new SalonDetails(
+    $a->get(SettingsRepository::class),
+));
+
 $app->singleton(MailSettings::class, static fn (App $a): MailSettings => new MailSettings(
     $a->get(SettingsRepository::class),
     is_array($a->config('mail')) ? $a->config('mail') : [],
@@ -313,6 +318,7 @@ $app->singleton(BookingApiController::class, static fn (App $a): BookingApiContr
     $a->get(AvailabilityService::class),
     $a->get(BookingService::class),
     $a->get(ServiceRepository::class),
+    $a->get(CategoryRepository::class),
     $a->get(RateLimitRepository::class),
     (string) ($a->config('app.url') ?? ''),
     $a->get(SignedLink::class),
@@ -336,6 +342,9 @@ $app->singleton(MessageController::class, static fn (App $a): MessageController 
 $app->singleton(ContentApiController::class, static fn (App $a): ContentApiController => new ContentApiController(
     $a->get(GalleryRepository::class),
     $a->get(ReviewRepository::class),
+    $a->get(SalonDetails::class),
+    $a->get(BusinessHoursRepository::class),
+    $a->get(ClosureRepository::class),
     (string) ($a->config('app.upload_url') ?? '/uploads'),
 ));
 
@@ -380,6 +389,7 @@ $app->singleton(ActivityController::class, static fn (App $a): ActivityControlle
 $app->singleton(SettingsController::class, static fn (App $a): SettingsController => new SettingsController(
     $a->get(View::class),
     $a->get(MailSettings::class),
+    $a->get(SalonDetails::class),
     $a->get(MailTransport::class),
     $a->get(RateLimitRepository::class),
     $a->get(ActivityLogRepository::class),
