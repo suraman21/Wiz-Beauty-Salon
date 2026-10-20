@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import {
-  PRICE_UNDISCLOSED,
   buildServicePages,
   formatPrice,
   hasUnpricedItems,
@@ -132,8 +131,9 @@ describe("service pages", () => {
     expect(taglineFor(pages[0]!)).toMatch(/^\d+ services?$/);
   });
 
-  it("uses the placeholder wording the page prints", () => {
-    expect(PRICE_UNDISCLOSED).toBe("Price · to be confirmed");
+  it("leaves the price out when the salon has not set one", () => {
+    // An empty string, not a placeholder line — the page prints nothing.
+    expect(localServicePages()[0]?.items.every((item) => item.price === "")).toBe(true);
     expect(taglineFor(buildServicePages(catalogue)[1]!)).toBe("Hands and feet");
   });
 });

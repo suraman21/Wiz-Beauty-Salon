@@ -64,12 +64,14 @@ function About() {
         </p>
         <div className="story-cols">
           <p>
-            [The WIZ founding story — to be written with the salon. This paragraph is placeholder
-            text describing where the idea came from and why it matters.]
+            WIZ began with a simple idea: that a visit to the salon should feel like a pause, not a
+            production. A calm room, an honest conversation, and work shaped around the person in
+            the chair rather than a picture on a wall.
           </p>
           <p>
-            [A second paragraph about the salon's approach and the people behind it. No names, dates
-            or credentials are shown until WIZ confirms them.]
+            Our approach is detail-led — the finish of a cut, the line of a braid, the way a colour
+            catches the light. Every appointment starts by listening to what you want, and ends with
+            something that feels entirely yours.
           </p>
         </div>
       </section>

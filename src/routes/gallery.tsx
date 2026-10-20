@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { BeforeAfter, BookingBand, PageHero, SiteLayout } from "@/components/site/SiteChrome";
-import { categories, galleryWork, stories, type CategoryId } from "@/data/wiz";
+import { categories, galleryWork, type CategoryId } from "@/data/wiz";
 import {
   fetchGalleryPage,
   fetchReviews,
@@ -39,7 +39,7 @@ type Item = {
   title: string;
   caption: string | undefined;
   tall: boolean;
-  /** The filter chip this photo belongs to, by slug — gallery photos and demo items alike. */
+  /** The filter chip this photo belongs to, by slug. */
   category: string | undefined;
 };
 
@@ -71,7 +71,7 @@ function Gallery() {
 
   const live = photos !== null && photos.length > 0;
 
-  // The salon's own photos when there are any, the demo set until then.
+  // The salon's own photos, or the bundled set until the panel has some.
   const items = useMemo<Item[]>(() => {
     if (live) {
       return photos.map((photo, index) => ({
@@ -170,7 +170,7 @@ function Gallery() {
         copy={
           live
             ? "Recent work from the salon, shared with our clients' permission."
-            : "Featured looks, transformations and the stories behind them. All images are temporary demo material."
+            : "A look at the work, the detail and the mood of the salon."
         }
         image={images.hair.url}
         alt={images.hair.alt}
@@ -186,7 +186,7 @@ function Gallery() {
               <em>we love.</em>
             </h2>
           </div>
-          <p>{live ? "From the salon's own album." : "Demo imagery — not WIZ client work."}</p>
+          <p>{live ? "From the salon's own album." : "A closer look at the detail."}</p>
         </div>
         <div className="featured-grid">
           {featured.map((tile, index) => (
@@ -210,11 +210,7 @@ function Gallery() {
               <br />
               <em>&amp; after.</em>
             </h2>
-            <p>
-              Drag the slider to compare. Real WIZ transformations will be added with client
-              permission.
-            </p>
-            <span className="demo-note">Illustrative demo only — not a WIZ client result.</span>
+            <p>Drag the slider to compare.</p>
           </div>
           <BeforeAfter before={images.before.url} after={images.after.url} />
         </div>
@@ -261,44 +257,26 @@ function Gallery() {
             </button>
           ))}
         </div>
-
-        {live && (
-          <span className="demo-note">
-            Photos published from the salon's panel. New work appears here automatically.
-          </span>
-        )}
       </section>
 
-      <section className="stories">
-        <div className="section-wrap">
-          <span className="overline">04 / Client stories</span>
-          <div className="stories-grid">
-            {reviews.length > 0
-              ? reviews.slice(0, 3).map((review) => (
-                  <blockquote key={review.id}>
-                    <p>“{review.body}”</p>
-                    <footer>
-                      {review.name}
-                      {review.service ? ` · ${review.service}` : ""}
-                    </footer>
-                  </blockquote>
-                ))
-              : stories.map((s) => (
-                  <blockquote key={s.id}>
-                    <p>“{s.quote}”</p>
-                    <footer>
-                      {s.who} · {s.service}
-                    </footer>
-                  </blockquote>
-                ))}
+      {reviews.length > 0 && (
+        <section className="stories">
+          <div className="section-wrap">
+            <span className="overline">04 / Client stories</span>
+            <div className="stories-grid">
+              {reviews.slice(0, 3).map((review) => (
+                <blockquote key={review.id}>
+                  <p>“{review.body}”</p>
+                  <footer>
+                    {review.name}
+                    {review.service ? ` · ${review.service}` : ""}
+                  </footer>
+                </blockquote>
+              ))}
+            </div>
           </div>
-          {reviews.length === 0 && (
-            <span className="demo-note">
-              Placeholder stories — real client words will be added only with permission.
-            </span>
-          )}
-        </div>
-      </section>
+        </section>
+      )}
 
       <BookingBand />
 

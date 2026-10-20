@@ -95,7 +95,6 @@ function Home() {
           <ArrowDown size={18} />
           <span>SCROLL TO DISCOVER</span>
         </a>
-        <span className="hero-image-note">Editorial demo imagery</span>
       </section>
 
       <section id="about" className="intro-section section-wrap">
@@ -155,7 +154,6 @@ function Home() {
             ))}
           </div>
           <div className="service-end">
-            <span className="demo-note">Imagery is temporary demo material.</span>
             <EditorialLink to="/services">View all services</EditorialLink>
           </div>
         </div>
@@ -171,7 +169,7 @@ function Home() {
               <em>everywhere.</em>
             </h2>
           </div>
-          <p>Images here show the creative direction, not WIZ's actual work.</p>
+          <p>A glimpse of the detail and the mood of the salon.</p>
         </div>
         <div className="gallery-composition">
           <figure className="gallery-one img-frame">
@@ -188,9 +186,6 @@ function Home() {
           </span>
         </div>
         <div className="gallery-end">
-          <span className="demo-note">
-            Temporary editorial images · Replace with WIZ photography
-          </span>
           <EditorialLink to="/gallery">View gallery</EditorialLink>
         </div>
       </section>
@@ -205,10 +200,9 @@ function Home() {
               <em>difference.</em>
             </h2>
             <p>
-              Sometimes a change in the mirror changes everything. Move the slider to explore a
-              sample transformation.
+              Sometimes a change in the mirror changes everything. Move the slider to see the
+              difference.
             </p>
-            <span className="demo-note">Illustrative demo only — not a WIZ client result.</span>
             <EditorialLink to="/gallery" light>
               See more transformations
             </EditorialLink>

@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 import { ArrowRight, Menu, X } from "lucide-react";
 import logo from "@/assets/wiz-logo.png";
-import { contact, nav } from "@/data/wiz";
+import { nav } from "@/data/wiz";
 import { useSalonInfo } from "@/lib/site-content";
 import { hasDetails, whatsappHref } from "@/lib/salon-api";
 
@@ -102,7 +102,7 @@ export function SiteFooter() {
         </div>
         <div className="footer-last">
           <span>© WIZ Beauty Salon</span>
-          <span>Demo imagery and details are placeholders until confirmed by WIZ</span>
+          <span>All rights reserved.</span>
         </div>
       </div>
     </footer>
@@ -110,8 +110,8 @@ export function SiteFooter() {
 }
 
 /**
- * The footer prints what the salon published in Settings, and the placeholders
- * only while it has published nothing — the same rule as the Contact page.
+ * The footer prints what the salon published in Settings — the same rule as the
+ * Contact page: a detail it has not filled in is left out, never faked.
  */
 function FooterContact() {
   const salon = useSalonInfo();
@@ -119,15 +119,7 @@ function FooterContact() {
   const published = details !== undefined && hasDetails(details);
 
   if (details === undefined || !published) {
-    return (
-      <div className="footer-contact">
-        <span>{contact.phone}</span>
-        <span>{contact.address}</span>
-        <span>
-          Instagram {contact.instagram} · TikTok {contact.tiktok}
-        </span>
-      </div>
-    );
+    return null;
   }
 
   const socials = [
@@ -248,7 +240,7 @@ export function BookingBand({
 export function BeforeAfter({
   before,
   after,
-  label = "Illustrative before and after comparison",
+  label = "Before and after comparison",
 }: {
   before: string;
   after: string;
@@ -257,9 +249,9 @@ export function BeforeAfter({
   const [v, setV] = useState(50);
   return (
     <div className="comparison" aria-label={label}>
-      <img src={after} alt="Demo result after" loading="lazy" />
+      <img src={after} alt="After the transformation" loading="lazy" />
       <div className="comparison-before" style={{ width: `${v}%` }}>
-        <img src={before} alt="Demo before" loading="lazy" />
+        <img src={before} alt="Before the transformation" loading="lazy" />
       </div>
       <span className="comparison-label comparison-label-before">BEFORE</span>
       <span className="comparison-label comparison-label-after">AFTER</span>
@@ -272,7 +264,7 @@ export function BeforeAfter({
         max="100"
         value={v}
         onChange={(e) => setV(Number(e.target.value))}
-        aria-label="Reveal before and after demo transformation"
+        aria-label="Reveal the before and after comparison"
       />
     </div>
   );

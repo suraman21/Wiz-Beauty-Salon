@@ -467,7 +467,11 @@ tokens it uses. */
   gap: 20px;
   margin-top: 40px;
 }
-.demo-note {
+.service-end > .editorial-link,
+.gallery-end > .editorial-link {
+  margin-left: auto;
+}
+.fine-print {
   font-size: 11px;
   letter-spacing: 0.02em;
   line-height: 1.5;
@@ -541,7 +545,7 @@ tokens it uses. */
   font-size: 15px;
   line-height: 1.75;
 }
-.transformation-copy .demo-note {
+.transformation-copy .fine-print {
   display: block;
   margin-top: 18px;
 }
@@ -651,7 +655,7 @@ tokens it uses. */
   font-size: 15px;
   margin-top: 24px;
 }
-.booking-inner .demo-note {
+.booking-inner .fine-print {
   max-width: 370px;
   margin-top: 19px;
 }
@@ -1577,7 +1581,7 @@ tokens it uses. */
   padding-block: 110px;
   align-items: center;
 }
-.map-placeholder {
+.location-card {
   aspect-ratio: 4 / 3;
   background: repeating-linear-gradient(
     45deg,
@@ -1595,12 +1599,11 @@ tokens it uses. */
   color: var(--plum);
   padding: 20px;
 }
-.map-placeholder p {
-  font: 400 32px var(--font-display);
+.location-card span {
+  font: 400 26px var(--font-display);
+  line-height: 1.3;
 }
-.map-placeholder span {
-  font-size: 12px;
-}
+
 .visit h2,
 .message-section h2 {
   font-size: clamp(48px, 5.5vw, 84px);
@@ -2346,15 +2349,6 @@ body {
   letter-spacing: 0.17em;
 }
 
-.hero-image-note {
-  position: absolute;
-  right: var(--hero-gutter);
-  bottom: calc(1.75rem + env(safe-area-inset-bottom, 0px));
-  font-size: 10px;
-  letter-spacing: 0.08em;
-  opacity: 0.75;
-}
-
 .intro-section {
   padding-block: clamp(5rem, 9vw, 8rem);
   gap: clamp(2rem, 5vw, 4.5rem);
@@ -2616,6 +2610,15 @@ body {
   gap: clamp(2rem, 6vw, 5rem);
 }
 
+/* Without a published address there is nothing to pin, so the copy takes the row
+   and the hours keep a readable measure instead of stretching edge to edge. */
+.visit.visit--copy-only {
+  grid-template-columns: minmax(0, 1fr);
+}
+.visit--copy-only .visit-copy {
+  max-width: 46rem;
+}
+
 .message-inner {
   grid-template-columns: minmax(14rem, 0.8fr) minmax(0, 1.2fr);
   gap: clamp(2rem, 6vw, 5rem);
@@ -2840,11 +2843,6 @@ body {
 
   .hero-scroll {
     bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
-  }
-
-  .hero-image-note {
-    bottom: calc(1.05rem + env(safe-area-inset-bottom, 0px));
-    font-size: 0.55rem;
   }
 
   .intro-section {
@@ -3257,7 +3255,7 @@ body {
     aspect-ratio: 1.45 / 1;
   }
 
-  .map-placeholder {
+  .location-card {
     aspect-ratio: 1.35 / 1;
   }
 

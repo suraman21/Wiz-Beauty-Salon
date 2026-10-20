@@ -40,13 +40,11 @@ export type ServicePage = {
   items: ServiceListItem[];
 };
 
-export const PRICE_UNDISCLOSED = "Price · to be confirmed";
-
 const local = new Map(serviceCategories.map((category) => [category.id as string, category]));
 
 const fallbackImage = {
   image: images.space,
-  alt: "Illustrative placeholder for this service category; not actual WIZ work",
+  alt: "Service category",
 };
 
 /** Format cents as the salon would say the price out loud. */

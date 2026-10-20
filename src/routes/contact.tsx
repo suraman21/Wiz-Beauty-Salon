@@ -3,7 +3,6 @@ import { useState, type FormEvent } from "react";
 import { Clock, Mail, MapPin, MessageCircle, Phone, Instagram, Music2 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { EditorialLink, SiteLayout } from "@/components/site/SiteChrome";
-import { contact } from "@/data/wiz";
 import { ApiError } from "@/lib/api";
 import { sendMessage } from "@/lib/contact-api";
 import {
@@ -75,15 +74,6 @@ const channelsFor = (salon: SalonContact): Channel[] =>
     },
   ].filter((channel) => channel.value !== "");
 
-/** Until the salon publishes its details, the page says so with placeholders. */
-const placeholderChannels: Channel[] = [
-  { icon: Phone, label: "Phone", value: contact.phone, href: undefined },
-  { icon: MessageCircle, label: "WhatsApp", value: contact.whatsapp, href: undefined },
-  { icon: Mail, label: "Email", value: contact.email, href: undefined },
-  { icon: Instagram, label: "Instagram", value: contact.instagram, href: undefined },
-  { icon: Music2, label: "TikTok", value: contact.tiktok, href: undefined },
-];
-
 type FormState = { name: string; contact: string; message: string };
 
 const emptyForm: FormState = { name: "", contact: "", message: "" };
@@ -92,13 +82,12 @@ function Contact() {
   const images = useSiteImages();
   const salon = useSalonInfo();
 
+  // Only what the salon published: a channel it has not filled in is left out
+  // rather than shown as a bracketed placeholder.
   const published = salon !== null && hasDetails(salon.contact);
-  const channels = published && salon !== null ? channelsFor(salon.contact) : placeholderChannels;
-  const address =
-    published && salon !== null && salon.contact.address !== ""
-      ? salon.contact.address
-      : contact.address;
-  const hours = salon !== null && salon.hours.length > 0 ? hoursRows(salon.hours) : contact.hours;
+  const channels = published && salon !== null ? channelsFor(salon.contact) : [];
+  const address = published && salon !== null ? salon.contact.address : "";
+  const hours = salon !== null && salon.hours.length > 0 ? hoursRows(salon.hours) : [];
   const closures = salon?.closures ?? [];
 
   const [form, setForm] = useState<FormState>(emptyForm);
@@ -144,25 +133,22 @@ function Contact() {
             <p className="contact-lead">
               Questions, ideas or special requests — reach us the way that suits you.
             </p>
-            <ul className="channels">
-              {channels.map(({ icon: Icon, label, value, href }) => (
-                <li key={label}>
-                  <Icon size={18} strokeWidth={1.4} />
-                  <span className="ch-label">{label}</span>
-                  {href === undefined ? (
-                    <span className="ch-value">{value}</span>
-                  ) : (
-                    <a className="ch-value" href={href} rel="noreferrer">
-                      {value}
-                    </a>
-                  )}
-                </li>
-              ))}
-            </ul>
-            {!published && (
-              <span className="demo-note">
-                All contact details are placeholders until WIZ provides them.
-              </span>
+            {channels.length > 0 && (
+              <ul className="channels">
+                {channels.map(({ icon: Icon, label, value, href }) => (
+                  <li key={label}>
+                    <Icon size={18} strokeWidth={1.4} />
+                    <span className="ch-label">{label}</span>
+                    {href === undefined ? (
+                      <span className="ch-value">{value}</span>
+                    ) : (
+                      <a className="ch-value" href={href} rel="noreferrer">
+                        {value}
+                      </a>
+                    )}
+                  </li>
+                ))}
+              </ul>
             )}
           </div>
           <figure className="contact-image img-frame reveal">
@@ -171,12 +157,13 @@ function Contact() {
         </div>
       </section>
 
-      <section className="visit section-wrap">
-        <div className="map-placeholder" role="img" aria-label={`Map placeholder — ${address}`}>
-          <MapPin size={30} strokeWidth={1.2} />
-          <p>Map will appear here</p>
-          <span>{address}</span>
-        </div>
+      <section className={`visit section-wrap${address === "" ? " visit--copy-only" : ""}`}>
+        {address !== "" && (
+          <div className="location-card" role="img" aria-label={`The salon is at ${address}`}>
+            <MapPin size={30} strokeWidth={1.2} />
+            <span>{address}</span>
+          </div>
+        )}
         <div className="visit-copy">
           <span className="overline">Visit us</span>
           <h2>
@@ -184,19 +171,23 @@ function Contact() {
             <br />
             <em>&amp; hours.</em>
           </h2>
-          <p className="visit-address">
-            <MapPin size={16} /> {address}
-          </p>
-          <dl className="hours">
-            {hours.map((h) => (
-              <div key={h.day}>
-                <dt>
-                  <Clock size={14} /> {h.day}
-                </dt>
-                <dd>{h.time}</dd>
-              </div>
-            ))}
-          </dl>
+          {address !== "" && (
+            <p className="visit-address">
+              <MapPin size={16} /> {address}
+            </p>
+          )}
+          {hours.length > 0 && (
+            <dl className="hours">
+              {hours.map((h) => (
+                <div key={h.day}>
+                  <dt>
+                    <Clock size={14} /> {h.day}
+                  </dt>
+                  <dd>{h.time}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
           {closures.length > 0 && (
             <ul className="closures">
               {closures.slice(0, 3).map((closure) => (

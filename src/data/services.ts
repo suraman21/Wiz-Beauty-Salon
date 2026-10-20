@@ -37,7 +37,7 @@ const category = (
   name,
   amharic,
   image,
-  alt: `Illustrative placeholder for ${name}; not actual WIZ work`,
+  alt: `${name} at WIZ Beauty Salon`,
   items: options.map((option, i) => ({ id: `${id}-${i + 1}`, name: option })),
 });
 

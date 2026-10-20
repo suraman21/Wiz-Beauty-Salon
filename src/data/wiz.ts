@@ -1,5 +1,5 @@
-// WIZ demo content. Everything here is replaceable placeholder material —
-// swap in the salon's confirmed services, photos, details and stories.
+// The photographs, navigation and fallback copy the site ships with. Anything
+// the salon edits in the panel overrides these at runtime.
 import hair from "@/assets/hair-detail.jpg";
 import nails from "@/assets/nails-editorial.jpg";
 import makeup from "@/assets/makeup-editorial.jpg";
@@ -24,8 +24,6 @@ export type CategoryId = "hair" | "nails" | "makeup" | "skin";
 
 export type ServiceItem = { id: string; name: string; note: string; duration: string };
 
-export const PRICE_PLACEHOLDER = "Price · to be confirmed";
-
 export const categories: {
   id: CategoryId;
   name: string;
@@ -41,21 +39,21 @@ export const categories: {
     tagline: "A little movement. A lot of feeling.",
     copy: "Cuts, colour and styling shaped around your texture, your routine and the way you want to feel.",
     image: hair,
-    alt: "Demo image of hair being styled",
+    alt: "Hair being styled at WIZ Beauty Salon",
     items: [
-      { id: "hair-cut", name: "Cut & finish", note: "Demo service name", duration: "Duration TBC" },
-      { id: "hair-colour", name: "Colour", note: "Demo service name", duration: "Duration TBC" },
+      { id: "hair-cut", name: "Cut & finish", note: "", duration: "" },
+      { id: "hair-colour", name: "Colour", note: "", duration: "" },
       {
         id: "hair-style",
         name: "Styling & blow-dry",
-        note: "Demo service name",
-        duration: "Duration TBC",
+        note: "",
+        duration: "",
       },
       {
         id: "hair-treatment",
         name: "Hair treatment",
-        note: "Demo service name",
-        duration: "Duration TBC",
+        note: "",
+        duration: "",
       },
     ],
   },
@@ -65,11 +63,11 @@ export const categories: {
     tagline: "The detail that changes everything.",
     copy: "Clean shapes, considered colour and finishing touches that feel quietly polished.",
     image: nails,
-    alt: "Demo image of a manicure",
+    alt: "Manicure detail at WIZ Beauty Salon",
     items: [
-      { id: "nails-mani", name: "Manicure", note: "Demo service name", duration: "Duration TBC" },
-      { id: "nails-pedi", name: "Pedicure", note: "Demo service name", duration: "Duration TBC" },
-      { id: "nails-art", name: "Nail art", note: "Demo service name", duration: "Duration TBC" },
+      { id: "nails-mani", name: "Manicure", note: "", duration: "" },
+      { id: "nails-pedi", name: "Pedicure", note: "", duration: "" },
+      { id: "nails-art", name: "Nail art", note: "", duration: "" },
     ],
   },
   {
@@ -78,25 +76,25 @@ export const categories: {
     tagline: "Your features, beautifully expressed.",
     copy: "From soft daytime looks to occasion glamour — always led by your features, never hiding them.",
     image: makeup,
-    alt: "Demo beauty makeup portrait",
+    alt: "Makeup portrait at WIZ Beauty Salon",
     items: [
       {
         id: "makeup-day",
         name: "Everyday look",
-        note: "Demo service name",
-        duration: "Duration TBC",
+        note: "",
+        duration: "",
       },
       {
         id: "makeup-event",
         name: "Occasion makeup",
-        note: "Demo service name",
-        duration: "Duration TBC",
+        note: "",
+        duration: "",
       },
       {
         id: "makeup-bridal",
         name: "Bridal makeup",
-        note: "Demo service name",
-        duration: "Duration TBC",
+        note: "",
+        duration: "",
       },
     ],
   },
@@ -106,20 +104,20 @@ export const categories: {
     tagline: "A fresh way to feel like yourself.",
     copy: "Calm, restorative care for skin that looks rested and feels like your own.",
     image: skin,
-    alt: "Demo skincare portrait",
+    alt: "Skincare portrait at WIZ Beauty Salon",
     items: [
-      { id: "skin-facial", name: "Facial", note: "Demo service name", duration: "Duration TBC" },
+      { id: "skin-facial", name: "Facial", note: "", duration: "" },
       {
         id: "skin-brows",
         name: "Brow shaping",
-        note: "Demo service name",
-        duration: "Duration TBC",
+        note: "",
+        duration: "",
       },
       {
         id: "skin-glow",
         name: "Glow treatment",
-        note: "Demo service name",
-        duration: "Duration TBC",
+        note: "",
+        duration: "",
       },
     ],
   },
@@ -141,74 +139,52 @@ export const galleryWork: {
     id: "g1",
     category: "hair",
     image: portrait,
-    alt: "Demo editorial hair portrait",
+    alt: "Editorial hair portrait at WIZ Beauty Salon",
     title: "Soft volume",
     tall: true,
   },
-  { id: "g2", category: "nails", image: nails, alt: "Demo manicure detail", title: "Quiet polish" },
+  {
+    id: "g2",
+    category: "nails",
+    image: nails,
+    alt: "Manicure detail at WIZ Beauty Salon",
+    title: "Quiet polish",
+  },
   {
     id: "g3",
     category: "makeup",
     image: makeup,
-    alt: "Demo makeup portrait",
+    alt: "Makeup portrait at WIZ Beauty Salon",
     title: "Evening glow",
     tall: true,
   },
-  { id: "g4", category: "skin", image: skin, alt: "Demo skincare portrait", title: "Fresh skin" },
+  {
+    id: "g4",
+    category: "skin",
+    image: skin,
+    alt: "Skincare portrait at WIZ Beauty Salon",
+    title: "Fresh skin",
+  },
   {
     id: "g5",
     category: "hair",
     image: hair,
-    alt: "Demo hair styling detail",
+    alt: "Hair styling detail at WIZ Beauty Salon",
     title: "Movement",
     tall: true,
   },
-  { id: "g6", category: "hair", image: after, alt: "Demo styled waves", title: "Long waves" },
+  {
+    id: "g6",
+    category: "hair",
+    image: after,
+    alt: "Styled waves at WIZ Beauty Salon",
+    title: "Long waves",
+  },
   {
     id: "g7",
     category: "makeup",
     image: hero,
-    alt: "Demo editorial beauty portrait",
+    alt: "Editorial beauty portrait at WIZ Beauty Salon",
     title: "Lilac mood",
   },
 ];
-
-// Clearly marked sample stories — replace with real, permission-given client words.
-export const stories = [
-  {
-    id: "s1",
-    quote: "A short client story about how their visit felt will appear here.",
-    who: "Client name · placeholder",
-    service: "Hair",
-  },
-  {
-    id: "s2",
-    quote: "Space for a second real client story, shared with their permission.",
-    who: "Client name · placeholder",
-    service: "Makeup",
-  },
-  {
-    id: "s3",
-    quote: "A third story — a few honest words about a WIZ moment.",
-    who: "Client name · placeholder",
-    service: "Nails",
-  },
-];
-
-// Contact placeholders — every value is to be supplied by WIZ.
-export const contact = {
-  phone: "[Phone number — to be added]",
-  whatsapp: "[WhatsApp number — to be added]",
-  email: "[Email address — to be added]",
-  instagram: "[@instagram — to be added]",
-  tiktok: "[@tiktok — to be added]",
-  address: "[Salon address — to be added]",
-  hours: [
-    { day: "Monday – Friday", time: "[Hours TBC]" },
-    { day: "Saturday", time: "[Hours TBC]" },
-    { day: "Sunday", time: "[Hours TBC]" },
-  ],
-};
-
-// Demo appointment times — replace with the salon's real availability.
-export const demoTimes = ["09:00", "10:00", "11:30", "13:00", "14:30", "16:00", "17:30"];

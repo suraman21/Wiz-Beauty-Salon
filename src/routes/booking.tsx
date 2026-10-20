@@ -367,7 +367,7 @@ function Booking() {
                               onChange={() => chooseService(s.id)}
                             />
                             <span className="opt-name">{s.name}</span>
-                            <span className="opt-meta">{price ?? "Price · to be confirmed"}</span>
+                            {price !== null && <span className="opt-meta">{price}</span>}
                           </label>
                         );
                       })}
@@ -422,7 +422,7 @@ function Booking() {
                         );
                       })}
                     </div>
-                    <span className="demo-note">
+                    <span className="fine-print">
                       Days the salon is closed are shown greyed out. Times are in Addis Ababa time.
                     </span>
                   </>
@@ -465,7 +465,7 @@ function Booking() {
                   </p>
                 )}
 
-                <span className="demo-note">
+                <span className="fine-print">
                   Times shown are still free right now. The salon confirms every request.
                 </span>
               </>
@@ -511,7 +511,7 @@ function Booking() {
                   />
                 </label>
                 {!validDetails && (details.name !== "" || details.phone !== "") && (
-                  <span className="demo-note full">
+                  <span className="fine-print full">
                     Please add your name and a phone number the salon can reach you on.
                   </span>
                 )}
@@ -533,12 +533,12 @@ function Booking() {
                   time={confirmed.time}
                   details={confirmed.details}
                 />
-                <p className="demo-note">
+                <p className="fine-print">
                   Your request is with the salon. We will call you to confirm the appointment — it
                   is not booked until we do.
                 </p>
                 {confirmed.manageUrl && (
-                  <p className="demo-note">
+                  <p className="fine-print">
                     Keep this link to change or cancel it:{" "}
                     <a href={confirmed.manageUrl}>manage this booking</a>
                   </p>
@@ -646,10 +646,12 @@ function Summary({
           <dd>{details.email}</dd>
         </div>
       )}
-      <div>
-        <dt>Price</dt>
-        <dd>{price ?? "Price · to be confirmed"}</dd>
-      </div>
+      {price !== null && (
+        <div>
+          <dt>Price</dt>
+          <dd>{price}</dd>
+        </div>
+      )}
     </dl>
   );
 }
