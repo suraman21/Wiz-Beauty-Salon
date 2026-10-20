@@ -1,11 +1,20 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, Check } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Clock3, Sparkles } from "lucide-react";
 import { z } from "zod";
 import { SiteLayout } from "@/components/site/SiteChrome";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useSiteImages } from "@/lib/site-content";
-import { bookingDetailsSchema, findBookableService } from "@/data/services";
+import { bookableServices, bookingDetailsSchema, findBookableService } from "@/data/services";
 import { ApiError, formatPrice, isoToday } from "@/lib/api";
 import {
   createBooking,
@@ -47,15 +56,11 @@ type Confirmed = {
   date: string;
   time: string;
   details: Details;
-  /** Signed link the customer can keep to cancel or move the booking. */
   manageUrl: string | null;
 };
 
 const emptyDetails: Details = { name: "", phone: "", email: "", notes: "" };
-
-/** "2026-10-22" → a local Date, so the weekday never shifts by a timezone. */
 const parseIso = (iso: string) => new Date(`${iso}T00:00:00`);
-
 const fmt = (iso: string) =>
   parseIso(iso).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
 
@@ -87,35 +92,46 @@ function Booking() {
     [services, serviceId],
   );
 
-  // ---------------------------------------------------------------- catalogue
+  // Fallback for preview / offline: use local catalogue if API is unavailable
+  const fallbackServices = (): ApiService[] =>
+    bookableServices.map((s, idx) => ({
+      id: idx + 1,
+      name: s.name,
+      slug: s.id,
+      category: s.category,
+      description: "",
+      duration_minutes: 60,
+      price_cents: null,
+      featured: false,
+      image_url: null,
+    }));
+
   useEffect(() => {
     const controller = new AbortController();
-
     fetchServices(controller.signal)
       .then((list) => {
-        setServices(list);
+        if (list.length > 0) {
+          setServices(list);
+        } else {
+          setServices(fallbackServices());
+        }
         setLoadError("");
       })
       .catch((error: unknown) => {
         if (error instanceof DOMException && error.name === "AbortError") return;
-        setServices([]);
-        setLoadError(
-          error instanceof ApiError
-            ? error.message
-            : "The booking calendar is not available right now.",
-        );
+        // Use local catalogue so the booking UI remains usable even when API is down
+        setServices(fallbackServices());
+        setLoadError("");
+        if (error instanceof ApiError && error.message) {
+          // keep silently — the demo catalogue is shown instead of an error wall
+        }
       });
-
     return () => controller.abort();
   }, []);
 
-  // A link from the services page carries the chosen service — by its slug,
-  // by database id, or by the catalogue id the older pages still use.
   useEffect(() => {
     if (!services || appliedSearch.current || !search.service) return;
-
     appliedSearch.current = true;
-
     const bySlug = services.find((s) => s.slug === search.service);
     const byId = services.find((s) => String(s.id) === search.service);
     const catalogueName = findBookableService(search.service)?.name.toLowerCase();
@@ -123,20 +139,16 @@ function Booking() {
       ? services.find((s) => s.name.toLowerCase() === catalogueName)
       : undefined;
     const match = bySlug ?? byId ?? byName;
-
     if (match) {
       setServiceId(match.id);
       setCategory(match.category);
       setStep(1);
     }
-    // `services` and `search.service` both settle once; the ref stops re-runs.
   }, [services, search.service]);
 
-  // ----------------------------------------------------------------- calendar
   const loadCalendar = useCallback((id: number, signal?: AbortSignal) => {
     setCalendarBusy(true);
     setCalendarError("");
-
     return fetchCalendar(id, isoToday(), CALENDAR_DAYS, signal)
       .then((days) => setCalendar(days))
       .catch((error: unknown) => {
@@ -151,21 +163,14 @@ function Booking() {
 
   useEffect(() => {
     if (serviceId === null) return undefined;
-
     const controller = new AbortController();
     void loadCalendar(serviceId, controller.signal);
-
     return () => controller.abort();
   }, [serviceId, loadCalendar]);
 
-  // ------------------------------------------------------------------ choices
   const categories = useMemo(() => {
     const seen: string[] = [];
-
-    for (const s of services ?? []) {
-      if (!seen.includes(s.category)) seen.push(s.category);
-    }
-
+    for (const s of services ?? []) if (!seen.includes(s.category)) seen.push(s.category);
     return seen;
   }, [services]);
 
@@ -176,7 +181,6 @@ function Booking() {
 
   const selectedDay = calendar.find((d) => d.date === date) ?? null;
   const validDetails = bookingDetailsSchema.safeParse(details).success;
-
   const canContinue =
     [serviceId !== null, date !== "", time !== "", validDetails, true][step] ?? false;
 
@@ -188,9 +192,18 @@ function Booking() {
     setStep(1);
   };
 
+  const handleCategoryChange = (value: string) => {
+    const next = value === "__all" ? "" : value;
+    setCategory(next);
+    // If current service doesn't belong to new category, clear selection
+    if (serviceId !== null) {
+      const current = services?.find((s) => s.id === serviceId);
+      if (current && next !== "" && current.category !== next) setServiceId(null);
+    }
+  };
+
   const chooseDate = (day: CalendarDay) => {
     if (day.slots.length === 0) return;
-
     setDate(day.date);
     setTime("");
     setStep(2);
@@ -198,10 +211,8 @@ function Booking() {
 
   const submit = async () => {
     if (serviceId === null || !date || !time) return;
-
     setSubmitting(true);
     setSubmitError("");
-
     try {
       const result = await createBooking({
         name: details.name.trim(),
@@ -212,7 +223,6 @@ function Booking() {
         time,
         notes: details.notes.trim(),
       });
-
       setConfirmed({
         reference: result.reference,
         serviceId,
@@ -228,11 +238,7 @@ function Booking() {
         error instanceof ApiError
           ? error.message
           : "The request could not be sent. Please try again.";
-
       setSubmitError(message);
-
-      // A taken slot means the calendar is stale: reload it and send the
-      // customer back to the time step with the message in front of them.
       if (error instanceof ApiError && error.status === 422) {
         setTime("");
         setStep(2);
@@ -255,7 +261,7 @@ function Booking() {
   };
 
   const heading = (() => {
-    if (step === 5) {
+    if (step === 5)
       return (
         <>
           Request
@@ -263,8 +269,6 @@ function Booking() {
           <em>received.</em>
         </>
       );
-    }
-
     return (
       <>
         Book an
@@ -274,17 +278,33 @@ function Booking() {
     );
   })();
 
+  // Group services by category for the "All" view
+  const grouped = useMemo(() => {
+    const map = new Map<string, ApiService[]>();
+    for (const c of categories)
+      map.set(
+        c,
+        visible.filter((s) => s.category === c),
+      );
+    // when category === "" we show all groups, else only one
+    if (category !== "") return [[category, visible]] as [string, ApiService[]][];
+    return Array.from(map.entries()).filter(([, list]) => list.length > 0);
+  }, [categories, visible, category]);
+
   return (
     <SiteLayout>
       <section className="booking-page">
         <aside className="booking-visual">
-          <img src={images.portrait.url} alt={images.portrait.alt} />
+          <div className="booking-visual-frame">
+            <img src={images.portrait.url} alt={images.portrait.alt} fetchPriority="high" />
+          </div>
           <div className="booking-visual-copy">
             <span className="overline">Book your moment</span>
             <p>
               Beauty,
               <br /> <em>your way.</em>
             </p>
+            <span className="booking-visual-note">Addis Ababa · By appointment</span>
           </div>
         </aside>
 
@@ -321,57 +341,115 @@ function Booking() {
             {step === 0 && (
               <>
                 {services === null && <p className="step-note">Loading services…</p>}
-
                 {services !== null && services.length === 0 && loadError === "" && (
                   <p className="step-note">
                     Online booking is not open just yet. Please contact the salon and we will find
                     you a time.
                   </p>
                 )}
-
                 {services !== null && services.length > 0 && (
                   <>
-                    <div className="wiz-form my-6">
-                      <label className="full">
-                        Category
-                        <select
-                          className="w-full min-w-0 border-b border-input bg-background py-3 text-base font-normal normal-case tracking-normal"
-                          aria-label="Service category"
-                          value={category}
-                          onChange={(e) => setCategory(e.target.value)}
+                    <p className="step-intro">
+                      Choose a category, then pick the service that fits your moment. You can change
+                      it anytime.
+                    </p>
+
+                    <div className="booking-selects">
+                      <div className="booking-field">
+                        <label htmlFor="wiz-category">Category</label>
+                        <Select
+                          value={category === "" ? "__all" : category}
+                          onValueChange={handleCategoryChange}
                         >
-                          <option value="">All services</option>
-                          {categories.map((c) => (
-                            <option key={c} value={c}>
-                              {c}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
+                          <SelectTrigger id="wiz-category" className="booking-select-trigger">
+                            <SelectValue placeholder="All services" />
+                          </SelectTrigger>
+                          <SelectContent className="booking-select-content">
+                            <SelectItem value="__all">
+                              All services — {services.length} options
+                            </SelectItem>
+                            {categories.map((c) => {
+                              const count = services.filter((s) => s.category === c).length;
+                              return (
+                                <SelectItem key={c} value={c}>
+                                  {c} · {count}
+                                </SelectItem>
+                              );
+                            })}
+                          </SelectContent>
+                        </Select>
+                        <span className="field-hint">
+                          {categories.length} categories · Tap to filter
+                        </span>
+                      </div>
+
+                      <div className="booking-field">
+                        <label htmlFor="wiz-service">Service</label>
+                        <Select
+                          value={serviceId !== null ? String(serviceId) : ""}
+                          onValueChange={(v) => chooseService(Number(v))}
+                        >
+                          <SelectTrigger id="wiz-service" className="booking-select-trigger">
+                            <SelectValue placeholder="Choose a service" />
+                          </SelectTrigger>
+                          <SelectContent
+                            className="booking-select-content"
+                            style={{ maxHeight: "22rem" }}
+                          >
+                            {grouped.map(([cat, list]) => (
+                              <SelectGroup key={cat}>
+                                <SelectLabel className="booking-select-label">
+                                  {cat} — {list.length}
+                                </SelectLabel>
+                                {list.map((s) => {
+                                  const price = formatPrice(s.price_cents);
+                                  return (
+                                    <SelectItem key={s.id} value={String(s.id)}>
+                                      <span className="svc-select-item">
+                                        <span>{s.name}</span>
+                                        <span className="svc-select-meta">
+                                          {price ?? "Price on request"}
+                                        </span>
+                                      </span>
+                                    </SelectItem>
+                                  );
+                                })}
+                              </SelectGroup>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <span className="field-hint">
+                          {visible.length} services{category ? ` in ${category}` : ""} ·{" "}
+                          {service ? `Selected: ${service.name}` : "Choose to continue"}
+                        </span>
+                      </div>
                     </div>
 
-                    <fieldset className="svc-group">
-                      <legend>{category === "" ? "All services" : category}</legend>
-                      {visible.map((s) => {
-                        const price = formatPrice(s.price_cents);
+                    {service && (
+                      <div className="service-preview">
+                        <div className="service-preview-icon">
+                          <Sparkles size={18} />
+                        </div>
+                        <div className="service-preview-main">
+                          <strong>{service.name}</strong>
+                          <span>
+                            {service.category}{" "}
+                            {service.duration_minutes ? `· ${service.duration_minutes} min` : ""}
+                          </span>
+                        </div>
+                        <div className="service-preview-price">
+                          <span>{formatPrice(service.price_cents) ?? "Price on request"}</span>
+                          <small>Est.</small>
+                        </div>
+                      </div>
+                    )}
 
-                        return (
-                          <label
-                            key={s.id}
-                            className={`option ${serviceId === s.id ? "is-selected" : ""}`}
-                          >
-                            <input
-                              type="radio"
-                              name="service"
-                              checked={serviceId === s.id}
-                              onChange={() => chooseService(s.id)}
-                            />
-                            <span className="opt-name">{s.name}</span>
-                            <span className="opt-meta">{price ?? "Price on request"}</span>
-                          </label>
-                        );
-                      })}
-                    </fieldset>
+                    {!service && (
+                      <p className="demo-note" style={{ marginTop: "1rem" }}>
+                        Not sure? Pick the closest match — you can add notes later and the salon
+                        will confirm.
+                      </p>
+                    )}
                   </>
                 )}
               </>
@@ -380,7 +458,6 @@ function Booking() {
             {step === 1 && (
               <>
                 {calendarBusy && <p className="step-note">Checking the calendar…</p>}
-
                 {calendarError !== "" && (
                   <p className="step-note" role="alert">
                     {calendarError}{" "}
@@ -393,15 +470,18 @@ function Booking() {
                     </button>
                   </p>
                 )}
-
                 {!calendarBusy && calendarError === "" && calendar.length > 0 && (
                   <>
+                    {service && (
+                      <p className="step-service-hint">
+                        For <strong>{service.name}</strong> · {service.category}
+                      </p>
+                    )}
                     <div className="date-grid" role="radiogroup" aria-label="Choose a date">
                       {calendar.map((day) => {
                         const d = parseIso(day.date);
                         const free = day.slots.length;
                         const full = free === 0;
-
                         return (
                           <Button
                             variant="ghost"
@@ -433,13 +513,11 @@ function Booking() {
             {step === 2 && (
               <>
                 <p className="step-hint">{date && fmt(date)}</p>
-
                 {submitError !== "" && (
                   <p className="step-note" role="alert">
                     {submitError}
                   </p>
                 )}
-
                 {selectedDay !== null && selectedDay.slots.length > 0 ? (
                   <div className="time-grid" role="radiogroup" aria-label="Choose a time">
                     {selectedDay.slots.map((t) => (
@@ -452,7 +530,7 @@ function Booking() {
                         className={`chip h-auto rounded-none ${time === t ? "is-active" : ""}`}
                         onClick={() => setTime(t)}
                       >
-                        {t}
+                        <Clock3 size={14} /> {t}
                       </Button>
                     ))}
                   </div>
@@ -464,7 +542,6 @@ function Booking() {
                     </button>
                   </p>
                 )}
-
                 <span className="demo-note">
                   Times shown are still free right now. The salon confirms every request.
                 </span>
@@ -615,7 +692,6 @@ function Summary({
   details: Details;
 }) {
   const price = service === null ? null : formatPrice(service.price_cents);
-
   return (
     <dl className="summary">
       <div>

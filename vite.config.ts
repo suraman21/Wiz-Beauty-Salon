@@ -25,13 +25,12 @@ export default defineConfig({
        * In production the site and the PHP panel share one host, so the booking
        * page calls /api/v1 directly. `bun dev` runs on another port, so this
        * forwards those calls to the local PHP server instead.
+       * If the PHP server is not running, the booking page falls back to the
+       * local catalogue so the UI remains usable.
        */
       proxy: {
-        "/api": { target: "http://127.0.0.1:8080", changeOrigin: false },
-        // Pictures staff upload in the panel. In production they sit in the
-        // docroot next to the site, so Apache serves them; `bun dev` has to ask
-        // the PHP server for them.
-        "/uploads": { target: "http://127.0.0.1:8080", changeOrigin: false },
+        "/api": { target: "http://127.0.0.1:8000", changeOrigin: false },
+        "/uploads": { target: "http://127.0.0.1:8000", changeOrigin: false },
       },
     },
   },
