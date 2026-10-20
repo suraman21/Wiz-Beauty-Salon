@@ -37,7 +37,11 @@ if (!function_exists('url')) {
 if (!function_exists('asset')) {
     function asset(string $path): string
     {
-        return '/admin/assets/' . ltrim($path, '/');
+        $relative = ltrim($path, '/');
+        $file = dirname(__DIR__, 2) . '/public/assets/' . $relative;
+        $version = is_file($file) ? (string) filemtime($file) : '';
+
+        return '/admin/assets/' . $relative . ($version === '' ? '' : '?v=' . $version);
     }
 }
 

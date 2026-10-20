@@ -2,24 +2,22 @@
 /**
  * Panel settings: email delivery.
  *
+ * The screen is written for the person who has to fix email at 9pm: one status
+ * line at the top that says whether mail actually works, the three fields that
+ * decide it marked when they are missing, and the test button where the
+ * question "is it working?" is answered.
+ *
  * @var array{driver: string, host: string, port: int, encryption: string, username: string, from_name: string, from_email: string, salon_email: string, password_saved: bool, readiness: array{state: string, missing: list<string>}} $mail
  * @var string $test_recipient
  * @var int $test_left
  */
 
-// The chosen driver is not the whole story: "mail server" with a blank host
-// or password cannot send anything, so the screen reports the effective state
-// rather than the intention.
-$driver = match ($mail['readiness']['state']) {
-    'smtp' => ['label' => 'Sending through your mail server (SMTP)', 'class' => 'badge--green'],
-    'mail' => ['label' => "Sending through the web host's mail service", 'class' => 'badge--warn'],
-    default => [
-        'label' => 'Not set up yet — missing ' . implode(', ', $mail['readiness']['missing']),
-        'class' => 'badge--warn',
-    ],
-};
+$state = $mail['readiness']['state'];
+$missing = $mail['readiness']['missing'];
+$canTest = $test_left > 0 && $state !== 'incomplete';
 
-$canTest = $test_left > 0 && $mail['readiness']['state'] !== 'incomplete';
+/** True when this particular detail is the reason nothing can be sent. */
+$isMissing = static fn (string $what): bool => in_array($what, $missing, true);
 ?>
 
 <div class="columns columns--detail">
@@ -29,9 +27,25 @@ $canTest = $test_left > 0 && $mail['readiness']['state'] !== 'incomplete';
 
             <h2 class="card__title">Email delivery</h2>
             <p class="card__sub">
-                Booking confirmations, cancellations and website messages are emailed from here.
-                Changes take effect immediately — no deploy, no restart.
+                Booking confirmations, replies and website messages leave the salon from here.
             </p>
+
+            <div class="mail-status mail-status--<?= $state === 'smtp' ? 'ok' : 'warn' ?>">
+                <span class="mail-status__dot" aria-hidden="true"></span>
+                <div>
+                    <?php if ($state === 'smtp'): ?>
+                        <strong>Email is set up.</strong>
+                        Messages are sent through your mail server, <?= e($mail['host']) ?>.
+                    <?php elseif ($state === 'mail'): ?>
+                        <strong>The web host sends the mail.</strong>
+                        This only works if the host allows it. A real mail server is the reliable choice.
+                    <?php else: ?>
+                        <strong>Email is not set up yet.</strong>
+                        Still needed: <?= e(implode(', ', $missing)) ?>.
+                        Until then nothing is delivered — each attempt is written to the log instead.
+                    <?php endif; ?>
+                </div>
+            </div>
 
             <div class="field-row">
                 <div class="field">
@@ -40,7 +54,6 @@ $canTest = $test_left > 0 && $mail['readiness']['state'] !== 'incomplete';
                         <option value="smtp" <?= $mail['driver'] === 'smtp' ? 'selected' : '' ?>>Mail server (recommended)</option>
                         <option value="mail" <?= $mail['driver'] === 'mail' ? 'selected' : '' ?>>Web host's mail service</option>
                     </select>
-                    <p class="field__hint">Use the mail server for real delivery. The web-host option only works if the host allows it.</p>
                 </div>
 
                 <div class="field">
@@ -54,33 +67,46 @@ $canTest = $test_left > 0 && $mail['readiness']['state'] !== 'incomplete';
             </div>
 
             <div class="field-row">
-                <div class="field">
+                <div class="field<?= $isMissing('mail server') ? ' field--missing' : '' ?>">
                     <label for="host">Mail server</label>
                     <input type="text" id="host" name="host" value="<?= e($mail['host']) ?>"
-                           maxlength="253" placeholder="mail.example.com" autocomplete="off">
+                           maxlength="253" placeholder="mail.wiz.arkeonethiopia.com" autocomplete="off">
+                    <?php if ($isMissing('mail server')): ?>
+                        <p class="field__hint field__hint--warn">Needed before anything can be sent.</p>
+                    <?php else: ?>
+                        <p class="field__hint">Usually the same host as your webmail.</p>
+                    <?php endif; ?>
                 </div>
 
                 <div class="field">
                     <label for="port">Port</label>
                     <input type="number" id="port" name="port" value="<?= (int) $mail['port'] ?>"
                            min="1" max="65535" required>
+                    <p class="field__hint">587 with STARTTLS, 465 with SSL.</p>
                 </div>
             </div>
 
-            <div class="field">
+            <div class="field<?= $isMissing('mailbox username') ? ' field--missing' : '' ?>">
                 <label for="username">Mailbox username</label>
                 <input type="text" id="username" name="username" value="<?= e($mail['username']) ?>"
-                       maxlength="254" placeholder="mailbox@example.com" autocomplete="off">
+                       maxlength="254" placeholder="admin@wiz.arkeonethiopia.com" autocomplete="off">
+                <?php if ($isMissing('mailbox username')): ?>
+                    <p class="field__hint field__hint--warn">The whole address, not just the part before @.</p>
+                <?php endif; ?>
             </div>
 
-            <div class="field">
+            <div class="field<?= $isMissing('mailbox password') ? ' field--missing' : '' ?>">
                 <label for="password">Mailbox password</label>
                 <input type="password" id="password" name="password" maxlength="4096" autocomplete="new-password"
                        placeholder="<?= $mail['password_saved'] ? '••••••••••••' : 'Not saved yet' ?>">
-                <p class="field__hint">
-                    <?= $mail['password_saved']
-                        ? 'A password is saved. Leave this blank to keep it, or type a new one to replace it.'
-                        : 'Stored encrypted, never as plain text. It is used only when sending.' ?>
+                <p class="field__hint<?= $isMissing('mailbox password') ? ' field__hint--warn' : '' ?>">
+                    <?php if ($mail['password_saved']): ?>
+                        A password is saved. Leave this blank to keep it, or type a new one to replace it.
+                    <?php elseif ($isMissing('mailbox password')): ?>
+                        The password of the mailbox above. It is stored encrypted and never shown again.
+                    <?php else: ?>
+                        Stored encrypted, never as plain text.
+                    <?php endif; ?>
                 </p>
             </div>
 
@@ -102,7 +128,7 @@ $canTest = $test_left > 0 && $mail['readiness']['state'] !== 'incomplete';
                 <label for="salon_email">Notification address</label>
                 <input type="email" id="salon_email" name="salon_email" value="<?= e($mail['salon_email']) ?>"
                        required maxlength="190">
-                <p class="field__hint">Where new bookings and website messages are sent — usually the salon's own inbox.</p>
+                <p class="field__hint">Where new bookings and website messages are sent — the salon's own inbox.</p>
             </div>
 
             <div class="form-actions">
@@ -112,24 +138,11 @@ $canTest = $test_left > 0 && $mail['readiness']['state'] !== 'incomplete';
         </form>
 
         <section class="card">
-            <h2 class="card__title">Send a test</h2>
+            <h2 class="card__title">Send a test email</h2>
             <p class="card__sub">
-                A test reports what the mail server said. It cannot prove the message reached an inbox —
-                check the inbox and the junk folder after sending.
+                Goes to <strong><?= e($test_recipient) ?></strong>, your own address, at
+                <strong><?= (int) $test_left ?></strong> per hour. Receiving it is the only proof that mail works.
             </p>
-
-            <p><span class="badge <?= e($driver['class']) ?>"><?= e($driver['label']) ?></span></p>
-
-            <p class="field__hint">
-                Tests go to <strong><?= e($test_recipient) ?></strong>, the address on your own account.
-                Each attempt gets a reference, so you can match the panel, the log and the message.
-            </p>
-
-            <?php if ($mail['readiness']['state'] === 'incomplete'): ?>
-                <p class="field__hint">
-                    Fill in the missing details above first — a test now would fail.
-                </p>
-            <?php endif; ?>
 
             <form method="post" action="/admin/settings/test">
                 <?= csrf_field() ?>
@@ -139,12 +152,12 @@ $canTest = $test_left > 0 && $mail['readiness']['state'] !== 'incomplete';
             </form>
 
             <p class="card__note">
-                <?php if ($test_left <= 0): ?>
+                <?php if ($state === 'incomplete'): ?>
+                    Fill in the missing details above first — a test now would fail.
+                <?php elseif ($test_left <= 0): ?>
                     Three tests have been sent in the last hour. Try again a little later.
-                <?php elseif ($test_left === 1): ?>
-                    One test left this hour.
                 <?php else: ?>
-                    <?= (int) $test_left ?> tests left this hour.
+                    Each test carries a reference, so you can match the panel, the log and the message.
                 <?php endif; ?>
             </p>
         </section>
@@ -153,30 +166,52 @@ $canTest = $test_left > 0 && $mail['readiness']['state'] !== 'incomplete';
     <aside class="side-stack">
         <section class="card">
             <h2 class="card__title">If email stops arriving</h2>
-            <p class="card__sub">
-                Check three things, in this order: the mail server answers a test, the password still
-                works in the mailbox's own webmail, and the From address belongs to the salon's domain.
-            </p>
-            <p class="card__note">
-                A wrong password stops delivery without changing anything on this page — the test
-                button reports the mail server's own answer.
-            </p>
+            <ol class="step-list">
+                <li class="step">
+                    <span class="step__num">1</span>
+                    <span>Send a test above. If it fails, the mail server refused the login and the message says why.</span>
+                </li>
+                <li class="step">
+                    <span class="step__num">2</span>
+                    <span>Open the same mailbox in webmail with the same password. If that fails, reset it there, then save the new one here.</span>
+                </li>
+                <li class="step">
+                    <span class="step__num">3</span>
+                    <span>If the test arrives but customers get nothing, ask them to check spam, then check the domain's SPF and DKIM records.</span>
+                </li>
+            </ol>
+
+            <details class="disclosure">
+                <summary class="disclosure__summary">What SPF and DKIM mean</summary>
+                <p class="card__sub">
+                    Two DNS records that tell the world which server may send mail for this domain
+                    (SPF) and prove the message was not altered on the way (DKIM). When they are
+                    missing, honest mail is more likely to be treated as spam.
+                </p>
+            </details>
         </section>
 
         <section class="card">
             <h2 class="card__title">Kept private</h2>
             <p class="card__sub">
-                The email password is encrypted before it is stored, and the screen only ever shows
-                whether it is set. Nothing here is written to a page, a log or an audit record.
-            </p>
-        </section>
-
-        <section class="card">
-            <h2 class="card__title">Before a launch</h2>
-            <p class="card__sub">
-                Delivery is only proven by a real message arriving. Send one to a mailbox you control,
-                then read the SPF, DKIM and DMARC results from its headers.
+                The password is encrypted before it is stored and never shown again. This screen only
+                says whether one is set.
             </p>
         </section>
     </aside>
 </div>
+
+<script>
+    // Choosing an encryption mode offers its usual port, so the two fields cannot
+    // disagree. A custom port that matches neither default is left alone.
+    (() => {
+        const encryption = document.getElementById("encryption");
+        const port = document.getElementById("port");
+        if (!encryption || !port) return;
+        const usual = { tls: "587", ssl: "465" };
+        encryption.addEventListener("change", () => {
+            const next = usual[encryption.value];
+            if (next && ["", "587", "465"].includes(port.value)) port.value = next;
+        });
+    })();
+</script>
