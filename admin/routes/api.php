@@ -29,5 +29,6 @@ return static function (Router $router, App $app): void {
     $router->get('/api/v1/availability', [BookingApiController::class, 'availability']);
     $router->get('/api/v1/calendar', [BookingApiController::class, 'calendar']);
     $router->post('/api/v1/bookings', [BookingApiController::class, 'store']);
+    $router->post('/api/v1/bookings/recover', [BookingApiController::class, 'recover']);
     $router->post('/api/v1/messages', [MessageApiController::class, 'store']);
 };

@@ -343,6 +343,7 @@ $app->singleton(BookingApiController::class, static fn (App $a): BookingApiContr
     $a->get(ServiceRepository::class),
     $a->get(CategoryRepository::class),
     $a->get(RateLimitRepository::class),
+    $a->get(BookingRepository::class),
     (string) ($a->config('app.url') ?? ''),
     (string) ($a->config('app.upload_url') ?? '/uploads'),
     $a->get(SignedLink::class),

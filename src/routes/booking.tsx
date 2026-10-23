@@ -940,15 +940,17 @@ function Booking() {
                 <div className="recover-card">
                   <h4>Lost your link?</h4>
                   <p>
-                    You can recover any booking with your phone number — no password needed. For
-                    now, keep your reference <strong>{confirmed.reference}</strong> and call the
-                    salon if you need to make a change.
+                    Enter your phone number to get your manage links back — no password needed.
+                    Keep your reference <strong>{confirmed.reference}</strong> handy, or recover
+                    now.
                   </p>
                   <div className="recover-actions">
+                    <Link to="/booking/recover" className="editorial-link">
+                      Recover via phone <ArrowRight size={14} />
+                    </Link>
                     <Link to="/contact" className="editorial-link">
                       Contact salon <ArrowRight size={14} />
                     </Link>
-                    <span className="recover-hint">Recover via phone — coming soon</span>
                   </div>
                 </div>
 
@@ -1005,6 +1007,13 @@ function Booking() {
                 </Button>
               )}
             </div>
+          )}
+          {step < 5 && (
+            <p style={{ marginTop: "1.1rem", textAlign: "center" }}>
+              <Link to="/booking/recover" className="editorial-link" style={{ fontSize: "13px" }}>
+                Lost your link? Recover with phone <ArrowRight size={12} />
+              </Link>
+            </p>
           )}
         </div>
       </section>

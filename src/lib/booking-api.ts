@@ -153,4 +153,21 @@ export function createBooking(input: BookingInput): Promise<BookingResult> {
   return apiPost<BookingResult>('/api/v1/bookings', payload);
 }
 
+export type RecoverBooking = {
+  reference: string;
+  service_name: string;
+  booking_date: string;
+  start_time: string;
+  end_time: string;
+  status: string;
+  manage_url: string | null;
+};
+
+export function recoverBookingsByPhone(phone: string): Promise<{ bookings: RecoverBooking[]; count: number }> {
+  return apiPost<{ bookings: RecoverBooking[]; count: number }>('/api/v1/bookings/recover', {
+    phone,
+    website: '',
+  });
+}
+
 export { ApiError };

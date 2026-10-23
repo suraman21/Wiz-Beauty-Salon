@@ -198,4 +198,52 @@ final class BookingRepository
             'note' => $note,
         ]);
     }
+
+    /**
+     * Find upcoming bookings that can be recovered by phone.
+     * Only requested/confirmed and future dates — nothing past or finished.
+     * Normalizes Ethiopian numbers: 09..., +251..., 251... all match by last 9 digits.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findRecoverableByPhone(string $phone): array
+    {
+        $normalized = $this->normalizePhone($phone);
+        if ($normalized === '') {
+            return [];
+        }
+        $last9 = strlen($normalized) > 9 ? substr($normalized, -9) : $normalized;
+        if (strlen($last9) < 7) {
+            return [];
+        }
+
+        $rows = $this->db->all(
+            "SELECT * FROM bookings
+              WHERE status IN ('requested','confirmed')
+                AND booking_date >= CURDATE()
+                AND booking_date <= DATE_ADD(CURDATE(), INTERVAL 60 DAY)
+              ORDER BY booking_date ASC, start_time ASC
+              LIMIT 20",
+        );
+
+        $out = [];
+        foreach ($rows as $row) {
+            $stored = $this->normalizePhone((string) ($row['customer_phone'] ?? ''));
+            $storedLast9 = strlen($stored) > 9 ? substr($stored, -9) : $stored;
+            if ($storedLast9 === $last9) {
+                $out[] = $row;
+            }
+        }
+
+        return $out;
+    }
+
+    private function normalizePhone(string $phone): string
+    {
+        $digits = preg_replace('/\D+/', '', $phone) ?? '';
+        if (strlen($digits) === 12 && str_starts_with($digits, '251')) {
+            $digits = '0' . substr($digits, 3);
+        }
+        return $digits;
+    }
 }

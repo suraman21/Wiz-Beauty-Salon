@@ -363,6 +363,7 @@ final class PublicContentTest extends TestCase
             $this->services,
             $this->categories,
             new RateLimitRepository($this->db),
+            new BookingRepository($this->db),
             '',
             '/uploads',
             null,

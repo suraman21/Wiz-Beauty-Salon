@@ -7,6 +7,7 @@ use Wiz\Core\HttpException;
 use Wiz\Core\Request;
 use Wiz\Core\Response;
 use Wiz\Core\Validator;
+use Wiz\Repositories\BookingRepository;
 use Wiz\Repositories\CategoryRepository;
 use Wiz\Repositories\RateLimitRepository;
 use Wiz\Repositories\ServiceRepository;
@@ -30,6 +31,7 @@ final class BookingApiController
         private readonly ServiceRepository $services,
         private readonly CategoryRepository $categories,
         private readonly RateLimitRepository $limits,
+        private readonly BookingRepository $bookingRepo,
         private readonly string $appOrigin = '',
         private readonly string $uploadUrl = '/uploads',
         private readonly ?SignedLink $links = null,
@@ -388,5 +390,72 @@ final class BookingApiController
             'manage_url' => $token === null ? null : rtrim($this->appOrigin, '/') . '/booking/manage/' . $token,
             'message' => 'Thank you. The salon will confirm your appointment shortly.',
         ], 201);
+    }
+
+    /**
+     * POST /api/v1/bookings/recover
+     *
+     * Lets a customer who lost their manage link get it back with the phone
+     * number they booked with. Only upcoming requested/confirmed bookings are
+     * returned, and the response is the same shape whether or not anything
+     * was found — probing many numbers teaches the caller nothing useful.
+     *
+     * @param array<string, string> $params
+     */
+    public function recover(Request $request, array $params = []): Response
+    {
+        Origin::assertSame($request, $this->appOrigin);
+
+        $ip = $request->ip();
+
+        if (!$this->limits->attempt('recover:' . $ip, 5, 300)) {
+            throw new HttpException(429, 'Too many recovery attempts. Please wait a few minutes and try again.');
+        }
+
+        if ($request->string('website') !== '' || $request->string('_website') !== '') {
+            throw HttpException::validation('The request could not be accepted.');
+        }
+
+        $phoneRaw = $request->string('phone') !== '' ? $request->string('phone') : $request->string('customer_phone');
+        if ($phoneRaw === '' && $request->input('phone') !== null) {
+            $phoneRaw = (string) $request->input('phone');
+        }
+        $phoneRaw = trim($phoneRaw);
+
+        $validator = new Validator(
+            ['customer_phone' => $phoneRaw],
+            ['customer_phone' => 'required|phone|max:40'],
+            ['customer_phone' => 'Phone number'],
+        );
+
+        if (!$validator->validate()) {
+            throw HttpException::validation((string) $validator->firstError());
+        }
+
+        $input = $validator->validated();
+        $phone = (string) $input['customer_phone'];
+
+        $rows = $this->bookingRepo->findRecoverableByPhone($phone);
+
+        $bookings = [];
+        foreach ($rows as $row) {
+            $id = (int) ($row['id'] ?? 0);
+            $token = $this->links?->issue('booking', $id);
+            $bookings[] = [
+                'reference' => (string) ($row['reference'] ?? ''),
+                'service_name' => (string) ($row['service_name'] ?? ''),
+                'booking_date' => (string) ($row['booking_date'] ?? ''),
+                'start_time' => substr((string) ($row['start_time'] ?? ''), 0, 5),
+                'end_time' => substr((string) ($row['end_time'] ?? ''), 0, 5),
+                'status' => (string) ($row['status'] ?? ''),
+                'manage_url' => $token === null ? null : rtrim($this->appOrigin, '/') . '/booking/manage/' . $token,
+            ];
+        }
+
+        return Response::json([
+            'ok' => true,
+            'bookings' => $bookings,
+            'count' => count($bookings),
+        ]);
     }
 }
