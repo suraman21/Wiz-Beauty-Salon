@@ -49,6 +49,7 @@ final class CategoryController
             'heading' => 'Service categories',
             'subheading' => 'How the services list is grouped on the website.',
             'active' => 'services',
+            'backHref' => $editing !== null ? '/admin/categories' : null,
             'categories' => $this->categories->allWithCounts(),
             'editing' => $editing,
             'uploads' => $this->uploader,

@@ -99,6 +99,7 @@ final class ServiceController
                 ? (string) ($selectedCategory['description'] ?? 'What customers can book, and what it costs.')
                 : 'Grouped by category — just like customers see them.',
             'active' => 'services',
+            'backHref' => $selectedCategory !== null ? '/admin/services' : null,
             'services' => $allServices,
             'categories' => $categories,
             'uploads' => $this->uploader,
@@ -320,6 +321,14 @@ final class ServiceController
             $service = ['category_id' => (int) $preselect];
         }
 
+        $backCategory = null;
+        if ($service !== null && isset($service['category_id']) && $service['category_id'] !== null && (int) $service['category_id'] > 0) {
+            $backCategory = (int) $service['category_id'];
+        } elseif ($preselect !== null) {
+            $backCategory = (int) $preselect;
+        }
+        $backHref = $backCategory !== null ? '/admin/services?category=' . $backCategory : '/admin/services';
+
         return $this->view->render('admin/services/form', [
             'title' => $service === null || !isset($service['name']) ? 'New service' : 'Edit service',
             'heading' => $service === null || !isset($service['name']) ? 'Add a service' : 'Edit service',
@@ -327,6 +336,7 @@ final class ServiceController
                 ? 'Customers see this on the services page.'
                 : (string) $service['name'],
             'active' => 'services',
+            'backHref' => $backHref,
             'service' => $service,
             'categories' => $this->categories->allWithCounts(),
             'uploads' => $this->uploader,

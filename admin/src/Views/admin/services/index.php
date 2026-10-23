@@ -127,10 +127,8 @@ $isDetail = $selectedCategory !== null;
     $catDesc = is_string($selectedCategory['description'] ?? null) ? trim($selectedCategory['description']) : '';
     $catCount = (int) ($selectedCategory['service_count'] ?? count($selectedServices));
     $catActive = (int) ($selectedCategory['is_active'] ?? 1) === 1;
-    $backHref = '/admin/services';
     $addHref = $isUncategorised ? '/admin/services/new' : '/admin/services/new?category=' . $catId;
     ?>
-    <a class="svc-admin-back" href="<?= e($backHref) ?>">← Back to categories</a>
 
     <section class="card svc-admin-detail-hero">
         <div class="svc-admin-detail-hero__media">

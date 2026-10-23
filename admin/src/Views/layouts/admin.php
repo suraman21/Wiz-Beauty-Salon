@@ -87,11 +87,19 @@ $navItem = static function (string $key, string $href, string $label, int $badge
 
 <div class="main">
     <header class="topbar">
-        <div>
-            <h1 class="topbar__title"><?= e($heading ?? ($title ?? 'Dashboard')) ?></h1>
-            <?php if (!empty($subheading)): ?>
-                <p class="topbar__sub"><?= e($subheading) ?></p>
+        <div class="topbar__main">
+            <?php
+            $resolvedBack = admin_back_href($backHref ?? null);
+            if ($resolvedBack !== null):
+            ?>
+                <a class="topbar__back" href="<?= e($resolvedBack) ?>" onclick="if (history.length > 1) { const ref = document.referrer; if (ref && new URL(ref, location.origin).origin === location.origin) { history.back(); return false; } }"><span aria-hidden="true">←</span> Back</a>
             <?php endif; ?>
+            <div>
+                <h1 class="topbar__title"><?= e($heading ?? ($title ?? 'Dashboard')) ?></h1>
+                <?php if (!empty($subheading)): ?>
+                    <p class="topbar__sub"><?= e($subheading) ?></p>
+                <?php endif; ?>
+            </div>
         </div>
 
         <form method="post" action="/admin/logout" class="topbar__actions">

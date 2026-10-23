@@ -140,3 +140,54 @@ if (!function_exists('full_date')) {
         return $timestamp === false ? $fallback : date('j M Y, H:i', $timestamp);
     }
 }
+
+if (!function_exists('admin_back_href')) {
+    /**
+     * Universal back link for the admin panel.
+     *
+     * Controllers may pass an explicit $explicit href (e.g. category-aware
+     * back). When none is given, the helper infers a parent from the
+     * current URL — path segments and known query states — so every
+     * detail/edit screen automatically has a way back.
+     */
+    function admin_back_href(?string $explicit = null): ?string
+    {
+        if ($explicit !== null && trim($explicit) !== '') {
+            return $explicit;
+        }
+
+        $uri = (string) ($_SERVER['REQUEST_URI'] ?? '');
+        $path = parse_url($uri, PHP_URL_PATH);
+        $path = is_string($path) ? $path : '/';
+        $path = '/' . trim(rawurldecode($path), '/');
+        if ($path !== '/' && str_ends_with($path, '/')) {
+            $path = rtrim($path, '/');
+        }
+        if ($path === '') {
+            $path = '/';
+        }
+
+        $query = $_GET;
+
+        // Query-driven detail states (path stays on the list route)
+        if ($path === '/admin/services' && isset($query['category']) && trim((string) $query['category']) !== '') {
+            return '/admin/services';
+        }
+        if ($path === '/admin/email-templates' && isset($query['type']) && trim((string) $query['type']) !== '') {
+            return '/admin/email-templates';
+        }
+        if ($path === '/admin/categories' && isset($query['edit']) && trim((string) $query['edit']) !== '') {
+            return '/admin/categories';
+        }
+
+        // Path-driven detail states: /admin/{section}/{id} or /admin/{section}/{id}/edit
+        $parts = explode('/', trim($path, '/')); // e.g. ['admin','bookings','123']
+        if (count($parts) >= 3 && $parts[0] === 'admin' && $parts[1] !== '') {
+            // Top-level list pages are 2 parts (admin + section) — no back
+            // Anything deeper is a detail/edit/new screen — back to its section
+            return '/admin/' . $parts[1];
+        }
+
+        return null;
+    }
+}

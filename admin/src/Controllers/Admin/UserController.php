@@ -184,6 +184,7 @@ final class UserController
                 ? 'They can sign in as soon as you save.'
                 : 'Change their details, rights, or password.',
             'active' => 'team',
+            'backHref' => '/admin/users',
             'user' => $user,
             'me' => $this->auth->id(),
         ]);
