@@ -98,13 +98,16 @@ final class BookingService
             $hasPrice = false;
             $hasNullPrice = false;
             $names = [];
-            // dedupe and filter
+            // dedupe and filter — no hard count limit exposed to client; security via duration + rate-limit
             $serviceIds = array_values(array_unique(array_filter($serviceIds, static fn (int $id): bool => $id > 0)));
             if (count($serviceIds) === 0) {
                 return ['ok' => false, 'error' => 'Please select at least one service.'];
             }
-            if (count($serviceIds) > 5) {
-                return ['ok' => false, 'error' => 'You can book up to 5 services at once.'];
+            // Silent security: prevent impossible day-long bookings (business hours are ~10h)
+            // without surfacing a limit to the user — availability will simply show no slots
+            // if duration exceeds the open window. Hard cap at 8h as safety.
+            if (count($serviceIds) > 30) {
+                return ['ok' => false, 'error' => 'That time is no longer available. Please choose another.'];
             }
             foreach ($serviceIds as $sid) {
                 $svc = $this->services->find($sid);
