@@ -82,8 +82,26 @@ $chip = static function (array $query, string $label, bool $active): string {
 
                             <span class="booking-row__service">
                                 <?= e($booking['service_name']) ?>
+                                <?php if (!empty($booking['is_undecided'])): ?>
+                                    <span class="cell-sub" style="color:#7c2d4b;font-weight:600">Consultation · 60 min · To be confirmed</span>
+                                <?php elseif (!empty($booking['service_ids'])): ?>
+                                    <?php
+                                    $ids = json_decode((string) $booking['service_ids'], true);
+                                    $count = is_array($ids) ? count($ids) : 0;
+                                    $dur = isset($booking['duration_minutes']) && $booking['duration_minutes'] !== null ? (int) $booking['duration_minutes'] : 0;
+                                    ?>
+                                    <?php if ($count > 1): ?>
+                                        <span class="cell-sub"><?= e($count) ?> services<?= $dur ? ' · ' . e($dur) . ' min' : '' ?></span>
+                                    <?php elseif ($dur): ?>
+                                        <span class="cell-sub"><?= e($dur) ?> min</span>
+                                    <?php endif; ?>
+                                <?php elseif (isset($booking['duration_minutes']) && $booking['duration_minutes'] !== null): ?>
+                                    <span class="cell-sub"><?= e((int) $booking['duration_minutes']) ?> min</span>
+                                <?php endif; ?>
                                 <?php if ($booking['price_cents'] !== null): ?>
                                     <span class="cell-sub">ETB <?= e(number_format(((int) $booking['price_cents']) / 100, 0)) ?></span>
+                                <?php elseif (!empty($booking['is_undecided'])): ?>
+                                    <span class="cell-sub">Price to be confirmed</span>
                                 <?php endif; ?>
                             </span>
 

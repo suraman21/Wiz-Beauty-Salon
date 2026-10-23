@@ -32,7 +32,9 @@ export type BookingInput = {
   name: string;
   phone: string;
   email: string;
-  service_id: number;
+  service_id?: number | null;
+  service_ids?: number[];
+  is_undecided?: boolean;
   date: string;
   time: string;
   notes: string;
@@ -77,25 +79,78 @@ export function fetchServices(signal?: AbortSignal): Promise<ApiService[]> {
   return fetchCatalogue(signal).then((body) => body.services);
 }
 
+export type CalendarOpts = {
+  serviceId?: number | null;
+  serviceIds?: number[];
+  isUndecided?: boolean;
+  duration?: number;
+};
+
 export function fetchCalendar(
-  serviceId: number,
+  serviceId: number | CalendarOpts,
   from: string,
   days = 21,
   signal?: AbortSignal,
 ): Promise<CalendarDay[]> {
+  let opts: CalendarOpts;
+  if (typeof serviceId === 'object' && serviceId !== null) {
+    opts = serviceId as CalendarOpts;
+  } else {
+    opts = { serviceId: serviceId as number };
+  }
+
   const query = new URLSearchParams({
-    service_id: String(serviceId),
     from,
     days: String(days),
   });
+
+  if (opts.isUndecided) {
+    query.set('is_undecided', '1');
+  } else if (opts.serviceIds && opts.serviceIds.length > 0) {
+    query.set('service_ids', opts.serviceIds.join(','));
+  } else if (opts.serviceId != null && opts.serviceId > 0) {
+    query.set('service_id', String(opts.serviceId));
+  } else if (opts.duration && opts.duration > 0) {
+    query.set('duration', String(opts.duration));
+  } else if (typeof serviceId === 'number' && serviceId > 0) {
+    query.set('service_id', String(serviceId));
+  }
 
   return apiGet<{ days: CalendarDay[] }>(`/api/v1/calendar?${query.toString()}`, signal).then(
     (body) => body.days,
   );
 }
 
+export function fetchCalendarMulti(
+  opts: CalendarOpts,
+  from: string,
+  days = 21,
+  signal?: AbortSignal,
+): Promise<CalendarDay[]> {
+  return fetchCalendar(opts, from, days, signal);
+}
+
 export function createBooking(input: BookingInput): Promise<BookingResult> {
-  return apiPost<BookingResult>("/api/v1/bookings", { ...input, website: "" });
+  const payload: Record<string, unknown> = {
+    name: input.name,
+    phone: input.phone,
+    email: input.email,
+    date: input.date,
+    time: input.time,
+    notes: input.notes,
+    website: '',
+  };
+  if (input.is_undecided) {
+    payload.is_undecided = 1;
+    payload.isUndecided = 1;
+  } else if (input.service_ids && input.service_ids.length > 0) {
+    payload.service_ids = input.service_ids;
+    payload.serviceIds = input.service_ids;
+    payload.service_id = input.service_id ?? input.service_ids[0];
+  } else if (input.service_id != null) {
+    payload.service_id = input.service_id;
+  }
+  return apiPost<BookingResult>('/api/v1/bookings', payload);
 }
 
 export { ApiError };

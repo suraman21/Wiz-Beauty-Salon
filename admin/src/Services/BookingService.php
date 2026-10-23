@@ -44,13 +44,6 @@ final class BookingService
      */
     public function create(array $input, ?int $userId, string $ip): array
     {
-        $serviceId = (int) ($input['service_id'] ?? 0);
-        $service = $this->services->find($serviceId);
-
-        if ($service === null || (int) ($service['is_active'] ?? 0) !== 1) {
-            return ['ok' => false, 'error' => 'That service is not available any more.'];
-        }
-
         $date = (string) ($input['date'] ?? '');
         $time = (string) ($input['time'] ?? '');
 
@@ -60,7 +53,97 @@ final class BookingService
             return ['ok' => false, 'error' => (string) $status['reason']];
         }
 
-        $duration = $this->durationOf($service);
+        // Resolve services: undecided, multi, or single
+        $isUndecidedInput = $input['is_undecided'] ?? $input['isUndecided'] ?? false;
+        $isUndecided = $isUndecidedInput === true || $isUndecidedInput === '1' || $isUndecidedInput === 1 || $isUndecidedInput === 'true';
+
+        $serviceIdsInput = $input['service_ids'] ?? $input['serviceIds'] ?? null;
+        $serviceIds = [];
+        if (is_string($serviceIdsInput) && $serviceIdsInput !== '') {
+            $decoded = json_decode($serviceIdsInput, true);
+            if (is_array($decoded)) {
+                $serviceIds = array_map('intval', $decoded);
+            } else {
+                // comma separated
+                $parts = array_filter(array_map('trim', explode(',', $serviceIdsInput)));
+                $serviceIds = array_map('intval', $parts);
+            }
+        } elseif (is_array($serviceIdsInput)) {
+            $serviceIds = array_map('intval', $serviceIdsInput);
+        }
+        // also support single service_id inside service_ids array via service_id fallback
+        $singleId = (int) ($input['service_id'] ?? 0);
+        // If no explicit service_ids but singleId provided, treat as single (handled below)
+        // If undecided flag or no service info at all -> undecided
+        $isUndecided = $isUndecided || (empty($serviceIds) && $singleId === 0);
+
+        $serviceId = null;
+        $serviceName = '';
+        $priceCents = null;
+        $duration = 0;
+        $serviceIdsJson = null;
+        $isUndecidedFlag = 0;
+
+        if ($isUndecided) {
+            $duration = 60;
+            $serviceName = 'Not sure — we’ll help you decide';
+            $priceCents = null;
+            $serviceId = null;
+            $serviceIdsJson = null;
+            $isUndecidedFlag = 1;
+        } elseif (!empty($serviceIds)) {
+            $services = [];
+            $totalDuration = 0;
+            $totalPrice = 0;
+            $hasPrice = false;
+            $hasNullPrice = false;
+            $names = [];
+            // dedupe and filter
+            $serviceIds = array_values(array_unique(array_filter($serviceIds, static fn (int $id): bool => $id > 0)));
+            if (count($serviceIds) === 0) {
+                return ['ok' => false, 'error' => 'Please select at least one service.'];
+            }
+            if (count($serviceIds) > 5) {
+                return ['ok' => false, 'error' => 'You can book up to 5 services at once.'];
+            }
+            foreach ($serviceIds as $sid) {
+                $svc = $this->services->find($sid);
+                if ($svc === null || (int) ($svc['is_active'] ?? 0) !== 1) {
+                    return ['ok' => false, 'error' => 'One of the selected services is not available.'];
+                }
+                $services[] = $svc;
+                $totalDuration += $this->durationOf($svc);
+                $names[] = (string) $svc['name'];
+                if ($svc['price_cents'] === null) {
+                    $hasNullPrice = true;
+                } else {
+                    $totalPrice += (int) $svc['price_cents'];
+                    $hasPrice = true;
+                }
+            }
+            if ($hasNullPrice) {
+                $priceCents = null;
+            } else {
+                $priceCents = $hasPrice ? $totalPrice : null;
+            }
+            $duration = $totalDuration > 0 ? $totalDuration : $this->availability->gridMinutes();
+            $serviceName = implode(' + ', $names);
+            $serviceId = (int) $services[0]['id'];
+            $serviceIdsJson = json_encode($serviceIds);
+            $isUndecidedFlag = 0;
+        } else {
+            $serviceId = $singleId;
+            $service = $this->services->find($serviceId);
+            if ($service === null || (int) ($service['is_active'] ?? 0) !== 1) {
+                return ['ok' => false, 'error' => 'That service is not available any more.'];
+            }
+            $duration = $this->durationOf($service);
+            $serviceName = (string) $service['name'];
+            $priceCents = $service['price_cents'] === null ? null : (int) $service['price_cents'];
+            $serviceIdsJson = null;
+            $isUndecidedFlag = 0;
+        }
+
         $available = $this->availability->slotsForDate($date, $duration);
 
         if (!in_array($time, $available, true)) {
@@ -74,22 +157,29 @@ final class BookingService
         try {
             $id = $this->db->transaction(function (Database $db) use (
                 $input,
-                $service,
                 $reference,
                 $date,
                 $time,
                 $duration,
                 $start,
                 $end,
+                $serviceId,
+                $serviceName,
+                $priceCents,
+                $serviceIdsJson,
+                $isUndecidedFlag
             ): int {
                 $id = $this->bookings->create([
                     'reference' => $reference,
                     'customer_name' => (string) ($input['customer_name'] ?? ''),
                     'customer_email' => $this->nullable($input['customer_email'] ?? null),
                     'customer_phone' => (string) ($input['customer_phone'] ?? ''),
-                    'service_id' => (int) $service['id'],
-                    'service_name' => (string) $service['name'],
-                    'price_cents' => $service['price_cents'] === null ? null : (int) $service['price_cents'],
+                    'service_id' => $serviceId,
+                    'service_ids' => $serviceIdsJson,
+                    'service_name' => $serviceName,
+                    'price_cents' => $priceCents,
+                    'duration_minutes' => $duration,
+                    'is_undecided' => $isUndecidedFlag,
                     'booking_date' => $date,
                     'start_time' => $start,
                     'end_time' => $end,
@@ -200,9 +290,28 @@ final class BookingService
             return ['ok' => false, 'error' => 'Only a new or confirmed booking can be moved.'];
         }
 
-        $serviceId = (int) ($booking['service_id'] ?? 0);
-        $service = $serviceId > 0 ? $this->services->find($serviceId) : null;
-        $duration = $service === null ? $this->availability->gridMinutes() : $this->durationOf($service);
+        $duration = (int) ($booking['duration_minutes'] ?? 0);
+        if ($duration <= 0) {
+            $serviceId = (int) ($booking['service_id'] ?? 0);
+            $service = $serviceId > 0 ? $this->services->find($serviceId) : null;
+            $duration = $service === null ? $this->availability->gridMinutes() : $this->durationOf($service);
+            // fallback for old bookings without stored duration but with multi-service JSON
+            if ($duration <= 0 && !empty($booking['service_ids'])) {
+                $ids = json_decode((string) $booking['service_ids'], true);
+                if (is_array($ids)) {
+                    $sum = 0;
+                    foreach ($ids as $sid) {
+                        $svc = $this->services->find((int) $sid);
+                        if ($svc !== null) {
+                            $sum += $this->durationOf($svc);
+                        }
+                    }
+                    if ($sum > 0) {
+                        $duration = $sum;
+                    }
+                }
+            }
+        }
 
         $start = $time . ':00';
         $end = $this->calculator->endTime($time, $duration) . ':00';

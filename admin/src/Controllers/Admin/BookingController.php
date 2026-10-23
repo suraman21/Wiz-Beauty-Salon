@@ -280,6 +280,29 @@ final class BookingController
      */
     private function slotsFor(string $date, array $booking): array
     {
+        $duration = (int) ($booking['duration_minutes'] ?? 0);
+        if ($duration > 0) {
+            return $this->availability->slotsForDate($date, $duration);
+        }
+        if (!empty($booking['is_undecided'])) {
+            return $this->availability->slotsForDate($date, 60);
+        }
+        if (!empty($booking['service_ids'])) {
+            $ids = json_decode((string) $booking['service_ids'], true);
+            if (is_array($ids) && $ids !== []) {
+                $total = 0;
+                foreach ($ids as $sid) {
+                    $svc = $this->services->find((int) $sid);
+                    if ($svc !== null) {
+                        $dur = (int) ($svc['duration_minutes'] ?? 0);
+                        $total += $dur > 0 ? $dur : $this->availability->gridMinutes();
+                    }
+                }
+                if ($total > 0) {
+                    return $this->availability->slotsForDate($date, $total);
+                }
+            }
+        }
         $serviceId = (int) ($booking['service_id'] ?? 0);
 
         return $serviceId > 0 ? $this->slotsForService($date, $serviceId) : [];

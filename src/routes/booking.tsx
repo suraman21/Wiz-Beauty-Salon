@@ -8,9 +8,12 @@ import {
   Clock3,
   Copy,
   ExternalLink,
+  HelpCircle,
+  Layers,
   MessageCircle,
   ShieldCheck,
   Sparkles,
+  X,
 } from "lucide-react";
 import { z } from "zod";
 import { SiteLayout } from "@/components/site/SiteChrome";
@@ -63,7 +66,9 @@ const CALENDAR_DAYS = 21;
 type Details = { name: string; phone: string; email: string; notes: string };
 type Confirmed = {
   reference: string;
-  serviceId: number;
+  serviceId: number | null;
+  serviceIds: number[];
+  isUndecided: boolean;
   date: string;
   time: string;
   details: Details;
@@ -83,7 +88,10 @@ function Booking() {
   const [services, setServices] = useState<ApiService[] | null>(null);
   const [loadError, setLoadError] = useState("");
   const [category, setCategory] = useState("");
-  const [serviceId, setServiceId] = useState<number | null>(null);
+  // New: multi-service + undecided state
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [isUndecided, setIsUndecided] = useState(false);
+  const [multiMode, setMultiMode] = useState(false);
 
   const [calendar, setCalendar] = useState<CalendarDay[]>([]);
   const [calendarBusy, setCalendarBusy] = useState(false);
@@ -99,10 +107,32 @@ function Booking() {
   const [confirmed, setConfirmed] = useState<Confirmed | null>(null);
   const [copied, setCopied] = useState(false);
 
+  // Derived
+  const serviceId = isUndecided ? null : (selectedIds[0] ?? null);
   const service = useMemo(
     () => services?.find((s) => s.id === serviceId) ?? null,
     [services, serviceId],
   );
+  const selectedServices = useMemo(
+    () => (services ? services.filter((s) => selectedIds.includes(s.id)) : []),
+    [services, selectedIds],
+  );
+  const totalDuration = useMemo(() => {
+    if (isUndecided) return 60;
+    if (selectedServices.length === 0) return 0;
+    return selectedServices.reduce((sum, s) => sum + (s.duration_minutes > 0 ? s.duration_minutes : 30), 0);
+  }, [selectedServices, isUndecided]);
+  const totalPrice = useMemo(() => {
+    if (isUndecided) return null;
+    if (selectedServices.length === 0) return null;
+    let sum = 0;
+    let hasNull = false;
+    for (const s of selectedServices) {
+      if (s.price_cents == null) hasNull = true;
+      else sum += s.price_cents;
+    }
+    return hasNull ? null : sum;
+  }, [selectedServices, isUndecided]);
 
   // Fallback for preview / offline: use local catalogue if API is unavailable
   const fallbackServices = (): ApiService[] =>
@@ -131,12 +161,8 @@ function Booking() {
       })
       .catch((error: unknown) => {
         if (error instanceof DOMException && error.name === "AbortError") return;
-        // Use local catalogue so the booking UI remains usable even when API is down
         setServices(fallbackServices());
         setLoadError("");
-        if (error instanceof ApiError && error.message) {
-          // keep silently — the demo catalogue is shown instead of an error wall
-        }
       });
     return () => controller.abort();
   }, []);
@@ -152,33 +178,51 @@ function Booking() {
       : undefined;
     const match = bySlug ?? byId ?? byName;
     if (match) {
-      setServiceId(match.id);
+      setSelectedIds([match.id]);
+      setIsUndecided(false);
       setCategory(match.category);
       setStep(1);
     }
   }, [services, search.service]);
 
-  const loadCalendar = useCallback((id: number, signal?: AbortSignal) => {
-    setCalendarBusy(true);
-    setCalendarError("");
-    return fetchCalendar(id, isoToday(), CALENDAR_DAYS, signal)
-      .then((days) => setCalendar(days))
-      .catch((error: unknown) => {
-        if (error instanceof DOMException && error.name === "AbortError") return;
-        setCalendar([]);
-        setCalendarError(
-          error instanceof ApiError ? error.message : "We could not load the available times.",
-        );
-      })
-      .finally(() => setCalendarBusy(false));
-  }, []);
+  const loadCalendar = useCallback(
+    (opts: { serviceId?: number | null; serviceIds?: number[]; isUndecided?: boolean }, signal?: AbortSignal) => {
+      setCalendarBusy(true);
+      setCalendarError("");
+      const calendarOpts = {
+        serviceId: opts.serviceId ?? undefined,
+        serviceIds: opts.serviceIds,
+        isUndecided: opts.isUndecided,
+      };
+      return fetchCalendar(calendarOpts, isoToday(), CALENDAR_DAYS, signal)
+        .then((days) => setCalendar(days))
+        .catch((error: unknown) => {
+          if (error instanceof DOMException && error.name === "AbortError") return;
+          setCalendar([]);
+          setCalendarError(
+            error instanceof ApiError ? error.message : "We could not load the available times.",
+          );
+        })
+        .finally(() => setCalendarBusy(false));
+    },
+    [],
+  );
 
   useEffect(() => {
-    if (serviceId === null) return undefined;
+    if (isUndecided) {
+      const controller = new AbortController();
+      void loadCalendar({ isUndecided: true }, controller.signal);
+      return () => controller.abort();
+    }
+    if (selectedIds.length === 0) return undefined;
     const controller = new AbortController();
-    void loadCalendar(serviceId, controller.signal);
+    if (selectedIds.length === 1) {
+      void loadCalendar({ serviceId: selectedIds[0] }, controller.signal);
+    } else {
+      void loadCalendar({ serviceIds: selectedIds }, controller.signal);
+    }
     return () => controller.abort();
-  }, [serviceId, loadCalendar]);
+  }, [selectedIds, isUndecided, loadCalendar]);
 
   const categories = useMemo(() => {
     const seen: string[] = [];
@@ -194,23 +238,51 @@ function Booking() {
   const selectedDay = calendar.find((d) => d.date === date) ?? null;
   const validDetails = bookingDetailsSchema.safeParse(details).success;
   const canContinue =
-    [serviceId !== null, date !== "", time !== "", validDetails, true][step] ?? false;
+    [isUndecided || selectedIds.length > 0, date !== "", time !== "", validDetails, true][
+      step
+    ] ?? false;
 
   const chooseService = (id: number) => {
-    setServiceId(id);
+    if (isUndecided) setIsUndecided(false);
+    if (multiMode) {
+      // toggle in multi
+      setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id].slice(0, 5)));
+    } else {
+      setSelectedIds([id]);
+      setDate("");
+      setTime("");
+      setSubmitError("");
+      setStep(1);
+    }
+  };
+
+  const toggleUndecided = () => {
+    if (isUndecided) {
+      setIsUndecided(false);
+      setSelectedIds([]);
+    } else {
+      setIsUndecided(true);
+      setSelectedIds([]);
+      setMultiMode(false);
+      setDate("");
+      setTime("");
+      setSubmitError("");
+    }
+  };
+
+  const removeSelected = (id: number) => {
+    setSelectedIds((prev) => prev.filter((x) => x !== id));
     setDate("");
     setTime("");
-    setSubmitError("");
-    setStep(1);
   };
 
   const handleCategoryChange = (value: string) => {
     const next = value === "__all" ? "" : value;
     setCategory(next);
-    // If current service doesn't belong to new category, clear selection
-    if (serviceId !== null) {
-      const current = services?.find((s) => s.id === serviceId);
-      if (current && next !== "" && current.category !== next) setServiceId(null);
+    // If current single selection doesn't belong to new category, clear only in single mode
+    if (!multiMode && !isUndecided && selectedIds.length === 1) {
+      const current = services?.find((s) => s.id === selectedIds[0]);
+      if (current && next !== "" && current.category !== next) setSelectedIds([]);
     }
   };
 
@@ -222,7 +294,7 @@ function Booking() {
   };
 
   const submit = async () => {
-    if (serviceId === null || !date || !time) return;
+    if ((selectedIds.length === 0 && !isUndecided) || !date || !time) return;
     setSubmitting(true);
     setSubmitError("");
     try {
@@ -230,14 +302,18 @@ function Booking() {
         name: details.name.trim(),
         phone: details.phone.trim(),
         email: details.email.trim(),
-        service_id: serviceId,
+        service_id: isUndecided ? null : selectedIds[0] ?? null,
+        service_ids: isUndecided ? undefined : selectedIds.length > 1 ? selectedIds : undefined,
+        is_undecided: isUndecided,
         date,
         time,
         notes: details.notes.trim(),
       });
       setConfirmed({
         reference: result.reference,
-        serviceId,
+        serviceId: selectedIds[0] ?? null,
+        serviceIds: [...selectedIds],
+        isUndecided,
         date,
         time,
         details,
@@ -254,7 +330,9 @@ function Booking() {
       if (error instanceof ApiError && error.status === 422) {
         setTime("");
         setStep(2);
-        void loadCalendar(serviceId);
+        if (isUndecided) void loadCalendar({ isUndecided: true });
+        else if (selectedIds.length > 1) void loadCalendar({ serviceIds: selectedIds });
+        else if (selectedIds[0]) void loadCalendar({ serviceId: selectedIds[0] });
       }
     } finally {
       setSubmitting(false);
@@ -264,7 +342,9 @@ function Booking() {
   const restart = () => {
     setConfirmed(null);
     setSubmitError("");
-    setServiceId(null);
+    setSelectedIds([]);
+    setIsUndecided(false);
+    setMultiMode(false);
     setCategory("");
     setDate("");
     setTime("");
@@ -308,8 +388,7 @@ function Booking() {
 
   const buildIcs = () => {
     if (!confirmed) return;
-    const svc = services?.find((s) => s.id === confirmed.serviceId) ?? null;
-    const duration = svc?.duration_minutes ?? 60;
+    const duration = isUndecidedConfirmed ? 60 : confirmedDuration ?? 60;
     const start = new Date(`${confirmed.date}T${confirmed.time}:00`);
     const end = new Date(start.getTime() + duration * 60000);
     const pad = (n: number) => String(n).padStart(2, "0");
@@ -324,7 +403,7 @@ function Booking() {
       `DTSTAMP:${fmtIcs(new Date())}`,
       `DTSTART:${fmtIcs(start)}`,
       `DTEND:${fmtIcs(end)}`,
-      `SUMMARY:WIZ Beauty Salon - ${svc?.name ?? "Appointment"}`,
+      `SUMMARY:WIZ Beauty Salon - ${confirmedName}`,
       `DESCRIPTION:Reference ${confirmed.reference} - Manage: ${confirmed.manageUrl ?? ""}`,
       `LOCATION:WIZ Beauty Salon, Addis Ababa`,
       "END:VEVENT",
@@ -341,8 +420,7 @@ function Booking() {
 
   const googleCalendarHref = (() => {
     if (!confirmed) return "";
-    const svc = services?.find((s) => s.id === confirmed.serviceId) ?? null;
-    const duration = svc?.duration_minutes ?? 60;
+    const duration = isUndecidedConfirmed ? 60 : confirmedDuration ?? 60;
     const start = new Date(`${confirmed.date}T${confirmed.time}:00`);
     const end = new Date(start.getTime() + duration * 60000);
     const pad = (n: number) => String(n).padStart(2, "0");
@@ -350,13 +428,35 @@ function Booking() {
       `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00`;
     const params = new URLSearchParams({
       action: "TEMPLATE",
-      text: `WIZ Beauty Salon - ${svc?.name ?? "Appointment"} (${confirmed.reference})`,
+      text: `WIZ Beauty Salon - ${confirmedName} (${confirmed.reference})`,
       dates: `${fmtG(start)}/${fmtG(end)}`,
       details: `Reference ${confirmed.reference} - Manage: ${confirmed.manageUrl ?? ""}`,
       location: "WIZ Beauty Salon, Addis Ababa",
     });
     return `https://calendar.google.com/calendar/render?${params.toString()}`;
   })();
+
+  // For confirmed display helpers
+  const confirmedServices = useMemo(() => {
+    if (!confirmed) return [];
+    if (confirmed.isUndecided) return [];
+    return (services ?? []).filter((s) => confirmed.serviceIds.includes(s.id));
+  }, [confirmed, services]);
+  const confirmedDuration = useMemo(() => {
+    if (!confirmed || confirmed.isUndecided) return 60;
+    if (confirmedServices.length === 0) return 60;
+    return confirmedServices.reduce((sum, s) => sum + (s.duration_minutes > 0 ? s.duration_minutes : 30), 0);
+  }, [confirmed, confirmedServices]);
+  const confirmedName = useMemo(() => {
+    if (!confirmed) return "Appointment";
+    if (confirmed.isUndecided) return "Not sure — we'll help you decide";
+    if (confirmedServices.length === 0) {
+      const svc = services?.find((s) => s.id === confirmed.serviceId);
+      return svc?.name ?? "Appointment";
+    }
+    return confirmedServices.map((s) => s.name).join(" + ");
+  }, [confirmed, confirmedServices, services]);
+  const isUndecidedConfirmed = confirmed?.isUndecided ?? false;
 
   // Group services by category for the "All" view
   const grouped = useMemo(() => {
@@ -366,7 +466,6 @@ function Booking() {
         c,
         visible.filter((s) => s.category === c),
       );
-    // when category === "" we show all groups, else only one
     if (category !== "") return [[category, visible]] as [string, ApiService[]][];
     return Array.from(map.entries()).filter(([, list]) => list.length > 0);
   }, [categories, visible, category]);
@@ -430,105 +529,245 @@ function Booking() {
                 {services !== null && services.length > 0 && (
                   <>
                     <p className="step-intro">
-                      Choose a category, then pick the service that fits your moment. You can change
-                      it anytime.
+                      Choose what you need — pick one, combine a few, or just book a time and we’ll
+                      help you decide at the salon.
                     </p>
 
-                    <div className="booking-selects">
-                      <div className="booking-field">
-                        <label htmlFor="wiz-category">Category</label>
-                        <Select
-                          value={category === "" ? "__all" : category}
-                          onValueChange={handleCategoryChange}
-                        >
-                          <SelectTrigger id="wiz-category" className="booking-select-trigger">
-                            <SelectValue placeholder="All services" />
-                          </SelectTrigger>
-                          <SelectContent className="booking-select-content">
-                            <SelectItem value="__all">
-                              All services — {services.length} options
-                            </SelectItem>
-                            {categories.map((c) => {
-                              const count = services.filter((s) => s.category === c).length;
-                              return (
-                                <SelectItem key={c} value={c}>
-                                  {c} · {count}
-                                </SelectItem>
-                              );
-                            })}
-                          </SelectContent>
-                        </Select>
-                        <span className="field-hint">
-                          {categories.length} categories · Tap to filter
+                    {/* Undecided / consultation card */}
+                    <button
+                      type="button"
+                      className={`wiz-undecided-card ${isUndecided ? "is-selected" : ""}`}
+                      onClick={toggleUndecided}
+                      aria-pressed={isUndecided}
+                    >
+                      <span className="wiz-undecided-icon">
+                        <HelpCircle size={20} />
+                      </span>
+                      <span className="wiz-undecided-main">
+                        <strong>Not sure yet? Book a consultation</strong>
+                        <span>
+                          We’ll help you decide at the salon — 60 min to talk through what suits you.
+                          No wrong choice.
                         </span>
-                      </div>
+                      </span>
+                      <span className="wiz-undecided-check">
+                        {isUndecided ? <Check size={14} /> : <span className="wiz-undecided-dot" />}
+                      </span>
+                    </button>
 
-                      <div className="booking-field">
-                        <label htmlFor="wiz-service">Service</label>
-                        <Select
-                          value={serviceId !== null ? String(serviceId) : ""}
-                          onValueChange={(v) => chooseService(Number(v))}
-                        >
-                          <SelectTrigger id="wiz-service" className="booking-select-trigger">
-                            <SelectValue placeholder="Choose a service" />
-                          </SelectTrigger>
-                          <SelectContent
-                            className="booking-select-content"
-                            style={{ maxHeight: "22rem" }}
+                    {!isUndecided && (
+                      <>
+                        <div className="booking-mode-toggle" role="tablist" aria-label="Booking mode">
+                          <button
+                            type="button"
+                            role="tab"
+                            aria-selected={!multiMode}
+                            className={!multiMode ? "is-active" : ""}
+                            onClick={() => setMultiMode(false)}
                           >
-                            {grouped.map(([cat, list]) => (
-                              <SelectGroup key={cat}>
-                                <SelectLabel className="booking-select-label">
-                                  {cat} — {list.length}
-                                </SelectLabel>
-                                {list.map((s) => {
-                                  const price = formatPrice(s.price_cents);
+                            <Sparkles size={14} /> One service
+                          </button>
+                          <button
+                            type="button"
+                            role="tab"
+                            aria-selected={multiMode}
+                            className={multiMode ? "is-active" : ""}
+                            onClick={() => setMultiMode(true)}
+                          >
+                            <Layers size={14} /> Multiple (up to 5)
+                          </button>
+                        </div>
+
+                        <div className="booking-selects">
+                          <div className="booking-field">
+                            <label htmlFor="wiz-category">Category</label>
+                            <Select
+                              value={category === "" ? "__all" : category}
+                              onValueChange={handleCategoryChange}
+                            >
+                              <SelectTrigger id="wiz-category" className="booking-select-trigger">
+                                <SelectValue placeholder="All services" />
+                              </SelectTrigger>
+                              <SelectContent className="booking-select-content">
+                                <SelectItem value="__all">
+                                  All services — {services.length} options
+                                </SelectItem>
+                                {categories.map((c) => {
+                                  const count = services.filter((s) => s.category === c).length;
                                   return (
-                                    <SelectItem key={s.id} value={String(s.id)}>
-                                      <span className="svc-select-item">
-                                        <span>{s.name}</span>
-                                        <span className="svc-select-meta">
-                                          {price ?? "Price on request"}
-                                        </span>
-                                      </span>
+                                    <SelectItem key={c} value={c}>
+                                      {c} · {count}
                                     </SelectItem>
                                   );
                                 })}
-                              </SelectGroup>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <span className="field-hint">
-                          {visible.length} services{category ? ` in ${category}` : ""} ·{" "}
-                          {service ? `Selected: ${service.name}` : "Choose to continue"}
-                        </span>
-                      </div>
-                    </div>
+                              </SelectContent>
+                            </Select>
+                            <span className="field-hint">
+                              {categories.length} categories · Tap to filter
+                            </span>
+                          </div>
 
-                    {service && (
-                      <div className="service-preview">
-                        <div className="service-preview-icon">
-                          <Sparkles size={18} />
+                          {!multiMode && (
+                            <div className="booking-field">
+                              <label htmlFor="wiz-service">Service</label>
+                              <Select
+                                value={selectedIds[0] != null ? String(selectedIds[0]) : ""}
+                                onValueChange={(v) => chooseService(Number(v))}
+                              >
+                                <SelectTrigger id="wiz-service" className="booking-select-trigger">
+                                  <SelectValue placeholder="Choose a service" />
+                                </SelectTrigger>
+                                <SelectContent
+                                  className="booking-select-content"
+                                  style={{ maxHeight: "22rem" }}
+                                >
+                                  {grouped.map(([cat, list]) => (
+                                    <SelectGroup key={cat}>
+                                      <SelectLabel className="booking-select-label">
+                                        {cat} — {list.length}
+                                      </SelectLabel>
+                                      {list.map((s) => {
+                                        const price = formatPrice(s.price_cents);
+                                        return (
+                                          <SelectItem key={s.id} value={String(s.id)}>
+                                            <span className="svc-select-item">
+                                              <span>{s.name}</span>
+                                              <span className="svc-select-meta">
+                                                {price ?? "Price on request"} · {s.duration_minutes || 30} min
+                                              </span>
+                                            </span>
+                                          </SelectItem>
+                                        );
+                                      })}
+                                    </SelectGroup>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <span className="field-hint">
+                                {visible.length} services{category ? ` in ${category}` : ""} ·{" "}
+                                {selectedIds.length === 1 && service
+                                  ? `Selected: ${service.name}`
+                                  : "Choose to continue"}
+                              </span>
+                            </div>
+                          )}
                         </div>
-                        <div className="service-preview-main">
-                          <strong>{service.name}</strong>
-                          <span>
-                            {service.category}{" "}
-                            {service.duration_minutes ? `· ${service.duration_minutes} min` : ""}
-                          </span>
-                        </div>
-                        <div className="service-preview-price">
-                          <span>{formatPrice(service.price_cents) ?? "Price on request"}</span>
-                          <small>Est.</small>
-                        </div>
-                      </div>
+
+                        {multiMode && (
+                          <>
+                            <p className="demo-note" style={{ marginTop: "0.75rem" }}>
+                              Tap to add. Your services will run back-to-back — we’ll reserve the
+                              total time.
+                            </p>
+                            <div className="booking-multi-list" role="group" aria-label="Choose services">
+                              {grouped.map(([cat, list]) => (
+                                <div key={cat} className="booking-multi-group">
+                                  <span className="booking-multi-label">
+                                    {cat} — {list.length}
+                                  </span>
+                                  <div className="booking-multi-grid">
+                                    {list.map((s) => {
+                                      const selected = selectedIds.includes(s.id);
+                                      const price = formatPrice(s.price_cents);
+                                      return (
+                                        <button
+                                          key={s.id}
+                                          type="button"
+                                          className={`booking-multi-item ${selected ? "is-selected" : ""}`}
+                                          onClick={() => chooseService(s.id)}
+                                          aria-pressed={selected}
+                                        >
+                                          <span className="booking-multi-check">
+                                            {selected ? <Check size={12} /> : <span />}
+                                          </span>
+                                          <span className="booking-multi-main">
+                                            <strong>{s.name}</strong>
+                                            <span>
+                                              {s.duration_minutes || 30} min · {price ?? "Price on request"}
+                                            </span>
+                                          </span>
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </>
+                        )}
+
+                        {/* Selected summary for single */}
+                        {!multiMode && service && (
+                          <div className="service-preview">
+                            <div className="service-preview-icon">
+                              <Sparkles size={18} />
+                            </div>
+                            <div className="service-preview-main">
+                              <strong>{service.name}</strong>
+                              <span>
+                                {service.category}{" "}
+                                {service.duration_minutes ? `· ${service.duration_minutes} min` : ""}
+                              </span>
+                            </div>
+                            <div className="service-preview-price">
+                              <span>{formatPrice(service.price_cents) ?? "Price on request"}</span>
+                              <small>Est.</small>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Selected summary for multi */}
+                        {multiMode && selectedServices.length > 0 && (
+                          <div className="booking-multi-summary">
+                            <div className="booking-multi-summary-head">
+                              <strong>
+                                {selectedServices.length} service{selectedServices.length > 1 ? "s" : ""} · {totalDuration} min
+                              </strong>
+                              <span>{totalPrice != null ? (formatPrice(totalPrice) ?? "—") : "Price to be confirmed"}</span>
+                            </div>
+                            <div className="booking-multi-chips">
+                              {selectedServices.map((s) => (
+                                <span key={s.id} className="booking-chip">
+                                  {s.name}
+                                  <button
+                                    type="button"
+                                    aria-label={`Remove ${s.name}`}
+                                    onClick={() => removeSelected(s.id)}
+                                  >
+                                    <X size={12} />
+                                  </button>
+                                </span>
+                              ))}
+                            </div>
+                            {selectedServices.length >= 5 && (
+                              <span className="field-hint">Maximum 5 services per booking.</span>
+                            )}
+                          </div>
+                        )}
+
+                        {selectedIds.length === 0 && (
+                          <p className="demo-note" style={{ marginTop: "1rem" }}>
+                            Pick a service above — or switch to “Not sure” if you’d like us to help
+                            you decide at the salon.
+                          </p>
+                        )}
+                      </>
                     )}
 
-                    {!service && (
-                      <p className="demo-note" style={{ marginTop: "1rem" }}>
-                        Not sure? Pick the closest match — you can add notes later and the salon
-                        will confirm.
-                      </p>
+                    {isUndecided && (
+                      <div className="service-preview service-preview--undecided">
+                        <div className="service-preview-icon">
+                          <HelpCircle size={18} />
+                        </div>
+                        <div className="service-preview-main">
+                          <strong>Not sure — we’ll help you decide</strong>
+                          <span>Consultation · 60 min · We’ll find the right service with you</span>
+                        </div>
+                        <div className="service-preview-price">
+                          <span>To be confirmed</span>
+                          <small>at salon</small>
+                        </div>
+                      </div>
                     )}
                   </>
                 )}
@@ -544,7 +783,11 @@ function Booking() {
                     <button
                       type="button"
                       className="editorial-link"
-                      onClick={() => serviceId !== null && void loadCalendar(serviceId)}
+                      onClick={() => {
+                        if (isUndecided) void loadCalendar({ isUndecided: true });
+                        else if (selectedIds.length > 1) void loadCalendar({ serviceIds: selectedIds });
+                        else if (selectedIds[0]) void loadCalendar({ serviceId: selectedIds[0] });
+                      }}
                     >
                       Try again
                     </button>
@@ -552,9 +795,21 @@ function Booking() {
                 )}
                 {!calendarBusy && calendarError === "" && calendar.length > 0 && (
                   <>
-                    {service && (
+                    {(isUndecided || selectedServices.length > 0) && (
                       <p className="step-service-hint">
-                        For <strong>{service.name}</strong> · {service.category}
+                        {isUndecided ? (
+                          <>
+                            For <strong>Consultation (not sure yet)</strong> · 60 min
+                          </>
+                        ) : selectedServices.length === 1 ? (
+                          <>
+                            For <strong>{selectedServices[0].name}</strong> · {selectedServices[0].category} · {totalDuration} min
+                          </>
+                        ) : (
+                          <>
+                            For <strong>{selectedServices.map((s) => s.name).join(" + ")}</strong> · {totalDuration} min · {selectedServices.length} services
+                          </>
+                        )}
                       </p>
                     )}
                     <div className="date-grid" role="radiogroup" aria-label="Choose a date">
@@ -584,6 +839,7 @@ function Booking() {
                     </div>
                     <span className="demo-note">
                       Days the salon is closed are shown greyed out. Times are in Addis Ababa time.
+                      {totalDuration > 60 ? ` Your booking will reserve ${totalDuration} minutes back-to-back.` : ""}
                     </span>
                   </>
                 )}
@@ -624,6 +880,7 @@ function Booking() {
                 )}
                 <span className="demo-note">
                   Times shown are still free right now. The salon confirms every request.
+                  {totalDuration ? ` Selected duration: ${totalDuration} min.` : ""}
                 </span>
               </>
             )}
@@ -664,7 +921,13 @@ function Booking() {
                     rows={3}
                     value={details.notes}
                     onChange={(e) => setDetails({ ...details, notes: e.target.value })}
-                    placeholder="Anything we should know?"
+                    placeholder={
+                      isUndecided
+                        ? "Tell us what you’re hoping for — we’ll help you decide at the salon."
+                        : selectedServices.length > 1
+                          ? "Anything we should know about your services?"
+                          : "Anything we should know?"
+                    }
                   />
                 </label>
                 {!validDetails && (details.name !== "" || details.phone !== "") && (
@@ -675,8 +938,16 @@ function Booking() {
               </div>
             )}
 
-            {step === 4 && service !== null && (
-              <Summary service={service} date={date} time={time} details={details} />
+            {step === 4 && (isUndecided || selectedServices.length > 0) && (
+              <Summary
+                services={isUndecided ? [] : selectedServices}
+                isUndecided={isUndecided}
+                totalDuration={totalDuration}
+                totalPrice={totalPrice}
+                date={date}
+                time={time}
+                details={details}
+              />
             )}
 
             {step === 5 && confirmed !== null && (
@@ -685,7 +956,17 @@ function Booking() {
                   Reference <strong>{confirmed.reference}</strong>
                 </p>
                 <Summary
-                  service={services?.find((s) => s.id === confirmed.serviceId) ?? null}
+                  services={confirmed.isUndecided ? [] : confirmedServices}
+                  isUndecided={confirmed.isUndecided}
+                  totalDuration={confirmedDuration}
+                  totalPrice={
+                    confirmed.isUndecided
+                      ? null
+                      : confirmedServices.reduce((sum, s) => {
+                          if (s.price_cents == null) return sum;
+                          return sum + s.price_cents;
+                        }, 0) || null
+                  }
                   date={confirmed.date}
                   time={confirmed.time}
                   details={confirmed.details}
@@ -842,32 +1123,63 @@ function Booking() {
 }
 
 function Summary({
-  service,
+  services,
+  isUndecided,
+  totalDuration,
+  totalPrice,
   date,
   time,
   details,
 }: {
-  service: ApiService | null;
+  services: ApiService[];
+  isUndecided: boolean;
+  totalDuration: number;
+  totalPrice: number | null;
   date: string;
   time: string;
   details: Details;
 }) {
-  const price = service === null ? null : formatPrice(service.price_cents);
+  const price = totalPrice != null ? formatPrice(totalPrice) : null;
+  const name = isUndecided
+    ? "Not sure — we'll help you decide"
+    : services.length === 0
+      ? "—"
+      : services.length === 1
+        ? services[0].name
+        : services.map((s) => s.name).join(" + ");
+  const cat = isUndecided
+    ? "Consultation · We'll decide together"
+    : services.length === 1
+      ? services[0].category
+      : `${services.length} services · ${totalDuration} min`;
   return (
     <dl className="summary">
       <div>
         <dt>Service</dt>
         <dd>
-          {service?.name ?? "—"} {service && <small>{service.category}</small>}
+          {name} <small>{cat}</small>
         </dd>
       </div>
+      {services.length > 1 && (
+        <div>
+          <dt>Selected</dt>
+          <dd>
+            {services.map((s) => s.name).join(" + ")}
+            <small>
+              {services.map((s) => `${s.category} · ${s.duration_minutes || 30} min`).join(" · ")}
+            </small>
+          </dd>
+        </div>
+      )}
       <div>
         <dt>Date</dt>
         <dd>{date ? fmt(date) : "—"}</dd>
       </div>
       <div>
         <dt>Time</dt>
-        <dd>{time || "—"}</dd>
+        <dd>
+          {time || "—"} {totalDuration ? <small>· {totalDuration} min</small> : null}
+        </dd>
       </div>
       <div>
         <dt>Name</dt>
@@ -885,7 +1197,7 @@ function Summary({
       )}
       <div>
         <dt>Price</dt>
-        <dd>{price ?? "Price on request"}</dd>
+        <dd>{isUndecided ? "To be confirmed at salon" : (price ?? "Price on request")}</dd>
       </div>
     </dl>
   );

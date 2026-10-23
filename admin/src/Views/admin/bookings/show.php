@@ -36,6 +36,14 @@ $actionStyle = static function (BookingStatus $target): string {
         default => 'btn btn--ghost',
     };
 };
+
+$isUndecided = !empty($booking['is_undecided']);
+$duration = isset($booking['duration_minutes']) && $booking['duration_minutes'] !== null ? (int) $booking['duration_minutes'] : null;
+$serviceIds = [];
+if (!empty($booking['service_ids'])) {
+    $decoded = json_decode((string) $booking['service_ids'], true);
+    if (is_array($decoded)) $serviceIds = $decoded;
+}
 ?>
 
 <?php if (!empty($error)): ?>
@@ -49,8 +57,21 @@ $actionStyle = static function (BookingStatus $target): string {
                 <p class="detail-when">
                     <?= e(date('l j F Y', (int) strtotime($date))) ?>
                     <strong><?= e($short($booking['start_time'])) ?>–<?= e($short($booking['end_time'])) ?></strong>
+                    <?php if ($duration): ?>
+                        <span style="font-weight:400;color:var(--muted-foreground);font-size:0.9em"> · <?= e($duration) ?> min</span>
+                    <?php endif; ?>
                 </p>
-                <p class="detail-service"><?= e($booking['service_name']) ?></p>
+                <p class="detail-service">
+                    <?= e($booking['service_name']) ?>
+                    <?php if ($isUndecided): ?>
+                        <span style="display:inline-block;margin-left:0.5rem;padding:2px 8px;border-radius:999px;background:#fff1f1;color:#7c2d4b;font-size:11px;font-weight:700;letter-spacing:0.04em">Consultation — not sure yet</span>
+                    <?php elseif (count($serviceIds) > 1): ?>
+                        <span style="display:inline-block;margin-left:0.5rem;padding:2px 8px;border-radius:999px;background:var(--ink);color:white;font-size:11px;font-weight:600"><?= e(count($serviceIds)) ?> services · <?= $duration ? e($duration) . ' min' : '' ?></span>
+                    <?php endif; ?>
+                </p>
+                <?php if (count($serviceIds) > 1): ?>
+                    <p style="font-size:12px;color:var(--muted-foreground);margin-top:4px"><?= e($booking['service_name']) ?> — booked together, back-to-back</p>
+                <?php endif; ?>
             </div>
             <span class="<?= e($status?->badgeClass() ?? 'badge badge--grey') ?>">
                 <?= e($status?->label() ?? (string) $booking['status']) ?>
@@ -78,7 +99,19 @@ $actionStyle = static function (BookingStatus $target): string {
             </div>
             <div>
                 <dt>Price</dt>
-                <dd><?= $booking['price_cents'] === null ? '—' : 'ETB ' . e(number_format(((int) $booking['price_cents']) / 100, 0)) ?></dd>
+                <dd>
+                    <?php if ($isUndecided): ?>
+                        To be confirmed at salon
+                    <?php elseif ($booking['price_cents'] === null): ?>
+                        —
+                    <?php else: ?>
+                        ETB <?= e(number_format(((int) $booking['price_cents']) / 100, 0)) ?>
+                    <?php endif; ?>
+                </dd>
+            </div>
+            <div>
+                <dt>Duration</dt>
+                <dd><?= $duration ? e($duration) . ' min' : '—' ?></dd>
             </div>
             <div>
                 <dt>Reference</dt>

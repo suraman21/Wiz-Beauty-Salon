@@ -111,6 +111,7 @@ final class BookingApiController
 
     /**
      * GET /api/v1/availability?date=YYYY-MM-DD&service_id=1
+     * Also supports ?service_ids=1,2,3&duration=90&is_undecided=1 for multi/undecided bookings
      *
      * @param array<string, string> $params
      */
@@ -118,26 +119,22 @@ final class BookingApiController
     {
         $this->guardRead('availability', $request);
 
-        $serviceId = (int) $request->queryString('service_id');
         $date = $request->queryString('date', date('Y-m-d'));
+        $resolved = $this->resolveDuration($request);
 
-        $service = $this->services->find($serviceId);
-
-        if ($service === null || (int) ($service['is_active'] ?? 0) !== 1) {
+        if ($resolved === null) {
             throw HttpException::notFound('Unknown service.');
         }
 
-        $duration = (int) ($service['duration_minutes'] ?? 0);
+        $duration = $resolved['duration'];
+        $serviceInfo = $resolved['service'];
+
         $status = $this->availability->dayStatus($date);
         $slots = $status['open'] ? $this->availability->slotsForDate($date, $duration) : [];
 
         return Response::json([
             'date' => $date,
-            'service' => [
-                'id' => (int) $service['id'],
-                'name' => (string) $service['name'],
-                'duration_minutes' => $duration > 0 ? $duration : $this->availability->gridMinutes(),
-            ],
+            'service' => $serviceInfo,
             'open' => $status['open'],
             'reason' => $status['reason'],
             'slots' => $slots,
@@ -146,6 +143,7 @@ final class BookingApiController
 
     /**
      * GET /api/v1/calendar?service_id=1&from=YYYY-MM-DD&days=14
+     * Also supports multi-service and undecided via service_ids/duration/is_undecided
      *
      * @param array<string, string> $params
      */
@@ -153,25 +151,108 @@ final class BookingApiController
     {
         $this->guardRead('calendar', $request);
 
-        $service = $this->services->find((int) $request->queryString('service_id'));
+        $resolved = $this->resolveDuration($request);
 
-        if ($service === null || (int) ($service['is_active'] ?? 0) !== 1) {
+        if ($resolved === null) {
             throw HttpException::notFound('Unknown service.');
         }
 
-        $duration = (int) ($service['duration_minutes'] ?? 0);
-        $duration = $duration > 0 ? $duration : $this->availability->gridMinutes();
+        $duration = $resolved['duration'];
+        $serviceInfo = $resolved['service'];
         $from = $request->queryString('from', date('Y-m-d'));
         $days = (int) $request->queryString('days', '14');
 
         return Response::json([
-            'service' => [
-                'id' => (int) $service['id'],
-                'name' => (string) $service['name'],
-                'duration_minutes' => $duration,
-            ],
+            'service' => $serviceInfo,
             'days' => $this->availability->calendar($from, $days, $duration),
         ])->withHeader('Cache-Control', 'public, max-age=60');
+    }
+
+    /**
+     * Resolve a duration and a display service from the request, supporting
+     * single, multi-service (service_ids) and undecided bookings.
+     *
+     * @return array{duration: int, service: array{id: int, name: string, duration_minutes: int}}|null
+     */
+    private function resolveDuration(Request $request): ?array
+    {
+        $durationParam = $request->queryString('duration');
+        if ($durationParam !== '' && ctype_digit($durationParam) && (int) $durationParam > 0) {
+            $d = (int) $durationParam;
+            $d = max(15, min(480, $d));
+            return [
+                'duration' => $d,
+                'service' => ['id' => 0, 'name' => 'Selected services', 'duration_minutes' => $d],
+            ];
+        }
+
+        $isUndecided = $request->queryString('is_undecided') === '1' || $request->queryString('is_undecided') === 'true' || $request->queryString('isUndecided') === '1';
+
+        $serviceIdsParam = $request->queryString('service_ids') !== '' ? $request->queryString('service_ids') : $request->queryString('serviceIds');
+        if ($serviceIdsParam !== '') {
+            $ids = [];
+            $decoded = json_decode($serviceIdsParam, true);
+            if (is_array($decoded)) {
+                $ids = array_map('intval', $decoded);
+            } else {
+                $parts = array_filter(array_map('trim', explode(',', $serviceIdsParam)));
+                $ids = array_map('intval', $parts);
+            }
+            $ids = array_values(array_unique(array_filter($ids, static fn (int $id): bool => $id > 0)));
+            if ($ids !== []) {
+                $total = 0;
+                $names = [];
+                $valid = 0;
+                foreach ($ids as $sid) {
+                    $svc = $this->services->find($sid);
+                    if ($svc !== null && (int) ($svc['is_active'] ?? 0) === 1) {
+                        $dur = (int) ($svc['duration_minutes'] ?? 0);
+                        $total += $dur > 0 ? $dur : $this->availability->gridMinutes();
+                        $names[] = (string) $svc['name'];
+                        $valid++;
+                    }
+                }
+                if ($valid > 0) {
+                    $duration = $total > 0 ? $total : $this->availability->gridMinutes();
+                    return [
+                        'duration' => $duration,
+                        'service' => [
+                            'id' => $ids[0],
+                            'name' => implode(' + ', $names),
+                            'duration_minutes' => $duration,
+                        ],
+                    ];
+                }
+            }
+        }
+
+        $serviceId = (int) $request->queryString('service_id');
+        if ($serviceId > 0) {
+            $service = $this->services->find($serviceId);
+            if ($service !== null && (int) ($service['is_active'] ?? 0) === 1) {
+                $d = (int) ($service['duration_minutes'] ?? 0);
+                $duration = $d > 0 ? $d : $this->availability->gridMinutes();
+                return [
+                    'duration' => $duration,
+                    'service' => [
+                        'id' => (int) $service['id'],
+                        'name' => (string) $service['name'],
+                        'duration_minutes' => $duration,
+                    ],
+                ];
+            }
+            return null;
+        }
+
+        if ($isUndecided) {
+            $d = 60;
+            return [
+                'duration' => $d,
+                'service' => ['id' => 0, 'name' => 'Not sure — we’ll help you decide', 'duration_minutes' => $d],
+            ];
+        }
+
+        return null;
     }
 
     /**
@@ -216,12 +297,30 @@ final class BookingApiController
             throw HttpException::validation('The booking could not be accepted.');
         }
 
+        // Gather service selection: single, multi, or undecided
+        $rawServiceIds = $request->string('service_ids') !== '' ? $request->string('service_ids') : $request->string('serviceIds');
+        // Support JSON array body: Request::input may hold array
+        if ($rawServiceIds === '' && is_array($request->input('service_ids') ?? null)) {
+            $rawServiceIds = json_encode($request->input('service_ids'));
+        }
+        if ($rawServiceIds === '' && is_array($request->input('serviceIds') ?? null)) {
+            $rawServiceIds = json_encode($request->input('serviceIds'));
+        }
+        $rawIsUndecided = $request->string('is_undecided') !== '' ? $request->string('is_undecided') : $request->string('isUndecided');
+        // Also support JSON boolean
+        if ($rawIsUndecided === '' && $request->input('is_undecided') !== null) {
+            $v = $request->input('is_undecided');
+            $rawIsUndecided = is_bool($v) ? ($v ? '1' : '0') : (string) $v;
+        }
+
         $validator = new Validator(
             [
                 'customer_name' => $request->string('name'),
                 'customer_phone' => $request->string('phone'),
                 'customer_email' => $request->string('email'),
                 'service_id' => $request->string('service_id'),
+                'service_ids' => $rawServiceIds,
+                'is_undecided' => $rawIsUndecided,
                 'date' => $request->string('date'),
                 'time' => $request->string('time'),
                 'notes' => $request->string('notes'),
@@ -230,7 +329,9 @@ final class BookingApiController
                 'customer_name' => 'required|max:120',
                 'customer_phone' => 'required|phone|max:40',
                 'customer_email' => 'email|max:190',
-                'service_id' => 'required|integer',
+                'service_id' => 'integer',
+                'service_ids' => 'string',
+                'is_undecided' => 'string',
                 'date' => 'required|date',
                 'time' => 'required|time',
                 'notes' => 'max:500',
@@ -252,11 +353,21 @@ final class BookingApiController
 
         $input = $validator->validated();
 
+        // Ensure at least one service choice or undecided is present
+        $hasServiceId = isset($input['service_id']) && (string) $input['service_id'] !== '' && (int) $input['service_id'] > 0;
+        $hasServiceIds = isset($input['service_ids']) && (string) $input['service_ids'] !== '' && (string) $input['service_ids'] !== '[]';
+        $isUndecidedFlag = isset($input['is_undecided']) && in_array(strtolower((string) $input['is_undecided']), ['1', 'true', 'yes'], true);
+        if (!$hasServiceId && !$hasServiceIds && !$isUndecidedFlag) {
+            throw HttpException::validation('Please select a service, add more than one, or choose “Not sure — we’ll help you decide”.');
+        }
+
         $result = $this->bookings->create([
             'customer_name' => (string) $input['customer_name'],
             'customer_phone' => (string) $input['customer_phone'],
             'customer_email' => (string) ($input['customer_email'] ?? ''),
-            'service_id' => (int) $input['service_id'],
+            'service_id' => $hasServiceId ? (int) $input['service_id'] : null,
+            'service_ids' => $hasServiceIds ? (string) $input['service_ids'] : null,
+            'is_undecided' => $isUndecidedFlag ? 1 : 0,
             'date' => (string) $input['date'],
             'time' => (string) $input['time'],
             'notes' => (string) ($input['notes'] ?? ''),
