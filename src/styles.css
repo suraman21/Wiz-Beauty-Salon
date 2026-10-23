@@ -1535,103 +1535,181 @@ tokens it uses. */
 }
 .svc-sub-list {
   display: grid;
-  gap: 10px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
 }
 .svc-sub-item {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 14px 16px;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
   background: white;
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 14px;
+  box-shadow: 0 4px 16px color-mix(in oklab, var(--ink) 4%, transparent);
   transition:
-    background 0.3s,
+    transform 0.3s var(--ease-quiet),
     border-color 0.3s,
     box-shadow 0.3s;
 }
 .svc-sub-item:hover {
-  background: color-mix(in oklab, oklch(0.89 0.04 348) 12%, white);
+  transform: translateY(-3px);
+  background: color-mix(in oklab, oklch(0.89 0.04 348) 10%, white);
   border-color: color-mix(in oklab, oklch(0.89 0.04 348) 35%, var(--border));
-  box-shadow: 0 8px 20px color-mix(in oklab, var(--ink) 6%, transparent);
+  box-shadow: 0 10px 24px color-mix(in oklab, var(--ink) 8%, transparent);
 }
 .svc-sub-main {
   display: flex;
-  align-items: center;
-  gap: 14px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
   min-width: 0;
+  flex: 1;
 }
 .svc-sub-thumb {
-  width: 36px;
-  height: 36px;
-  border-radius: 999px;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
   object-fit: cover;
   flex: none;
   background: var(--border);
+  border: 1px solid var(--border);
 }
 .svc-sub-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 999px;
-  background: oklch(0.89 0.04 348);
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: color-mix(in oklab, oklch(0.89 0.04 348) 45%, var(--mist));
+  border: 1px solid color-mix(in oklab, oklch(0.89 0.04 348) 30%, var(--border));
   flex: none;
+  position: relative;
+}
+.svc-sub-dot::after {
+  content: "✦";
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  color: var(--plum);
+  opacity: 0.8;
 }
 .svc-sub-item h4 {
-  font-size: 15px;
-  font-weight: 600;
-  line-height: 1.2;
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.25;
+  color: var(--ink);
 }
 .svc-sub-price {
   display: block;
-  margin-top: 3px;
+  margin-top: 4px;
   font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
   color: var(--muted-foreground);
 }
 .svc-sub-book {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  padding: 10px 16px;
+  padding: 9px 14px;
   border-radius: 999px;
   background: var(--ink);
   color: white;
   border: 1px solid var(--ink);
-  flex: none;
+  width: 100%;
+  margin-top: auto;
   transition:
     background 0.3s,
-    color 0.3s;
+    border-color 0.3s,
+    transform 0.2s;
 }
 .svc-sub-book:hover {
   background: var(--plum);
   border-color: var(--plum);
+  transform: translateY(-1px);
 }
 @media (max-width: 900px) {
   .svc-category-grid {
     grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
   }
   .svc-detail-hero {
     grid-template-columns: 1fr;
   }
+  .svc-sub-list {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 @media (max-width: 520px) {
   .svc-category-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .svc-category-body {
+    padding: 11px 10px 10px;
+  }
+  .svc-category-body h3 {
+    font: 600 13px / 1.25 var(--font-display);
+  }
+  .svc-category-am {
+    font-size: 0.62rem;
+  }
+  .svc-category-count {
+    font-size: 10px;
+    margin-top: 6px;
+  }
+  .svc-category-cta {
+    font-size: 10px;
+    margin-top: 8px;
+  }
+  .svc-category-index {
+    font-size: 9px;
+    padding: 4px 7px;
+    top: 8px;
+    left: 8px;
   }
   .svc-hub-head h2 {
-    font-size: 30px;
+    font-size: 26px;
+  }
+  .svc-sub-list {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
   }
   .svc-sub-item {
-    flex-direction: column;
-    align-items: flex-start;
+    padding: 10px;
+    border-radius: 12px;
+    gap: 8px;
+  }
+  .svc-sub-item h4 {
+    font-size: 12.5px;
+  }
+  .svc-sub-thumb,
+  .svc-sub-dot {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+  }
+  .svc-sub-price {
+    font-size: 10px;
   }
   .svc-sub-book {
-    align-self: stretch;
-    justify-content: center;
+    padding: 8px 10px;
+    font-size: 10px;
+  }
+}
+@media (max-width: 360px) {
+  .svc-category-grid,
+  .svc-sub-list {
+    gap: 8px;
+  }
+  .svc-category-body h3 {
+    font-size: 12px;
   }
 }
 
