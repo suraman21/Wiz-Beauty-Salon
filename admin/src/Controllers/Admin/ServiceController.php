@@ -38,16 +38,75 @@ final class ServiceController
      */
     public function index(Request $request, array $params = []): Response
     {
+        $categories = $this->categories->allWithCounts();
+        $allServices = $this->services->allWithCategory();
+
+        $categoryParam = trim((string) $request->queryString('category'));
+        $selectedCategory = null;
+        $selectedServices = [];
+        $uncategorisedCount = 0;
+
+        foreach ($allServices as $serviceRow) {
+            if (empty($serviceRow['category_id'])) {
+                $uncategorisedCount++;
+            }
+        }
+
+        if ($categoryParam !== '') {
+            if ($categoryParam === 'uncategorised') {
+                $selectedCategory = [
+                    'id' => 0,
+                    'name' => 'Uncategorised',
+                    'amharic' => null,
+                    'description' => 'Services without a category — shown on the site outside any card.',
+                    'is_active' => 1,
+                    'image_path' => null,
+                    'service_count' => $uncategorisedCount,
+                ];
+                $selectedServices = array_values(array_filter(
+                    $allServices,
+                    static fn (array $service): bool => empty($service['category_id']),
+                ));
+            } elseif (ctype_digit($categoryParam) && (int) $categoryParam > 0) {
+                $id = (int) $categoryParam;
+                $found = $this->categories->find($id);
+
+                if ($found === null) {
+                    throw HttpException::notFound('That category no longer exists.');
+                }
+                $selectedCategory = $found;
+
+                foreach ($categories as $catRow) {
+                    if ((int) $catRow['id'] === $id) {
+                        $selectedCategory['service_count'] = $catRow['service_count'];
+
+                        break;
+                    }
+                }
+                $selectedServices = array_values(array_filter(
+                    $allServices,
+                    static fn (array $service): bool => (int) ($service['category_id'] ?? 0) === $id,
+                ));
+            } else {
+                throw HttpException::notFound('That category no longer exists.');
+            }
+        }
+
         return $this->view->render('admin/services/index', [
             'title' => 'Services',
-            'heading' => 'Services',
-            'subheading' => 'What customers can book, and what it costs.',
+            'heading' => $selectedCategory !== null ? (string) $selectedCategory['name'] : 'Services',
+            'subheading' => $selectedCategory !== null
+                ? (string) ($selectedCategory['description'] ?? 'What customers can book, and what it costs.')
+                : 'Grouped by category — just like customers see them.',
             'active' => 'services',
-            'services' => $this->services->allWithCategory(),
-            'categories' => $this->categories->allWithCounts(),
+            'services' => $allServices,
+            'categories' => $categories,
             'uploads' => $this->uploader,
-            // Set after a new service is saved, so the fresh row is obvious.
             'highlight' => (int) $request->queryString('highlight'),
+            'selectedCategory' => $selectedCategory,
+            'selectedServices' => $selectedServices,
+            'uncategorisedCount' => $uncategorisedCount,
+            'categoryParam' => $categoryParam,
         ]);
     }
 
@@ -119,7 +178,9 @@ final class ServiceController
 
         $this->session->flash('success', sprintf('“%s” was added to the services list.', $data['name']));
 
-        throw new RedirectException('/admin/services?highlight=' . $id);
+        $categoryQuery = $data['category_id'] !== null ? '?category=' . (int) $data['category_id'] . '&highlight=' . $id : '?highlight=' . $id;
+
+        throw new RedirectException('/admin/services' . $categoryQuery);
     }
 
     /**
@@ -180,7 +241,9 @@ final class ServiceController
         }
         $this->session->flash('success', sprintf('“%s” was saved.', $data['name']));
 
-        throw new RedirectException('/admin/services');
+        $categoryQuery = $data['category_id'] !== null ? '?category=' . (int) $data['category_id'] : '';
+
+        throw new RedirectException('/admin/services' . $categoryQuery);
     }
 
     /**
@@ -195,12 +258,15 @@ final class ServiceController
             throw HttpException::notFound('That service no longer exists.');
         }
 
+        $categoryId = $service['category_id'] ?? null;
         $this->services->delete($id);
         $this->uploader->delete(is_string($service['image_path'] ?? null) ? $service['image_path'] : null);
 
         $this->session->flash('success', sprintf('“%s” was deleted.', (string) $service['name']));
 
-        throw new RedirectException('/admin/services');
+        $returnTo = $categoryId !== null && (int) $categoryId > 0 ? '/admin/services?category=' . (int) $categoryId : '/admin/services';
+
+        throw new RedirectException($returnTo);
     }
 
     /**
@@ -222,7 +288,9 @@ final class ServiceController
             sprintf('“%s” is now %s.', (string) $service['name'], $active ? 'visible on the website' : 'hidden from the website'),
         );
 
-        throw new RedirectException('/admin/services');
+        $returnTo = !empty($service['category_id']) ? '/admin/services?category=' . (int) $service['category_id'] : '/admin/services';
+
+        throw new RedirectException($returnTo);
     }
 
     /**
@@ -233,9 +301,12 @@ final class ServiceController
         $id = (int) ($params['id'] ?? 0);
         $direction = $request->string('direction') === 'down' ? 'down' : 'up';
 
+        $service = $this->services->find($id);
+        $returnTo = ($service !== null && !empty($service['category_id'])) ? '/admin/services?category=' . (int) $service['category_id'] : '/admin/services';
+
         $this->services->move($id, $direction);
 
-        throw new RedirectException('/admin/services');
+        throw new RedirectException($returnTo);
     }
 
     /**
@@ -243,10 +314,16 @@ final class ServiceController
      */
     private function form(?array $service, Request $request): Response
     {
+        $preselect = ctype_digit((string) $request->queryString('category')) ? (string) $request->queryString('category') : null;
+
+        if ($service === null && $preselect !== null) {
+            $service = ['category_id' => (int) $preselect];
+        }
+
         return $this->view->render('admin/services/form', [
-            'title' => $service === null ? 'New service' : 'Edit service',
-            'heading' => $service === null ? 'Add a service' : 'Edit service',
-            'subheading' => $service === null
+            'title' => $service === null || !isset($service['name']) ? 'New service' : 'Edit service',
+            'heading' => $service === null || !isset($service['name']) ? 'Add a service' : 'Edit service',
+            'subheading' => $service === null || !isset($service['name'])
                 ? 'Customers see this on the services page.'
                 : (string) $service['name'],
             'active' => 'services',
