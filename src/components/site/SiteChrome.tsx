@@ -38,6 +38,9 @@ export function SiteHeader() {
         ))}
       </nav>
       <div className="header-actions">
+        <Link to="/booking/recover" className="nav-manage">
+          Manage booking
+        </Link>
         <Link to="/booking" className="btn btn-ink nav-book">
           Book Now <ArrowRight size={15} />
         </Link>
@@ -65,6 +68,9 @@ export function SiteHeader() {
               <ArrowRight size={16} />
             </Link>
           ))}
+          <Link to="/booking/recover" onClick={() => setOpen(false)} className="mobile-manage-link">
+            Manage booking <ArrowRight size={16} />
+          </Link>
           <Link to="/booking" onClick={() => setOpen(false)} className="btn btn-ink mobile-book">
             Book an appointment <ArrowRight size={16} />
           </Link>
@@ -97,6 +103,7 @@ export function SiteFooter() {
               </Link>
             ))}
             <Link to="/booking">Booking</Link>
+            <Link to="/booking/recover">Manage booking</Link>
           </nav>
           <FooterContact />
         </div>

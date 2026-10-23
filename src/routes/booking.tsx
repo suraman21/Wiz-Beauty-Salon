@@ -517,6 +517,13 @@ function Booking() {
                       consultation.
                     </p>
 
+                    <div className="booking-manage-card">
+                      <span>Already have a booking?</span>
+                      <Link to="/booking/recover" className="editorial-link" style={{ fontSize: "13px" }}>
+                        Recover with phone <ArrowRight size={12} />
+                      </Link>
+                    </div>
+
                     {!isUndecided ? (
                       <>
                         <div className="booking-clean-fields">
