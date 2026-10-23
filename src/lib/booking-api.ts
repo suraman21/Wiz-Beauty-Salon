@@ -4,6 +4,7 @@
  *   GET  /api/v1/services     the live catalogue
  *   GET  /api/v1/calendar     free times for a run of days
  *   POST /api/v1/bookings     ask for an appointment
+ *   POST /api/v1/bookings/recover  find your bookings with phone or email
  */
 
 import { ApiError, apiGet, apiPost } from "@/lib/api";
@@ -163,11 +164,24 @@ export type RecoverBooking = {
   manage_url: string | null;
 };
 
-export function recoverBookingsByPhone(phone: string): Promise<{ bookings: RecoverBooking[]; count: number }> {
+/**
+ * Find bookings with phone number OR email address.
+ * identifier can be either — server detects by presence of @.
+ */
+export function recoverBookings(identifier: string): Promise<{ bookings: RecoverBooking[]; count: number }> {
   return apiPost<{ bookings: RecoverBooking[]; count: number }>('/api/v1/bookings/recover', {
-    phone,
+    identifier: identifier.trim(),
     website: '',
   });
+}
+
+/** Backwards compat alias — kept so existing call sites don't break. */
+export function recoverBookingsByPhone(phone: string): Promise<{ bookings: RecoverBooking[]; count: number }> {
+  return recoverBookings(phone);
+}
+
+export function recoverBookingsByEmail(email: string): Promise<{ bookings: RecoverBooking[]; count: number }> {
+  return recoverBookings(email);
 }
 
 export { ApiError };

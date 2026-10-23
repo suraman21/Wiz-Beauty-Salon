@@ -200,15 +200,61 @@ final class BookingRepository
     }
 
     /**
-     * Find upcoming bookings that can be recovered by phone.
+     * Find upcoming bookings that can be recovered by phone or email.
      * Only requested/confirmed and future dates — nothing past or finished.
-     * Normalizes Ethiopian numbers: 09..., +251..., 251... all match by last 9 digits.
+     * Phone: Ethiopian numbers 09..., +251..., 251... all match by last 9 digits.
+     * Email: exact match case-insensitive.
+     * Uses SQL pre-filter on suffix to avoid scanning entire table.
      *
      * @return list<array<string, mixed>>
      */
     public function findRecoverableByPhone(string $phone): array
     {
-        $normalized = $this->normalizePhone($phone);
+        return $this->findRecoverableByIdentifier($phone);
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function findRecoverableByEmail(string $email): array
+    {
+        return $this->findRecoverableByIdentifier($email);
+    }
+
+    /**
+     * Unified lookup: phone number OR email address.
+     * If identifier contains @ it is treated as email, otherwise as phone.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findRecoverableByIdentifier(string $identifier): array
+    {
+        $identifier = trim($identifier);
+        if ($identifier === '') {
+            return [];
+        }
+
+        // Email path: contains @ -> validate and match LOWER(customer_email)
+        if (str_contains($identifier, '@')) {
+            $email = strtolower(trim($identifier));
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                return [];
+            }
+            // Direct SQL match — no need to scan all rows
+            return $this->db->all(
+                "SELECT * FROM bookings
+                  WHERE status IN ('requested','confirmed')
+                    AND booking_date >= CURDATE()
+                    AND booking_date <= DATE_ADD(CURDATE(), INTERVAL 60 DAY)
+                    AND LOWER(customer_email) = :email
+                  ORDER BY booking_date ASC, start_time ASC
+                  LIMIT 20",
+                [':email' => $email],
+            );
+        }
+
+        // Phone path
+        $normalized = $this->normalizePhone($identifier);
         if ($normalized === '') {
             return [];
         }
@@ -217,14 +263,33 @@ final class BookingRepository
             return [];
         }
 
+        // Pre-filter in SQL: phone ending with last9 (covers 09... and +251... without scanning everything)
+        // We use LIKE with suffix — stored phones contain digits, spaces, +, -, parentheses.
+        // A suffix search will still hit 09... and +251... because both end with same 9 digits.
+        // We also fetch a larger window (100) before PHP normalizes, to handle formatting edge cases.
         $rows = $this->db->all(
             "SELECT * FROM bookings
               WHERE status IN ('requested','confirmed')
                 AND booking_date >= CURDATE()
                 AND booking_date <= DATE_ADD(CURDATE(), INTERVAL 60 DAY)
+                AND customer_phone LIKE :suffix
               ORDER BY booking_date ASC, start_time ASC
-              LIMIT 20",
+              LIMIT 100",
+            [':suffix' => '%' . $last9],
         );
+
+        // Fallback if LIKE returned nothing (e.g. stored as 2519... without leading 0 but with different spacing)
+        // broaden to full upcoming set capped at 200 and filter in PHP.
+        if ($rows === []) {
+            $rows = $this->db->all(
+                "SELECT * FROM bookings
+                  WHERE status IN ('requested','confirmed')
+                    AND booking_date >= CURDATE()
+                    AND booking_date <= DATE_ADD(CURDATE(), INTERVAL 60 DAY)
+                  ORDER BY booking_date ASC, start_time ASC
+                  LIMIT 200",
+            );
+        }
 
         $out = [];
         foreach ($rows as $row) {
@@ -232,6 +297,9 @@ final class BookingRepository
             $storedLast9 = strlen($stored) > 9 ? substr($stored, -9) : $stored;
             if ($storedLast9 === $last9) {
                 $out[] = $row;
+                if (count($out) >= 20) {
+                    break;
+                }
             }
         }
 
@@ -245,5 +313,10 @@ final class BookingRepository
             $digits = '0' . substr($digits, 3);
         }
         return $digits;
+    }
+
+    private function normalizeEmail(string $email): string
+    {
+        return strtolower(trim($email));
     }
 }

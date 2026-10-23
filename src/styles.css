@@ -4717,3 +4717,29 @@ body {
     display: none;
   }
 }
+
+/* Manage booking page — distinct from booking flow, still on-brand */
+.manage-page .booking-visual-copy p {
+  font-size: clamp(42px, 5vw, 72px);
+  line-height: 0.92;
+}
+.manage-page .booking-visual-copy em {
+  color: var(--blush);
+  font-style: italic;
+}
+.manage-page .booking-panel h1 em {
+  color: var(--orchid);
+}
+.manage-page .btn-ink {
+  letter-spacing: 0.08em;
+}
+.manage-page .recover-card {
+  background: color-mix(in oklab, var(--mist) 42%, white);
+  border-style: solid;
+  border-color: var(--border);
+}
+.manage-page .field-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}

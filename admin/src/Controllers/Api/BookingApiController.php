@@ -396,9 +396,10 @@ final class BookingApiController
      * POST /api/v1/bookings/recover
      *
      * Lets a customer who lost their manage link get it back with the phone
-     * number they booked with. Only upcoming requested/confirmed bookings are
-     * returned, and the response is the same shape whether or not anything
-     * was found — probing many numbers teaches the caller nothing useful.
+     * number OR email they booked with. Only upcoming requested/confirmed
+     * bookings are returned, and the response is the same shape whether or not
+     * anything was found — probing many identifiers teaches the caller nothing
+     * useful. Accepts: phone, email, customer_phone, customer_email, identifier.
      *
      * @param array<string, string> $params
      */
@@ -409,33 +410,71 @@ final class BookingApiController
         $ip = $request->ip();
 
         if (!$this->limits->attempt('recover:' . $ip, 5, 300)) {
-            throw new HttpException(429, 'Too many recovery attempts. Please wait a few minutes and try again.');
+            throw new HttpException(429, 'Too many tries. Please wait a few minutes and try again.');
         }
 
         if ($request->string('website') !== '' || $request->string('_website') !== '') {
             throw HttpException::validation('The request could not be accepted.');
         }
 
-        $phoneRaw = $request->string('phone') !== '' ? $request->string('phone') : $request->string('customer_phone');
-        if ($phoneRaw === '' && $request->input('phone') !== null) {
-            $phoneRaw = (string) $request->input('phone');
+        // Accept any of these keys so old and new clients both work.
+        // Priority: identifier > phone > email > customer_* variants.
+        $identifier = '';
+        $candidates = [
+            $request->string('identifier'),
+            $request->string('phone'),
+            $request->string('email'),
+            $request->string('customer_phone'),
+            $request->string('customer_email'),
+        ];
+        foreach ($candidates as $c) {
+            if (trim($c) !== '') {
+                $identifier = trim($c);
+                break;
+            }
         }
-        $phoneRaw = trim($phoneRaw);
-
-        $validator = new Validator(
-            ['customer_phone' => $phoneRaw],
-            ['customer_phone' => 'required|phone|max:40'],
-            ['customer_phone' => 'Phone number'],
-        );
-
-        if (!$validator->validate()) {
-            throw HttpException::validation((string) $validator->firstError());
+        // Also support raw JSON body fallback
+        if ($identifier === '') {
+            foreach (['identifier', 'phone', 'email', 'customer_phone', 'customer_email'] as $k) {
+                $v = $request->input($k);
+                if (is_string($v) && trim($v) !== '') {
+                    $identifier = trim($v);
+                    break;
+                }
+            }
         }
 
-        $input = $validator->validated();
-        $phone = (string) $input['customer_phone'];
+        if ($identifier === '') {
+            throw HttpException::validation('Please enter your phone number or email address.');
+        }
 
-        $rows = $this->bookingRepo->findRecoverableByPhone($phone);
+        // Validate as either phone or email — one must pass.
+        $isEmail = str_contains($identifier, '@');
+        if ($isEmail) {
+            $validator = new Validator(
+                ['customer_email' => $identifier],
+                ['customer_email' => 'required|email|max:190'],
+                ['customer_email' => 'Email address'],
+            );
+            if (!$validator->validate()) {
+                throw HttpException::validation((string) $validator->firstError());
+            }
+            $identifier = (string) $validator->validated()['customer_email'];
+            $rows = $this->bookingRepo->findRecoverableByIdentifier($identifier);
+        } else {
+            $validator = new Validator(
+                ['customer_phone' => $identifier],
+                ['customer_phone' => 'required|phone|max:40'],
+                ['customer_phone' => 'Phone number'],
+            );
+            if (!$validator->validate()) {
+                // Provide friendlier message that hints email is also accepted
+                $msg = (string) $validator->firstError();
+                throw HttpException::validation($msg . ' Or enter your email address.');
+            }
+            $identifier = (string) $validator->validated()['customer_phone'];
+            $rows = $this->bookingRepo->findRecoverableByIdentifier($identifier);
+        }
 
         $bookings = [];
         foreach ($rows as $row) {

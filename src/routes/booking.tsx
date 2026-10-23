@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
@@ -80,6 +80,12 @@ const fmt = (iso: string) =>
   parseIso(iso).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
 
 function Booking() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  // When visiting /booking/recover the child route should render, not the booking flow.
+  // Without this, the parent would swallow the child (TanStack dot nesting requires Outlet).
+  if (pathname === "/booking/recover") {
+    return <Outlet />;
+  }
   const images = useSiteImages();
   const search = Route.useSearch();
   const appliedSearch = useRef(false);
@@ -520,7 +526,7 @@ function Booking() {
                     <div className="booking-manage-card">
                       <span>Already have a booking?</span>
                       <Link to="/booking/recover" className="editorial-link" style={{ fontSize: "13px" }}>
-                        Recover with phone <ArrowRight size={12} />
+                        Find your booking with phone or email <ArrowRight size={12} />
                       </Link>
                     </div>
 
@@ -947,13 +953,12 @@ function Booking() {
                 <div className="recover-card">
                   <h4>Lost your link?</h4>
                   <p>
-                    Enter your phone number to get your manage links back — no password needed.
-                    Keep your reference <strong>{confirmed.reference}</strong> handy, or recover
-                    now.
+                    Find your booking through your phone number or email — no password needed.
+                    Keep your reference <strong>{confirmed.reference}</strong> handy, or find it now.
                   </p>
                   <div className="recover-actions">
                     <Link to="/booking/recover" className="editorial-link">
-                      Recover via phone <ArrowRight size={14} />
+                      Find your booking <ArrowRight size={14} />
                     </Link>
                     <Link to="/contact" className="editorial-link">
                       Contact salon <ArrowRight size={14} />
@@ -1018,7 +1023,7 @@ function Booking() {
           {step < 5 && (
             <p style={{ marginTop: "1.1rem", textAlign: "center" }}>
               <Link to="/booking/recover" className="editorial-link" style={{ fontSize: "13px" }}>
-                Lost your link? Recover with phone <ArrowRight size={12} />
+                Find your booking with phone or email <ArrowRight size={12} />
               </Link>
             </p>
           )}

@@ -35,11 +35,11 @@ $status = (int) ($status ?? 500);
     <?php if ($status === 404 && str_contains((string) ($path ?? ''), '/booking/manage/')): ?>
         <p class="card__sub">
             This manage link has expired or is no longer valid — links are valid for 24 hours.
-            If you are trying to change or cancel an appointment, you can recover your booking
-            with the phone number you used to book.
+            If you are trying to change or cancel an appointment, you can find your booking
+            through your phone number or email.
         </p>
         <div style="margin: 1rem 0; display:flex; gap:0.75rem; flex-wrap:wrap;">
-            <a class="btn btn--primary" href="/booking/recover">Recover with phone</a>
+            <a class="btn btn--primary" href="/booking/recover">Find your booking</a>
             <a class="btn btn--ghost" href="/contact">Contact the salon</a>
         </div>
         <p class="card__sub">
