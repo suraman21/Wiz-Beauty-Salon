@@ -8766,3 +8766,466 @@ body {
     transform: none !important;
   }
 }
+
+/* ---------------------------------------------------------- visit us, dressed
+   The Contact page's bright room. After the plum hero, Visit us takes the
+   light beat the way Our works does on the Gallery page: pink blush ground,
+   plum ink type, the plum seam where the hero hands over. The map becomes a
+   soft white card, and the hours sit in plum hairlines. Send a message
+   answers with the plum again below. */
+
+.visit {
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+  display: block;
+  padding: clamp(4.75rem, 11vh, 7.5rem) 0 clamp(4.5rem, 10vh, 7rem);
+  color: #2c0729;
+  background:
+    radial-gradient(115% 88% at 12% -10%, rgba(255, 122, 210, 0.42), transparent 58%),
+    radial-gradient(85% 65% at 96% 106%, rgba(255, 168, 226, 0.7), transparent 62%),
+    linear-gradient(180deg, #ffe3f4 0%, #fdd3ec 46%, #f9c2e5 100%);
+}
+
+.visit-inner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(16rem, 0.85fr);
+  gap: clamp(2rem, 6vw, 5rem);
+  align-items: center;
+}
+
+/* No address yet: the copy keeps the left edge and a comfortable measure. */
+.visit.visit-solo .visit-inner {
+  grid-template-columns: minmax(0, 30rem) minmax(0, 1fr);
+}
+
+/* the seam it shares with the plum hero above: plum ink, not pink light */
+.visit::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 2;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(150, 30, 120, 0.26) 24%,
+    rgba(150, 30, 120, 0.1) 62%,
+    transparent
+  );
+}
+
+/* A whisper of grain: without it the pale ground bands on a wide display. */
+.visit::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.035;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+}
+
+.visit-bloom {
+  position: absolute;
+  z-index: 0;
+  top: -30%;
+  left: -16%;
+  width: min(50rem, 104vw);
+  aspect-ratio: 1;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(255, 255, 255, 0.95),
+    rgba(255, 172, 230, 0.38) 42%,
+    transparent 70%
+  );
+  filter: blur(34px);
+  opacity: 0;
+}
+
+.visit-copy {
+  position: relative;
+  z-index: 1;
+}
+
+.visit-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.7rem, 1.4vw, 1.1rem);
+  margin: 0;
+  font-size: clamp(0.6rem, 0.78vw, 0.74rem);
+  font-weight: 600;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: #6f2f61;
+  opacity: 0;
+}
+
+/* the line never breaks: on a narrow phone the rules give way instead */
+.visit-eyebrow-text {
+  white-space: nowrap;
+}
+
+.visit-eyebrow .feeling-rule {
+  background: linear-gradient(90deg, transparent, #e59fd2);
+}
+
+.visit-eyebrow .feeling-rule-end {
+  background: linear-gradient(90deg, #e59fd2, transparent);
+}
+
+.visit-title {
+  display: flex;
+  flex-direction: column;
+  margin: 18px 0 0;
+  font-family: "Bodoni Moda", "Playfair Display", var(--font-display);
+  font-size: clamp(2.4rem, 5.6vw, 5rem);
+  font-weight: 400;
+  line-height: 0.98;
+  letter-spacing: -0.012em;
+  text-wrap: pretty;
+}
+
+.visit-title .feeling-line {
+  background-image: linear-gradient(96deg, #33082f 2%, #581150 52%, #8b1476 100%);
+}
+
+.visit-title .feeling-line-em {
+  background-image: linear-gradient(96deg, #9c1379 0%, #c8158e 46%, #ee3f9c 100%);
+}
+
+/* the map becomes a soft white card on the light ground */
+.visit .map-placeholder {
+  position: relative;
+  z-index: 1;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(61, 15, 61, 0.14);
+  border-radius: 20px;
+  box-shadow: 0 24px 58px rgba(122, 20, 102, 0.18);
+  color: #33082f;
+  opacity: 0;
+}
+
+.visit .visit-address {
+  color: #33082f;
+  opacity: 0;
+}
+
+.visit .hours {
+  border-top-color: rgba(61, 15, 61, 0.2);
+  opacity: 0;
+}
+
+.visit .hours div {
+  border-bottom-color: rgba(61, 15, 61, 0.14);
+}
+
+.visit .hours dt {
+  color: #33082f;
+}
+
+.visit .hours dd {
+  color: rgba(62, 16, 57, 0.72);
+}
+
+.visit .closures {
+  color: rgba(62, 16, 57, 0.72);
+  opacity: 0;
+}
+
+.visit .editorial-link {
+  color: #33082f;
+  border-bottom-color: rgba(61, 15, 61, 0.28);
+  opacity: 0;
+}
+
+/* Entrance — rules draw, the title zooms, then the details settle in. */
+.visit.is-revealed .visit-eyebrow {
+  animation: wiz-rise 0.85s var(--ease-quiet) both;
+}
+
+.visit.is-revealed .feeling-rule {
+  animation: feeling-rule 0.95s var(--ease-quiet) both 0.1s;
+}
+
+.visit.is-revealed .visit-line:nth-child(1) {
+  animation: wiz-zoom 1.05s var(--ease-quiet) both 0.08s;
+}
+
+.visit.is-revealed .visit-line:nth-child(2) {
+  animation: wiz-zoom 1.05s var(--ease-quiet) both 0.22s;
+}
+
+.visit.is-revealed .map-placeholder {
+  animation: wiz-zoom 1.1s var(--ease-quiet) both 0.25s;
+}
+
+.visit.is-revealed .visit-address,
+.visit.is-revealed .hours,
+.visit.is-revealed .closures,
+.visit.is-revealed .editorial-link {
+  animation: wiz-rise 0.9s var(--ease-quiet) both 0.45s;
+}
+
+.visit.is-revealed .visit-bloom {
+  animation: feeling-glow 2.2s var(--ease-quiet) both;
+}
+
+@media (max-width: 900px) {
+  .visit-inner {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+  .visit-title {
+    font-size: clamp(2.3rem, 8.8vw, 3.5rem);
+  }
+}
+
+@media (max-width: 600px) {
+  .visit-title {
+    font-size: clamp(2.05rem, 9.6vw, 2.8rem);
+  }
+  .visit-eyebrow {
+    letter-spacing: 0.28em;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .visit .visit-eyebrow,
+  .visit .visit-line,
+  .visit .visit-address,
+  .visit .hours,
+  .visit .closures,
+  .visit .editorial-link,
+  .visit .map-placeholder,
+  .visit .visit-bloom,
+  .visit .feeling-rule {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* ----------------------------------------------------- send a message, dressed
+   The Contact page's closing room, back in the plum. The pink seam marks
+   where the bright Visit us hands over, the eyebrow rules draw in, the
+   title carries the gradient, and the form sits in the light plum tone
+   with the pink pill to send. */
+
+.message-section {
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+  color: var(--paper);
+  background:
+    radial-gradient(80% 90% at 84% 0%, rgba(126, 20, 112, 0.55), transparent 60%),
+    radial-gradient(60% 70% at 12% 100%, rgba(240, 90, 192, 0.16), transparent 65%),
+    linear-gradient(180deg, #22041f 0%, #1e0520 55%, #190319 100%);
+}
+
+/* the seam where the bright Visit us hands over: the pink hairline */
+.message-section::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 2;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 167, 236, 0.36) 24%,
+    rgba(255, 167, 236, 0.12) 62%,
+    transparent
+  );
+}
+
+.message-section::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+}
+
+.message-bloom {
+  position: absolute;
+  z-index: 0;
+  top: -30%;
+  right: -14%;
+  width: min(46rem, 100vw);
+  aspect-ratio: 1;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(255, 120, 214, 0.3),
+    rgba(255, 120, 214, 0.09) 42%,
+    transparent 68%
+  );
+  filter: blur(42px);
+  opacity: 0;
+}
+
+.message-inner {
+  position: relative;
+  z-index: 1;
+}
+
+.message-copy {
+  position: relative;
+  z-index: 1;
+}
+
+.message-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.7rem, 1.4vw, 1.1rem);
+  margin: 0 0 clamp(1.7rem, 4vh, 2.6rem);
+  font-size: clamp(0.6rem, 0.78vw, 0.74rem);
+  font-weight: 600;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: #f0d8ec;
+  opacity: 0;
+}
+
+/* the line never breaks: on a narrow phone the rules give way instead */
+.message-eyebrow-text {
+  white-space: nowrap;
+}
+
+.message-title {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  font-family: "Bodoni Moda", "Playfair Display", var(--font-display);
+  font-size: clamp(2.4rem, 5.6vw, 5rem);
+  font-weight: 400;
+  line-height: 0.98;
+  letter-spacing: -0.012em;
+  text-wrap: pretty;
+}
+
+.message-title .feeling-line {
+  background-image: linear-gradient(96deg, #ffffff 4%, #fdf0fa 46%, #f6c7ea 100%);
+}
+
+.message-title .feeling-line-em {
+  background-image: linear-gradient(96deg, #ffe3f7 0%, #ffa7ec 44%, #f65cc4 100%);
+}
+
+.message-section .wiz-form,
+.message-section .form-done {
+  opacity: 0;
+}
+
+.message-section .wiz-form label {
+  color: #f0d8ec;
+}
+
+.message-section .wiz-form input,
+.message-section .wiz-form textarea {
+  border-bottom-color: rgba(240, 216, 236, 0.28);
+  color: #fbeef8;
+}
+
+.message-section .wiz-form input:focus,
+.message-section .wiz-form textarea:focus {
+  border-color: #ffa7ec;
+}
+
+.message-section .form-error {
+  color: #ffa7ec;
+}
+
+.message-section .form-done h3 {
+  font-family: "Bodoni Moda", "Playfair Display", var(--font-display);
+  font-weight: 400;
+  background-image: linear-gradient(96deg, #ffffff 4%, #fdf0fa 46%, #f6c7ea 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.message-section .form-done p {
+  color: rgba(240, 216, 236, 0.78);
+}
+
+/* the send button takes the pill the other calls to action wear */
+.message-section .btn {
+  border-radius: 999px;
+  box-shadow: 0 16px 34px rgba(8, 1, 10, 0.45);
+  transition:
+    background-color 0.35s var(--ease-quiet),
+    color 0.35s var(--ease-quiet),
+    border-color 0.35s,
+    transform 0.35s var(--ease-quiet),
+    box-shadow 0.35s var(--ease-quiet);
+}
+
+.message-section .btn:hover {
+  background: var(--pink-2);
+  box-shadow: 0 20px 42px rgba(8, 1, 10, 0.55);
+}
+
+/* Entrance — rules draw, the title zooms, then the form settles in. */
+.message-section.is-revealed .message-eyebrow {
+  animation: wiz-rise 0.85s var(--ease-quiet) both;
+}
+
+.message-section.is-revealed .feeling-rule {
+  animation: feeling-rule 0.95s var(--ease-quiet) both 0.1s;
+}
+
+.message-section.is-revealed .message-line:nth-child(1) {
+  animation: wiz-zoom 1.05s var(--ease-quiet) both 0.08s;
+}
+
+.message-section.is-revealed .message-line:nth-child(2) {
+  animation: wiz-zoom 1.05s var(--ease-quiet) both 0.22s;
+}
+
+.message-section.is-revealed .wiz-form,
+.message-section.is-revealed .form-done {
+  animation: wiz-rise 0.9s var(--ease-quiet) both 0.4s;
+}
+
+.message-section.is-revealed .message-bloom {
+  animation: feeling-glow 2.2s var(--ease-quiet) both;
+}
+
+@media (max-width: 900px) {
+  .message-title {
+    font-size: clamp(2.3rem, 8.8vw, 3.5rem);
+  }
+}
+
+@media (max-width: 600px) {
+  .message-title {
+    font-size: clamp(2.05rem, 9.6vw, 2.8rem);
+  }
+  .message-eyebrow {
+    letter-spacing: 0.28em;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .message-section .message-eyebrow,
+  .message-section .message-line,
+  .message-section .wiz-form,
+  .message-section .form-done,
+  .message-section .message-bloom,
+  .message-section .feeling-rule {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

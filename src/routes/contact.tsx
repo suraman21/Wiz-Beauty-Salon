@@ -14,6 +14,7 @@ import {
   type SalonContact,
 } from "@/lib/salon-api";
 import { useSalonInfo, useSiteImages } from "@/lib/site-content";
+import { useReveal } from "@/lib/use-reveal";
 
 export const Route = createFileRoute("/contact")({
   head: () => ({
@@ -82,6 +83,8 @@ const emptyForm: FormState = { name: "", contact: "", message: "" };
 function Contact() {
   const images = useSiteImages();
   const salon = useSalonInfo();
+  const visitReveal = useReveal<HTMLElement>();
+  const messageReveal = useReveal<HTMLElement>();
 
   const published = salon !== null && hasDetails(salon.contact);
   const channels = published && salon !== null ? channelsFor(salon.contact) : [];
@@ -159,56 +162,79 @@ function Contact() {
         </div>
       </section>
 
-      <section className={`visit section-wrap${address === "" ? " visit-solo" : ""}`}>
-        {address !== "" && (
-          <div className="map-placeholder" role="img" aria-label={`Salon location — ${address}`}>
-            <MapPin size={30} strokeWidth={1.2} />
-            <span>{address}</span>
-          </div>
-        )}
-        <div className="visit-copy">
-          <span className="overline">Visit us</span>
-          <h2>
-            Location
-            <br />
-            <em>&amp; hours.</em>
-          </h2>
+      <section
+        ref={visitReveal.ref}
+        className={`visit${address === "" ? " visit-solo" : ""}${visitReveal.revealed ? " is-revealed" : ""}`}
+      >
+        <noscript>
+          <style>{`.visit-eyebrow,.visit-line,.visit-address,.hours,.closures,.visit .editorial-link,.feeling-rule{opacity:1!important;animation:none!important;transform:none!important}.visit-bloom,.map-placeholder{opacity:1!important}`}</style>
+        </noscript>
+        <span className="visit-bloom" aria-hidden="true" />
+        <div className="section-wrap visit-inner">
           {address !== "" && (
-            <p className="visit-address">
-              <MapPin size={16} /> {address}
+            <div className="map-placeholder" role="img" aria-label={`Salon location — ${address}`}>
+              <MapPin size={30} strokeWidth={1.2} />
+              <span>{address}</span>
+            </div>
+          )}
+          <div className="visit-copy">
+            <p className="visit-eyebrow">
+              <span className="feeling-rule" aria-hidden="true" />
+              <span className="visit-eyebrow-text">Visit us</span>
+              <span className="feeling-rule feeling-rule-end" aria-hidden="true" />
             </p>
-          )}
-          {hours.length > 0 && (
-            <dl className="hours">
-              {hours.map((h) => (
-                <div key={h.day}>
-                  <dt>
-                    <Clock size={14} /> {h.day}
-                  </dt>
-                  <dd>{h.time}</dd>
-                </div>
-              ))}
-            </dl>
-          )}
-          {closures.length > 0 && (
-            <ul className="closures">
-              {closures.slice(0, 3).map((closure) => (
-                <li key={`${closure.from}-${closure.to}`}>Closed {closureLabel(closure)}</li>
-              ))}
-            </ul>
-          )}
-          <EditorialLink to="/booking">Book an appointment</EditorialLink>
+            <h2 className="visit-title">
+              <span className="feeling-line visit-line">Location</span>
+              <span className="feeling-line feeling-line-em visit-line">&amp; hours.</span>
+            </h2>
+            {address !== "" && (
+              <p className="visit-address">
+                <MapPin size={16} /> {address}
+              </p>
+            )}
+            {hours.length > 0 && (
+              <dl className="hours">
+                {hours.map((h) => (
+                  <div key={h.day}>
+                    <dt>
+                      <Clock size={14} /> {h.day}
+                    </dt>
+                    <dd>{h.time}</dd>
+                  </div>
+                ))}
+              </dl>
+            )}
+            {closures.length > 0 && (
+              <ul className="closures">
+                {closures.slice(0, 3).map((closure) => (
+                  <li key={`${closure.from}-${closure.to}`}>Closed {closureLabel(closure)}</li>
+                ))}
+              </ul>
+            )}
+            <EditorialLink to="/booking">Book an appointment</EditorialLink>
+          </div>
         </div>
       </section>
 
-      <section className="message-section" id="message">
+      <section
+        ref={messageReveal.ref}
+        className={`message-section${messageReveal.revealed ? " is-revealed" : ""}`}
+        id="message"
+      >
+        <noscript>
+          <style>{`.message-eyebrow,.message-line,.wiz-form,.form-done,.feeling-rule{opacity:1!important;animation:none!important;transform:none!important}.message-bloom{opacity:1!important}`}</style>
+        </noscript>
+        <span className="message-bloom" aria-hidden="true" />
         <div className="section-wrap message-inner">
-          <div>
-            <span className="overline">Send a message</span>
-            <h2>
-              Write
-              <br />
-              <em>to us.</em>
+          <div className="message-copy">
+            <p className="message-eyebrow">
+              <span className="feeling-rule" aria-hidden="true" />
+              <span className="message-eyebrow-text">Send a message</span>
+              <span className="feeling-rule feeling-rule-end" aria-hidden="true" />
+            </p>
+            <h2 className="message-title">
+              <span className="feeling-line message-line">Write</span>
+              <span className="feeling-line feeling-line-em message-line">to us.</span>
             </h2>
           </div>
           {sent ? (
