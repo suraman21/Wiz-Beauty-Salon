@@ -11,6 +11,7 @@ import {
   type PublicReview,
 } from "@/lib/content-api";
 import { useSiteImages } from "@/lib/site-content";
+import { useReveal } from "@/lib/use-reveal";
 
 export const Route = createFileRoute("/gallery")({
   head: () => ({
@@ -45,6 +46,7 @@ type Item = {
 
 function Gallery() {
   const images = useSiteImages();
+  const worksReveal = useReveal<HTMLElement>();
   const [filter, setFilter] = useState<string>("all");
   const [open, setOpen] = useState<number | null>(null);
 
@@ -108,42 +110,6 @@ function Gallery() {
   const active = filterList.some((c) => c.id === filter) ? filter : "all";
   const shown = active === "all" ? items : items.filter((i) => i.category === active);
 
-  // The three large tiles at the top: the salon's newest published photos, or
-  // the design's own three when the panel has none yet.
-  const featured = useMemo<Item[]>(() => {
-    if (live) return items.slice(0, 3);
-
-    return [
-      {
-        key: "f-a",
-        image: images.makeup.url,
-        alt: images.makeup.alt,
-        title: "Evening glow",
-        caption: "Makeup",
-        tall: false,
-        category: undefined,
-      },
-      {
-        key: "f-b",
-        image: images.after.url,
-        alt: images.after.alt,
-        title: "Long waves",
-        caption: "Hair",
-        tall: false,
-        category: undefined,
-      },
-      {
-        key: "f-c",
-        image: images.skin.url,
-        alt: images.skin.alt,
-        title: "Fresh skin",
-        caption: "Skin",
-        tall: false,
-        category: undefined,
-      },
-    ];
-  }, [live, items, images]);
-
   useEffect(() => {
     if (open === null) return;
     const onKey = (e: KeyboardEvent) => {
@@ -172,28 +138,57 @@ function Gallery() {
         alt={images.hair.alt}
       />
 
-      <section className="featured section-wrap">
-        <div className="section-heading">
-          <div>
-            <span className="overline">01 / Featured work</span>
-            <h2>
-              The looks
-              <br />
-              <em>we love.</em>
-            </h2>
+      <section
+        ref={worksReveal.ref}
+        className={`works${worksReveal.revealed ? " is-revealed" : ""}`}
+      >
+        <noscript>
+          <style>{`.works-eyebrow,.works-line,.works .filter-bar,.works .masonry-item,.feeling-rule{opacity:1!important;animation:none!important;transform:none!important}.works-bloom{opacity:1!important}`}</style>
+        </noscript>
+        <span className="works-bloom" aria-hidden="true" />
+        <div className="section-wrap works-inner">
+          <p className="works-eyebrow">
+            <span className="feeling-rule" aria-hidden="true" />
+            <span>
+              <span className="feeling-index">01</span>
+              <span className="feeling-sep">/</span> Our works
+            </span>
+            <span className="feeling-rule feeling-rule-end" aria-hidden="true" />
+          </p>
+          <h2 className="works-title">
+            <span className="feeling-line works-line">Browse</span>
+            <span className="feeling-line feeling-line-em works-line">by mood.</span>
+          </h2>
+
+          {filterList.length > 1 && (
+            <div className="filter-bar" role="tablist" aria-label="Filter gallery">
+              {filterList.map((c) => (
+                <button
+                  key={c.id}
+                  role="tab"
+                  aria-selected={active === c.id}
+                  className={`chip ${active === c.id ? "is-active" : ""}`}
+                  onClick={() => setFilter(c.id)}
+                >
+                  {c.name}
+                </button>
+              ))}
+            </div>
+          )}
+
+          <div className="masonry">
+            {shown.map((g, i) => (
+              <button
+                key={g.key}
+                className={`masonry-item img-frame ${g.tall ? "tall" : ""}`}
+                onClick={() => setOpen(i)}
+                aria-label={`Open ${g.title}`}
+              >
+                <img src={g.image} alt={g.alt} loading="lazy" />
+                <span>{g.title}</span>
+              </button>
+            ))}
           </div>
-          <p>A selection of recent looks.</p>
-        </div>
-        <div className="featured-grid">
-          {featured.map((tile, index) => (
-            <figure className={`img-frame ${["f-a", "f-b", "f-c"][index] ?? "f-a"}`} key={tile.key}>
-              <img src={tile.image} alt={tile.alt} loading="lazy" />
-              <figcaption>
-                {tile.title}
-                {tile.caption !== undefined ? ` · ${tile.caption}` : ""}
-              </figcaption>
-            </figure>
-          ))}
         </div>
       </section>
 
@@ -212,53 +207,10 @@ function Gallery() {
         </div>
       </section>
 
-      <section className="more-work section-wrap">
-        <div className="section-heading">
-          <div>
-            <span className="overline">03 / More work</span>
-            <h2>
-              Browse
-              <br />
-              <em>by mood.</em>
-            </h2>
-          </div>
-        </div>
-
-        {filterList.length > 1 && (
-          <div className="filter-bar" role="tablist" aria-label="Filter gallery">
-            {filterList.map((c) => (
-              <button
-                key={c.id}
-                role="tab"
-                aria-selected={active === c.id}
-                className={`chip ${active === c.id ? "is-active" : ""}`}
-                onClick={() => setFilter(c.id)}
-              >
-                {c.name}
-              </button>
-            ))}
-          </div>
-        )}
-
-        <div className="masonry">
-          {shown.map((g, i) => (
-            <button
-              key={g.key}
-              className={`masonry-item img-frame ${g.tall ? "tall" : ""}`}
-              onClick={() => setOpen(i)}
-              aria-label={`Open ${g.title}`}
-            >
-              <img src={g.image} alt={g.alt} loading="lazy" />
-              <span>{g.title}</span>
-            </button>
-          ))}
-        </div>
-      </section>
-
       {reviews.length > 0 && (
         <section className="stories">
           <div className="section-wrap">
-            <span className="overline">04 / Client stories</span>
+            <span className="overline">03 / Client stories</span>
             <div className="stories-grid">
               {reviews.slice(0, 3).map((review) => (
                 <blockquote key={review.id}>

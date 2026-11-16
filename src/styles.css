@@ -8555,3 +8555,214 @@ body {
     transform: none !important;
   }
 }
+
+/* ------------------------------------------------------- our works, dressed
+   The Gallery page's bright room. After the mist hero, Our works takes the
+   light beat the way 02 and 04 do on the home page: pink blush ground, plum
+   ink type, the plum seam where the hero hands over. The filter chips turn
+   plum for the light ground, and the photographs take the framed treatment.
+   Transformations answers with the plum again below. */
+
+.works {
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+  padding: clamp(4.75rem, 11vh, 7.5rem) 0 clamp(4.5rem, 10vh, 7rem);
+  color: #2c0729;
+  background:
+    radial-gradient(115% 88% at 12% -10%, rgba(255, 122, 210, 0.42), transparent 58%),
+    radial-gradient(85% 65% at 96% 106%, rgba(255, 168, 226, 0.7), transparent 62%),
+    linear-gradient(180deg, #ffe3f4 0%, #fdd3ec 46%, #f9c2e5 100%);
+}
+
+/* the seam it shares with the plum hero above: plum ink, not pink light */
+.works::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 2;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(150, 30, 120, 0.26) 24%,
+    rgba(150, 30, 120, 0.1) 62%,
+    transparent
+  );
+}
+
+/* A whisper of grain: without it the pale ground bands on a wide display. */
+.works::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.035;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+}
+
+.works-bloom {
+  position: absolute;
+  z-index: 0;
+  top: -30%;
+  left: -16%;
+  width: min(50rem, 104vw);
+  aspect-ratio: 1;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(255, 255, 255, 0.95),
+    rgba(255, 172, 230, 0.38) 42%,
+    transparent 70%
+  );
+  filter: blur(34px);
+  opacity: 0;
+}
+
+.works-inner {
+  position: relative;
+  z-index: 1;
+}
+
+.works-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.7rem, 1.4vw, 1.1rem);
+  margin: 0 0 clamp(1.7rem, 4vh, 2.6rem);
+  font-size: clamp(0.6rem, 0.78vw, 0.74rem);
+  font-weight: 600;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: #6f2f61;
+  opacity: 0;
+}
+
+.works-eyebrow .feeling-index {
+  color: #c2158c;
+}
+
+.works-eyebrow .feeling-sep {
+  color: rgba(70, 20, 64, 0.4);
+}
+
+.works-eyebrow .feeling-rule {
+  background: linear-gradient(90deg, transparent, #e59fd2);
+}
+
+.works-eyebrow .feeling-rule-end {
+  background: linear-gradient(90deg, #e59fd2, transparent);
+}
+
+.works-title {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  font-family: "Bodoni Moda", "Playfair Display", var(--font-display);
+  font-size: clamp(2.4rem, 5.6vw, 5rem);
+  font-weight: 400;
+  line-height: 0.98;
+  letter-spacing: -0.012em;
+  text-wrap: pretty;
+}
+
+.works-title .feeling-line {
+  background-image: linear-gradient(96deg, #33082f 2%, #581150 52%, #8b1476 100%);
+}
+
+.works-title .feeling-line-em {
+  background-image: linear-gradient(96deg, #9c1379 0%, #c8158e 46%, #ee3f9c 100%);
+}
+
+.works .filter-bar {
+  padding-block: clamp(1.5rem, 4vh, 2.5rem) 14px;
+  opacity: 0;
+}
+
+/* the chips turn plum for the light ground */
+.works .chip {
+  border-color: rgba(61, 15, 61, 0.28);
+  color: #33082f;
+}
+
+.works .chip:hover {
+  border-color: #c2158c;
+  color: #c2158c;
+}
+
+.works .chip.is-active {
+  background: #33082f;
+  border-color: #33082f;
+  color: #fbeef8;
+}
+
+/* the photographs take the framed treatment; the wall waits for the scroll */
+.works .masonry-item {
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 18px 40px rgba(122, 20, 102, 0.18);
+  animation: none;
+  opacity: 0;
+}
+
+/* Entrance — rules draw, the title zooms, then the wall settles in. */
+.works.is-revealed .works-eyebrow {
+  animation: wiz-rise 0.85s var(--ease-quiet) both;
+}
+
+.works.is-revealed .feeling-rule {
+  animation: feeling-rule 0.95s var(--ease-quiet) both 0.1s;
+}
+
+.works.is-revealed .works-line:nth-child(1) {
+  animation: wiz-zoom 1.05s var(--ease-quiet) both 0.08s;
+}
+
+.works.is-revealed .works-line:nth-child(2) {
+  animation: wiz-zoom 1.05s var(--ease-quiet) both 0.22s;
+}
+
+.works.is-revealed .filter-bar {
+  animation: wiz-rise 0.9s var(--ease-quiet) both 0.35s;
+}
+
+.works.is-revealed .masonry-item {
+  animation: wiz-rise 0.8s var(--ease-quiet) both 0.45s;
+}
+
+.works.is-revealed .works-bloom {
+  animation: feeling-glow 2.2s var(--ease-quiet) both;
+}
+
+@media (max-width: 900px) {
+  .works-title {
+    font-size: clamp(2.3rem, 8.8vw, 3.5rem);
+  }
+}
+
+@media (max-width: 600px) {
+  .works {
+    padding: 4rem 0 3.75rem;
+  }
+  .works-title {
+    font-size: clamp(2.05rem, 9.6vw, 2.8rem);
+  }
+  .works-eyebrow {
+    letter-spacing: 0.28em;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .works .works-eyebrow,
+  .works .works-line,
+  .works .filter-bar,
+  .works .masonry-item,
+  .works .works-bloom,
+  .works .feeling-rule {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
