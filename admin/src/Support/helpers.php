@@ -170,8 +170,8 @@ if (!function_exists('admin_back_href')) {
         $query = $_GET;
 
         // Query-driven detail states (path stays on the list route)
-        if ($path === '/admin/services' && isset($query['category']) && trim((string) $query['category']) !== '') {
-            return '/admin/services';
+        if ($path === '/admin/categories' && isset($query['category']) && trim((string) $query['category']) !== '') {
+            return '/admin/categories';
         }
         if ($path === '/admin/email-templates' && isset($query['type']) && trim((string) $query['type']) !== '') {
             return '/admin/email-templates';

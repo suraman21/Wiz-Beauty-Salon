@@ -21,7 +21,6 @@ use Wiz\Controllers\Admin\WebsiteImagesController;
 use Wiz\Controllers\Admin\MessageController;
 use Wiz\Controllers\Admin\ReviewController;
 use Wiz\Controllers\Admin\ScheduleController;
-use Wiz\Controllers\Admin\ServiceController;
 use Wiz\Controllers\Admin\SettingsController;
 use Wiz\Controllers\Admin\UserController;
 use Wiz\Core\App;
@@ -119,16 +118,8 @@ return static function (Router $router, App $app): void {
     $router->post('/admin/schedule/closures/{id}/delete', [ScheduleController::class, 'destroyClosure'], ['auth']);
 
     // -------------------------------------------------------------- services
-    // Specific paths are registered before the {id} patterns so the router,
-    // which matches in order, never mistakes "new" for an id.
-    $router->get('/admin/services', [ServiceController::class, 'index'], ['auth']);
-    $router->get('/admin/services/new', [ServiceController::class, 'create'], ['auth']);
-    $router->post('/admin/services', [ServiceController::class, 'store'], ['auth']);
-    $router->get('/admin/services/{id}/edit', [ServiceController::class, 'edit'], ['auth']);
-    $router->post('/admin/services/{id}', [ServiceController::class, 'update'], ['auth']);
-    $router->post('/admin/services/{id}/delete', [ServiceController::class, 'destroy'], ['auth']);
-    $router->post('/admin/services/{id}/toggle', [ServiceController::class, 'toggle'], ['auth']);
-    $router->post('/admin/services/{id}/move', [ServiceController::class, 'move'], ['auth']);
+    // The services are the categories: one row per thing the salon offers —
+    // Hair, Nails, Makeup, Skin — edited on that screen.
 
     // ------------------------------------------------------------ categories
     $router->get('/admin/categories', [CategoryController::class, 'index'], ['auth']);

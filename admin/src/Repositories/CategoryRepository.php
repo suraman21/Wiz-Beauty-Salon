@@ -14,18 +14,17 @@ final class CategoryRepository extends OrderedRepository
     }
 
     /**
-     * Every category with the number of services filed under it.
+     * Every service, in the order staff arranged them.
+     *
+     * There is one level in the catalogue, so there is nothing to count: what
+     * the panel lists is what the customer picks.
      *
      * @return list<array<string, mixed>>
      */
     public function allWithCounts(): array
     {
         return $this->db->all(
-            'SELECT c.*, COUNT(s.id) AS service_count
-               FROM service_categories c
-          LEFT JOIN services s ON s.category_id = c.id
-           GROUP BY c.id
-           ORDER BY c.sort_order ASC, c.name ASC',
+            'SELECT * FROM service_categories ORDER BY sort_order ASC, name ASC',
         );
     }
 
@@ -47,7 +46,7 @@ final class CategoryRepository extends OrderedRepository
     public function published(): array
     {
         return $this->db->all(
-            'SELECT id, name, amharic, slug, description, image_path, sort_order
+            'SELECT id, name, amharic, slug, description, image_path, show_on_home, sort_order
                FROM service_categories
               WHERE is_active = 1
            ORDER BY sort_order ASC, name ASC',
@@ -73,23 +72,37 @@ final class CategoryRepository extends OrderedRepository
         return (int) $this->db->scalar($sql, $params) > 0;
     }
 
-    public function create(string $name, string $slug, ?string $description, bool $active, ?string $amharic = null): int
-    {
+    public function create(
+        string $name,
+        string $slug,
+        ?string $description,
+        bool $active,
+        ?string $amharic = null,
+        bool $showOnHome = false,
+    ): int {
         return $this->db->insert('service_categories', [
             'name' => $name,
             'amharic' => $amharic,
             'slug' => $slug,
             'description' => $description,
             'is_active' => $active ? 1 : 0,
+            'show_on_home' => $showOnHome ? 1 : 0,
             'sort_order' => $this->nextSortOrder(),
         ]);
     }
 
-    public function update(int $id, string $name, ?string $description, bool $active, ?string $amharic = null): void
-    {
+    public function update(
+        int $id,
+        string $name,
+        ?string $description,
+        bool $active,
+        ?string $amharic = null,
+        bool $showOnHome = false,
+    ): void {
         $this->db->execute(
             'UPDATE service_categories
-                SET name = :name, amharic = :amharic, description = :description, is_active = :active
+                SET name = :name, amharic = :amharic, description = :description,
+                    is_active = :active, show_on_home = :home
               WHERE id = :id',
             [
                 ':id' => $id,
@@ -97,6 +110,7 @@ final class CategoryRepository extends OrderedRepository
                 ':amharic' => $amharic,
                 ':description' => $description,
                 ':active' => $active ? 1 : 0,
+                ':home' => $showOnHome ? 1 : 0,
             ],
         );
     }

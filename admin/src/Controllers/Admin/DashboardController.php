@@ -10,6 +10,7 @@ use Wiz\Core\Response;
 use Wiz\Core\View;
 use Wiz\Repositories\ActivityLogRepository;
 use Wiz\Repositories\BookingRepository;
+use Wiz\Repositories\CategoryRepository;
 use Wiz\Repositories\MessageRepository;
 use Wiz\Repositories\ReviewRepository;
 use Wiz\Repositories\ServiceRepository;
@@ -31,6 +32,7 @@ final class DashboardController
         private readonly MessageRepository $messages,
         private readonly ReviewRepository $reviews,
         private readonly ServiceRepository $services,
+        private readonly CategoryRepository $categories,
         private readonly ActivityLogRepository $activity,
         private readonly UserRepository $users,
         private readonly Logger $logger,
@@ -69,7 +71,7 @@ final class DashboardController
             'bookings_pending' => $this->safe('bookings awaiting approval', fn (): int => $this->bookings->countAwaitingApproval()),
             'messages_unread' => $this->safe('unread messages', fn (): int => $this->messages->unreadCount()),
             'reviews_pending' => $this->safe('reviews awaiting approval', fn (): int => $this->reviews->countPending()),
-            'services_active' => $this->safe('active services', fn (): int => $this->services->countActive()),
+            'services_active' => $this->safe('active services', fn (): int => count($this->categories->active())),
         ];
     }
 

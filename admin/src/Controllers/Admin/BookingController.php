@@ -13,6 +13,7 @@ use Wiz\Core\Validator;
 use Wiz\Core\View;
 use Wiz\Domain\Enums\BookingStatus;
 use Wiz\Repositories\BookingRepository;
+use Wiz\Repositories\CategoryRepository;
 use Wiz\Repositories\ServiceRepository;
 use Wiz\Services\AvailabilityService;
 use Wiz\Services\BookingService;
@@ -33,6 +34,7 @@ final class BookingController
         private readonly View $view,
         private readonly BookingRepository $bookings,
         private readonly ServiceRepository $services,
+        private readonly CategoryRepository $categories,
         private readonly AvailabilityService $availability,
         private readonly BookingService $bookingService,
         private readonly Session $session,
@@ -120,7 +122,7 @@ final class BookingController
                 'customer_name' => $request->string('customer_name'),
                 'customer_phone' => $request->string('customer_phone'),
                 'customer_email' => $request->string('customer_email'),
-                'service_id' => $request->string('service_id'),
+                'category_id' => $request->string('category_id'),
                 'date' => $request->string('date'),
                 'time' => $request->string('time'),
                 'notes' => $request->string('notes'),
@@ -129,7 +131,7 @@ final class BookingController
                 'customer_name' => 'required|max:120',
                 'customer_phone' => 'required|phone|max:40',
                 'customer_email' => 'email|max:190',
-                'service_id' => 'required|integer',
+                'category_id' => 'required|integer',
                 'date' => 'required|date',
                 'time' => 'required|time',
                 'notes' => 'max:500',
@@ -138,7 +140,7 @@ final class BookingController
                 'customer_name' => 'Customer name',
                 'customer_phone' => 'Phone number',
                 'customer_email' => 'Email address',
-                'service_id' => 'Service',
+                'category_id' => 'Service',
                 'date' => 'Date',
                 'time' => 'Time',
                 'notes' => 'Notes',
@@ -157,7 +159,7 @@ final class BookingController
             'customer_name' => (string) $input['customer_name'],
             'customer_phone' => (string) $input['customer_phone'],
             'customer_email' => (string) ($input['customer_email'] ?? ''),
-            'service_id' => (int) $input['service_id'],
+            'category_id' => (int) $input['category_id'],
             'date' => (string) $input['date'],
             'time' => (string) $input['time'],
             'notes' => (string) ($input['notes'] ?? ''),
@@ -257,7 +259,7 @@ final class BookingController
     private function form(?array $booking, Request $request): Response
     {
         $date = $request->queryString('date', date('Y-m-d'));
-        $serviceId = (int) $request->queryString('service_id');
+        $serviceId = (int) $request->queryString('category_id');
 
         return $this->view->render('admin/bookings/form', [
             'title' => 'New booking',
@@ -265,7 +267,7 @@ final class BookingController
             'subheading' => 'For customers who call or walk in.',
             'active' => 'bookings',
             'backHref' => '/admin/bookings',
-            'services' => $this->services->activeWithCategory(),
+            'services' => $this->categories->active(),
             'date' => $date,
             'serviceId' => $serviceId,
             'slots' => $serviceId > 0 ? $this->slotsForService($date, $serviceId) : [],
@@ -313,13 +315,15 @@ final class BookingController
      */
     private function slotsForService(string $date, int $serviceId): array
     {
-        $service = $this->services->find($serviceId);
+        // A service has no published running time any more: every appointment
+        // claims one cell of the salon's grid.
+        $service = $this->categories->find($serviceId);
 
         if ($service === null) {
             return [];
         }
 
-        return $this->availability->slotsForDate($date, (int) ($service['duration_minutes'] ?? 0));
+        return $this->availability->slotsForDate($date, $this->availability->gridMinutes());
     }
 
     /**
@@ -358,6 +362,6 @@ final class BookingController
     private function backToForm(Request $request): string
     {
         return '/admin/bookings/new?date=' . rawurlencode($request->string('date'))
-            . '&service_id=' . rawurlencode($request->string('service_id'));
+            . '&category_id=' . rawurlencode($request->string('category_id'));
     }
 }

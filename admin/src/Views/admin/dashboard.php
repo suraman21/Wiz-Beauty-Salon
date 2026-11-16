@@ -21,7 +21,7 @@ $cards = [
     ['label' => 'Awaiting approval', 'key' => 'bookings_pending', 'hint' => 'Requests not confirmed yet', 'href' => '/admin/bookings?status=requested&range=upcoming'],
     ['label' => 'Unread messages', 'key' => 'messages_unread', 'hint' => 'New enquiries from the website', 'href' => '/admin/messages?filter=unread'],
     ['label' => 'Reviews to approve', 'key' => 'reviews_pending', 'hint' => 'Waiting before they appear', 'href' => '/admin/reviews'],
-    ['label' => 'Active services', 'key' => 'services_active', 'hint' => 'Currently offered on the website', 'href' => '/admin/services'],
+    ['label' => 'Active services', 'key' => 'services_active', 'hint' => 'Currently offered on the website', 'href' => '/admin/categories'],
 ];
 ?>
 

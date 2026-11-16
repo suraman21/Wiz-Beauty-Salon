@@ -45,13 +45,13 @@ describe("booking API client", () => {
     );
     vi.stubGlobal("fetch", fetchMock);
 
-    const days = await fetchCalendar(4, "2026-10-22", 7);
+    const days = await fetchCalendar({ categoryId: 4 }, "2026-10-22", 7);
 
     expect(days[0]?.slots).toEqual(["09:00"]);
 
     const url = String(fetchMock.mock.calls[0]?.[0]);
     expect(url).toContain("/api/v1/calendar?");
-    expect(url).toContain("service_id=4");
+    expect(url).toContain("category_id=4");
     expect(url).toContain("from=2026-10-22");
     expect(url).toContain("days=7");
   });
@@ -71,7 +71,7 @@ describe("booking API client", () => {
       name: "Hanna",
       phone: "0911223344",
       email: "",
-      service_id: 4,
+      category_id: 4,
       date: "2026-10-22",
       time: "10:00",
       notes: "",
@@ -81,7 +81,7 @@ describe("booking API client", () => {
 
     const init = fetchMock.mock.calls[0]?.[1] as RequestInit;
     expect(init.method).toBe("POST");
-    expect(JSON.parse(String(init.body))).toMatchObject({ service_id: 4, time: "10:00" });
+    expect(JSON.parse(String(init.body))).toMatchObject({ category_id: 4, time: "10:00" });
   });
 
   it("surfaces the server's own words when a slot has gone", async () => {
@@ -99,7 +99,7 @@ describe("booking API client", () => {
         name: "Hanna",
         phone: "0911223344",
         email: "",
-        service_id: 4,
+        category_id: 4,
         date: "2026-10-22",
         time: "10:00",
         notes: "",

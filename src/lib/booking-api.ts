@@ -9,17 +9,22 @@
 
 import { ApiError, apiGet, apiPost } from "@/lib/api";
 
+/**
+ * One of the salon's services — the row staff add in the panel.
+ *
+ * There is no price and no running time: both are settled with the customer at
+ * the salon, so the site never shows them.
+ */
 export type ApiService = {
   id: number;
   name: string;
   slug: string;
-  category: string;
+  amharic: string;
   description: string;
-  duration_minutes: number;
-  price_cents: number | null;
-  featured: boolean;
   /** The photo staff uploaded for this service, if any. */
   image_url: string | null;
+  /** True when staff ticked this service for the home page in the panel. */
+  show_on_home?: boolean | undefined;
 };
 
 export type CalendarDay = {
@@ -33,9 +38,8 @@ export type BookingInput = {
   name: string;
   phone: string;
   email: string;
-  service_id?: number | null | undefined;
-  service_ids?: number[] | undefined;
-  is_undecided?: boolean | undefined;
+  /** The service the customer picked, by its id in the panel. */
+  category_id?: number | null | undefined;
   date: string;
   time: string;
   notes: string;
@@ -49,30 +53,17 @@ export type BookingResult = {
   manage_url?: string | null;
 };
 
-export type ApiCategory = {
-  id: number;
-  name: string;
-  slug: string;
-  amharic: string;
-  description: string;
-  sort_order: number;
-  /** The illustration the salon chose for this category, if any. */
-  image_url: string | null;
-};
-
 export type ServiceCatalogue = {
   services: ApiService[];
-  categories: ApiCategory[];
 };
 
 /**
- * The whole public catalogue in one request: every visible service and every
- * visible category, in the order the salon arranged them in the panel.
+ * The whole public catalogue in one request: every visible service, in the
+ * order the salon arranged them in the panel.
  */
 export function fetchCatalogue(signal?: AbortSignal): Promise<ServiceCatalogue> {
   return apiGet<Partial<ServiceCatalogue>>("/api/v1/services", signal).then((body) => ({
     services: body.services ?? [],
-    categories: body.categories ?? [],
   }));
 }
 
@@ -81,54 +72,28 @@ export function fetchServices(signal?: AbortSignal): Promise<ApiService[]> {
 }
 
 export type CalendarOpts = {
-  serviceId?: number | null | undefined;
-  serviceIds?: number[] | undefined;
-  isUndecided?: boolean | undefined;
-  duration?: number | undefined;
+  /** The service the customer picked. */
+  categoryId?: number | null | undefined;
 };
 
 export function fetchCalendar(
-  serviceId: number | CalendarOpts,
-  from: string,
-  days = 21,
-  signal?: AbortSignal,
-): Promise<CalendarDay[]> {
-  let opts: CalendarOpts;
-  if (typeof serviceId === "object" && serviceId !== null) {
-    opts = serviceId as CalendarOpts;
-  } else {
-    opts = { serviceId: serviceId as number };
-  }
-
-  const query = new URLSearchParams({
-    from,
-    days: String(days),
-  });
-
-  if (opts.isUndecided) {
-    query.set("is_undecided", "1");
-  } else if (opts.serviceIds && opts.serviceIds.length > 0) {
-    query.set("service_ids", opts.serviceIds.join(","));
-  } else if (opts.serviceId != null && opts.serviceId > 0) {
-    query.set("service_id", String(opts.serviceId));
-  } else if (opts.duration && opts.duration > 0) {
-    query.set("duration", String(opts.duration));
-  } else if (typeof serviceId === "number" && serviceId > 0) {
-    query.set("service_id", String(serviceId));
-  }
-
-  return apiGet<{ days: CalendarDay[] }>(`/api/v1/calendar?${query.toString()}`, signal).then(
-    (body) => body.days,
-  );
-}
-
-export function fetchCalendarMulti(
   opts: CalendarOpts,
   from: string,
   days = 21,
   signal?: AbortSignal,
 ): Promise<CalendarDay[]> {
-  return fetchCalendar(opts, from, days, signal);
+  const query = new URLSearchParams({
+    from,
+    days: String(days),
+  });
+
+  if (opts.categoryId != null && opts.categoryId > 0) {
+    query.set("category_id", String(opts.categoryId));
+  }
+
+  return apiGet<{ days?: CalendarDay[] }>(`/api/v1/calendar?${query.toString()}`, signal).then(
+    (body) => body.days ?? [],
+  );
 }
 
 export function createBooking(input: BookingInput): Promise<BookingResult> {
@@ -141,15 +106,8 @@ export function createBooking(input: BookingInput): Promise<BookingResult> {
     notes: input.notes,
     website: "",
   };
-  if (input.is_undecided) {
-    payload["is_undecided"] = 1;
-    payload["isUndecided"] = 1;
-  } else if (input.service_ids && input.service_ids.length > 0) {
-    payload["service_ids"] = input.service_ids;
-    payload["serviceIds"] = input.service_ids;
-    payload["service_id"] = input.service_id ?? input.service_ids[0];
-  } else if (input.service_id != null) {
-    payload["service_id"] = input.service_id;
+  if (input.category_id != null) {
+    payload["category_id"] = input.category_id;
   }
   return apiPost<BookingResult>("/api/v1/bookings", payload);
 }

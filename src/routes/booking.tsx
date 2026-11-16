@@ -8,66 +8,54 @@ import {
   Clock3,
   Copy,
   ExternalLink,
-  HelpCircle,
   MessageCircle,
   ShieldCheck,
-  Sparkles,
-  X,
 } from "lucide-react";
 import { z } from "zod";
 import { SiteLayout } from "@/components/site/SiteChrome";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useSiteImages } from "@/lib/site-content";
-import { bookableServices, bookingDetailsSchema, findBookableService } from "@/data/services";
-import { ApiError, formatPrice, isoToday } from "@/lib/api";
+import { bookingDetailsSchema } from "@/data/services";
+import { ApiError, isoToday } from "@/lib/api";
 import {
   createBooking,
   fetchCalendar,
-  fetchServices,
+  fetchCatalogue,
   type ApiService,
   type CalendarDay,
 } from "@/lib/booking-api";
+import { localServices } from "@/lib/service-pages";
 
 export const Route = createFileRoute("/booking")({
   validateSearch: (s) => z.object({ service: z.string().optional() }).parse(s),
   head: () => ({
     meta: [
-      { title: "Book an Appointment | WIZ Beauty Salon" },
+      { title: "Book an appointment | WIZ Beauty Salon" },
       {
         name: "description",
         content:
-          "Book your WIZ Beauty Salon appointment: choose a service, date and time in a few simple steps.",
+          "Book your WIZ Beauty Salon appointment: choose your service, then a day and a time. The salon confirms every request.",
       },
-      { property: "og:title", content: "Book an Appointment | WIZ Beauty Salon" },
+      { property: "og:title", content: "Book an appointment | WIZ Beauty Salon" },
       {
         property: "og:description",
-        content: "Choose your service, date and time and book your WIZ moment.",
+        content: "Choose your service, day and time — the salon confirms every request.",
       },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
+      { property: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Booking,
 });
 
 const steps = ["Service", "Date", "Time", "Details", "Summary"];
+const CONFIRMED_STEP = 5;
 const CALENDAR_DAYS = 21;
 
 type Details = { name: string; phone: string; email: string; notes: string };
 type Confirmed = {
   reference: string;
-  serviceId: number | null;
-  serviceIds: number[];
-  isUndecided: boolean;
+  serviceName: string;
   date: string;
   time: string;
   details: Details;
@@ -86,9 +74,7 @@ function Booking() {
 
   const [services, setServices] = useState<ApiService[] | null>(null);
   const [loadError, setLoadError] = useState("");
-  const [category, setCategory] = useState("");
-  const [selectedIds, setSelectedIds] = useState<number[]>([]);
-  const [isUndecided, setIsUndecided] = useState(false);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
 
   const [calendar, setCalendar] = useState<CalendarDay[]>([]);
   const [calendarBusy, setCalendarBusy] = useState(false);
@@ -104,367 +90,195 @@ function Booking() {
   const [confirmed, setConfirmed] = useState<Confirmed | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const serviceId = isUndecided ? null : (selectedIds[0] ?? null);
   const service = useMemo(
-    () => services?.find((s) => s.id === serviceId) ?? null,
-    [services, serviceId],
+    () => services?.find((s) => s.id === selectedId) ?? null,
+    [services, selectedId],
   );
-  const selectedServices = useMemo(
-    () => (services ? services.filter((s) => selectedIds.includes(s.id)) : []),
-    [services, selectedIds],
-  );
-  const totalDuration = useMemo(() => {
-    if (isUndecided) return 60;
-    if (selectedServices.length === 0) return 0;
-    return selectedServices.reduce(
-      (sum, s) => sum + (s.duration_minutes > 0 ? s.duration_minutes : 30),
-      0,
-    );
-  }, [selectedServices, isUndecided]);
-  const totalPrice = useMemo(() => {
-    if (isUndecided) return null;
-    if (selectedServices.length === 0) return null;
-    let sum = 0;
-    let hasNull = false;
-    for (const s of selectedServices) {
-      if (s.price_cents == null) hasNull = true;
-      else sum += s.price_cents;
-    }
-    return hasNull ? null : sum;
-  }, [selectedServices, isUndecided]);
 
-  const fallbackServices = (): ApiService[] =>
-    bookableServices.map((s, idx) => ({
-      id: idx + 1,
+  // Until the panel answers, the bundled list keeps the page usable.
+  const fallback = (): ApiService[] =>
+    localServices().map((s, index) => ({
+      id: index + 1,
       name: s.name,
       slug: s.id,
-      category: s.category,
-      description: "",
-      duration_minutes: 60,
-      price_cents: null,
-      featured: false,
+      amharic: s.amharic,
+      description: s.description,
       image_url: null,
+      show_on_home: s.showOnHome,
     }));
 
   useEffect(() => {
     const controller = new AbortController();
-    fetchServices(controller.signal)
-      .then((list) => {
-        if (list.length > 0) {
-          setServices(list);
-        } else {
-          setServices(fallbackServices());
-        }
-        setLoadError("");
+
+    fetchCatalogue(controller.signal)
+      .then((catalogue) => {
+        if (catalogue.services.length > 0) setServices(catalogue.services);
+        else setServices(fallback());
       })
       .catch((error: unknown) => {
         if (error instanceof DOMException && error.name === "AbortError") return;
-        setServices(fallbackServices());
+        setServices(fallback());
         setLoadError("");
       });
+
     return () => controller.abort();
   }, []);
 
+  // A link from the services page: /booking?service=<slug or name>
   useEffect(() => {
     if (!services || appliedSearch.current || !search.service) return;
     appliedSearch.current = true;
-    const bySlug = services.find((s) => s.slug === search.service);
-    const byId = services.find((s) => String(s.id) === search.service);
-    const catalogueName = findBookableService(search.service)?.name.toLowerCase();
-    const byName = catalogueName
-      ? services.find((s) => s.name.toLowerCase() === catalogueName)
-      : undefined;
-    const match = bySlug ?? byId ?? byName;
-    if (match) {
-      setSelectedIds([match.id]);
-      setIsUndecided(false);
-      setCategory(match.category);
-      setStep(1);
-    }
+
+    const wanted = search.service.trim().toLowerCase();
+    const match =
+      services.find((s) => s.slug === search.service) ??
+      services.find((s) => String(s.id) === search.service) ??
+      services.find((s) => s.name.trim().toLowerCase() === wanted);
+
+    if (match) setSelectedId(match.id);
   }, [services, search.service]);
 
-  const loadCalendar = useCallback(
-    (
-      opts: {
-        serviceId?: number | null | undefined;
-        serviceIds?: number[] | undefined;
-        isUndecided?: boolean | undefined;
-      },
-      signal?: AbortSignal,
-    ) => {
-      setCalendarBusy(true);
-      setCalendarError("");
-      const calendarOpts = {
-        serviceId: opts.serviceId ?? undefined,
-        serviceIds: opts.serviceIds,
-        isUndecided: opts.isUndecided,
-      };
-      return fetchCalendar(calendarOpts, isoToday(), CALENDAR_DAYS, signal)
-        .then((days) => setCalendar(days))
-        .catch((error: unknown) => {
-          if (error instanceof DOMException && error.name === "AbortError") return;
-          setCalendar([]);
-          setCalendarError(
-            error instanceof ApiError ? error.message : "We could not load the available times.",
-          );
-        })
-        .finally(() => setCalendarBusy(false));
-    },
-    [],
-  );
+  const loadCalendar = useCallback((categoryId: number, signal?: AbortSignal) => {
+    setCalendarBusy(true);
+    setCalendarError("");
+
+    return fetchCalendar({ categoryId }, isoToday(), CALENDAR_DAYS, signal)
+      .then((days) => setCalendar(days))
+      .catch((error: unknown) => {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+        setCalendar([]);
+        setCalendarError(
+          error instanceof ApiError ? error.message : "We could not load the available times.",
+        );
+      })
+      .finally(() => setCalendarBusy(false));
+  }, []);
 
   useEffect(() => {
-    if (isUndecided) {
-      const controller = new AbortController();
-      void loadCalendar({ isUndecided: true }, controller.signal);
-      return () => controller.abort();
-    }
-    if (selectedIds.length === 0) return undefined;
+    if (selectedId === null) return undefined;
+
     const controller = new AbortController();
-    if (selectedIds.length === 1) {
-      void loadCalendar({ serviceId: selectedIds[0] }, controller.signal);
-    } else {
-      void loadCalendar({ serviceIds: selectedIds }, controller.signal);
-    }
+    void loadCalendar(selectedId, controller.signal);
+
     return () => controller.abort();
-  }, [selectedIds, isUndecided, loadCalendar]);
-
-  const categories = useMemo(() => {
-    const seen: string[] = [];
-    for (const s of services ?? []) if (!seen.includes(s.category)) seen.push(s.category);
-    return seen;
-  }, [services]);
-
-  const visible = useMemo(
-    () => (services ?? []).filter((s) => category === "" || s.category === category),
-    [services, category],
-  );
-
-  // For clean dropdown: show only not yet selected
-  const availableToAdd = useMemo(
-    () => visible.filter((s) => !selectedIds.includes(s.id)),
-    [visible, selectedIds],
-  );
+  }, [selectedId, loadCalendar]);
 
   const selectedDay = calendar.find((d) => d.date === date) ?? null;
   const validDetails = bookingDetailsSchema.safeParse(details).success;
+
   const canContinue =
-    [isUndecided || selectedIds.length > 0, date !== "", time !== "", validDetails, true][step] ??
-    false;
+    (step === 0 && selectedId !== null) ||
+    (step === 1 && date !== "") ||
+    (step === 2 && time !== "") ||
+    (step === 3 && validDetails) ||
+    step === 4;
 
-  const addService = (id: number) => {
-    if (isUndecided) setIsUndecided(false);
-    setSelectedIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
+  const chooseService = (id: number) => {
+    setSelectedId(id);
+    setCalendar([]);
     setDate("");
     setTime("");
-  };
-
-  const removeService = (id: number) => {
-    setSelectedIds((prev) => prev.filter((x) => x !== id));
-    setDate("");
-    setTime("");
-  };
-
-  const toggleUndecided = () => {
-    if (isUndecided) {
-      setIsUndecided(false);
-      setSelectedIds([]);
-    } else {
-      setIsUndecided(true);
-      setSelectedIds([]);
-      setDate("");
-      setTime("");
-      setSubmitError("");
-    }
-  };
-
-  const handleCategoryChange = (value: string) => {
-    const next = value === "__all" ? "" : value;
-    setCategory(next);
   };
 
   const chooseDate = (day: CalendarDay) => {
-    if (day.slots.length === 0) return;
     setDate(day.date);
     setTime("");
     setStep(2);
   };
 
-  const submit = async () => {
-    if ((selectedIds.length === 0 && !isUndecided) || !date || !time) return;
+  const submit = () => {
+    if (selectedId === null || date === "" || time === "") return;
     setSubmitting(true);
     setSubmitError("");
-    try {
-      const result = await createBooking({
-        name: details.name.trim(),
-        phone: details.phone.trim(),
-        email: details.email.trim(),
-        service_id: isUndecided ? null : (selectedIds[0] ?? null),
-        service_ids: isUndecided ? undefined : selectedIds.length > 1 ? selectedIds : undefined,
-        is_undecided: isUndecided,
-        date,
-        time,
-        notes: details.notes.trim(),
-      });
-      setConfirmed({
-        reference: result.reference,
-        serviceId: selectedIds[0] ?? null,
-        serviceIds: [...selectedIds],
-        isUndecided,
-        date,
-        time,
-        details,
-        manageUrl: result.manage_url ?? null,
-      });
-      setStep(5);
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    } catch (error) {
-      const message =
-        error instanceof ApiError
-          ? error.message
-          : "The request could not be sent. Please try again.";
-      setSubmitError(message);
-      if (error instanceof ApiError && error.status === 422) {
-        setTime("");
-        setStep(2);
-        if (isUndecided) void loadCalendar({ isUndecided: true });
-        else if (selectedIds.length > 1) void loadCalendar({ serviceIds: selectedIds });
-        else if (selectedIds[0]) void loadCalendar({ serviceId: selectedIds[0] });
-      }
-    } finally {
-      setSubmitting(false);
-    }
+
+    createBooking({
+      name: details.name,
+      phone: details.phone,
+      email: details.email,
+      category_id: selectedId,
+      date,
+      time,
+      notes: details.notes,
+    })
+      .then((result) => {
+        setConfirmed({
+          reference: result.reference,
+          serviceName: service?.name ?? "Appointment",
+          date,
+          time,
+          details,
+          manageUrl: result.manage_url ?? null,
+        });
+        setStep(CONFIRMED_STEP);
+      })
+      .catch((error: unknown) => {
+        setSubmitError(
+          error instanceof ApiError
+            ? error.message
+            : "We could not send the request. Please try again or call the salon.",
+        );
+      })
+      .finally(() => setSubmitting(false));
   };
 
   const restart = () => {
     setConfirmed(null);
-    setSubmitError("");
-    setSelectedIds([]);
-    setIsUndecided(false);
-    setCategory("");
+    setStep(0);
+    setSelectedId(null);
     setDate("");
     setTime("");
     setDetails(emptyDetails);
-    setStep(0);
+    setCalendar([]);
   };
 
-  const heading = (() => {
-    if (step === 5)
-      return (
-        <>
-          Request
-          <br />
-          <em>received.</em>
-        </>
-      );
-    return (
-      <>
-        Book an
-        <br />
-        <em>appointment.</em>
-      </>
-    );
-  })();
-
-  const copyManageLink = async () => {
+  const copyManageLink = () => {
     if (!confirmed?.manageUrl) return;
-    try {
-      await navigator.clipboard.writeText(confirmed.manageUrl);
+    void navigator.clipboard.writeText(confirmed.manageUrl).then(() => {
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      window.prompt("Copy this link:", confirmed.manageUrl);
-    }
+      window.setTimeout(() => setCopied(false), 2000);
+    });
   };
 
-  const whatsAppHref =
-    confirmed?.manageUrl && confirmed
-      ? `https://wa.me/?text=${encodeURIComponent(`My WIZ booking ${confirmed.reference}: ${confirmed.manageUrl}`)}`
-      : "";
+  const heading =
+    confirmed !== null
+      ? "You're in the book."
+      : (["Which service?", "Which day?", "What time?", "Your details", "Everything right?"][
+          step
+        ] ?? "Book your moment");
 
-  const confirmedServices = useMemo(() => {
-    if (!confirmed) return [];
-    if (confirmed.isUndecided) return [];
-    return (services ?? []).filter((s) => confirmed.serviceIds.includes(s.id));
-  }, [confirmed, services]);
-  const confirmedDuration = useMemo(() => {
-    if (!confirmed || confirmed.isUndecided) return 60;
-    if (confirmedServices.length === 0) return 60;
-    return confirmedServices.reduce(
-      (sum, s) => sum + (s.duration_minutes > 0 ? s.duration_minutes : 30),
-      0,
-    );
-  }, [confirmed, confirmedServices]);
-  const confirmedName = useMemo(() => {
-    if (!confirmed) return "Appointment";
-    if (confirmed.isUndecided) return "Not sure — we'll help you decide";
-    if (confirmedServices.length === 0) {
-      const svc = services?.find((s) => s.id === confirmed.serviceId);
-      return svc?.name ?? "Appointment";
-    }
-    return confirmedServices.map((s) => s.name).join(" + ");
-  }, [confirmed, confirmedServices, services]);
+  const start = confirmed === null ? null : new Date(`${confirmed.date}T${confirmed.time}:00`);
+  const endOfVisit = start === null ? null : new Date(start.getTime() + 60 * 60 * 1000);
 
-  const buildIcs = () => {
-    if (!confirmed) return;
-    const duration = confirmed.isUndecided ? 60 : (confirmedDuration ?? 60);
-    const start = new Date(`${confirmed.date}T${confirmed.time}:00`);
-    const end = new Date(start.getTime() + duration * 60000);
+  const icsHref = (() => {
+    if (confirmed === null || start === null || endOfVisit === null) return "";
     const pad = (n: number) => String(n).padStart(2, "0");
-    const fmtIcs = (d: Date) =>
+    const stamp = (d: Date) =>
       `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00`;
-    const ics = [
+    const body = [
       "BEGIN:VCALENDAR",
       "VERSION:2.0",
       "PRODID:-//WIZ Beauty Salon//Booking//EN",
       "BEGIN:VEVENT",
-      `UID:${confirmed.reference}@wiz.arkeonethiopia.com`,
-      `DTSTAMP:${fmtIcs(new Date())}`,
-      `DTSTART:${fmtIcs(start)}`,
-      `DTEND:${fmtIcs(end)}`,
-      `SUMMARY:WIZ Beauty Salon - ${confirmedName}`,
-      `DESCRIPTION:Reference ${confirmed.reference} - Manage: ${confirmed.manageUrl ?? ""}`,
-      `LOCATION:WIZ Beauty Salon, Addis Ababa`,
+      `UID:${confirmed.reference}@wizbeautysalon`,
+      `DTSTAMP:${stamp(new Date())}`,
+      `DTSTART:${stamp(start)}`,
+      `DTEND:${stamp(endOfVisit)}`,
+      `SUMMARY:WIZ Beauty Salon - ${confirmed.serviceName}`,
+      `DESCRIPTION:Reference ${confirmed.reference}`,
+      "LOCATION:WIZ Beauty Salon, Addis Ababa",
       "END:VEVENT",
       "END:VCALENDAR",
     ].join("\r\n");
-    const blob = new Blob([ics], { type: "text/calendar" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `WIZ-${confirmed.reference}.ics`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
 
-  const googleCalendarHref = (() => {
-    if (!confirmed) return "";
-    const duration = confirmed.isUndecided ? 60 : (confirmedDuration ?? 60);
-    const start = new Date(`${confirmed.date}T${confirmed.time}:00`);
-    const end = new Date(start.getTime() + duration * 60000);
-    const pad = (n: number) => String(n).padStart(2, "0");
-    const fmtG = (d: Date) =>
-      `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00`;
-    const params = new URLSearchParams({
-      action: "TEMPLATE",
-      text: `WIZ Beauty Salon - ${confirmedName} (${confirmed.reference})`,
-      dates: `${fmtG(start)}/${fmtG(end)}`,
-      details: `Reference ${confirmed.reference} - Manage: ${confirmed.manageUrl ?? ""}`,
-      location: "WIZ Beauty Salon, Addis Ababa",
-    });
-    return `https://calendar.google.com/calendar/render?${params.toString()}`;
+    return `data:text/calendar;charset=utf-8,${encodeURIComponent(body)}`;
   })();
 
-  const grouped = useMemo(() => {
-    const map = new Map<string, ApiService[]>();
-    for (const c of categories)
-      map.set(
-        c,
-        visible.filter((s) => s.category === c),
-      );
-    if (category !== "") return [[category, visible]] as [string, ApiService[]][];
-    return Array.from(map.entries()).filter(([, list]) => list.length > 0);
-  }, [categories, visible, category]);
+  const whatsAppHref =
+    confirmed?.manageUrl != null
+      ? `https://wa.me/?text=${encodeURIComponent(
+          `My WIZ booking ${confirmed.reference}: ${confirmed.manageUrl}`,
+        )}`
+      : "";
 
   return (
     <SiteLayout>
@@ -487,7 +301,7 @@ function Booking() {
           <span className="overline">Booking</span>
           <h1>{heading}</h1>
 
-          {step < 5 && (
+          {step < CONFIRMED_STEP && (
             <ol className="stepper" aria-label="Booking progress">
               {steps.map((s, i) => (
                 <li key={s} className={i === step ? "is-current" : i < step ? "is-done" : ""}>
@@ -516,17 +330,19 @@ function Booking() {
             {step === 0 && (
               <>
                 {services === null && <p className="step-note">Loading services…</p>}
-                {services !== null && services.length === 0 && loadError === "" && (
+
+                {services !== null && services.length === 0 && (
                   <p className="step-note">
                     Online booking is not open just yet. Please contact the salon and we will find
                     you a time.
                   </p>
                 )}
+
                 {services !== null && services.length > 0 && (
                   <>
                     <p className="step-intro">
-                      Add services as you like — pick one or combine. Not sure? Just book a
-                      consultation.
+                      Pick the service you are coming in for. How long it takes and what it costs is
+                      settled with you at the salon.
                     </p>
 
                     <div className="booking-manage-card">
@@ -540,172 +356,28 @@ function Booking() {
                       </Link>
                     </div>
 
-                    {!isUndecided ? (
-                      <>
-                        <div className="booking-clean-fields">
-                          <div className="booking-field">
-                            <label htmlFor="wiz-category">Category</label>
-                            <Select
-                              value={category === "" ? "__all" : category}
-                              onValueChange={handleCategoryChange}
-                            >
-                              <SelectTrigger id="wiz-category" className="booking-select-trigger">
-                                <SelectValue placeholder="All services" />
-                              </SelectTrigger>
-                              <SelectContent className="booking-select-content">
-                                <SelectItem value="__all">
-                                  All — {services.length} services
-                                </SelectItem>
-                                {categories.map((c) => {
-                                  const count = services.filter((s) => s.category === c).length;
-                                  return (
-                                    <SelectItem key={c} value={c}>
-                                      {c} · {count}
-                                    </SelectItem>
-                                  );
-                                })}
-                              </SelectContent>
-                            </Select>
-                          </div>
-
-                          <div className="booking-field">
-                            <label htmlFor="wiz-service">Add a service</label>
-                            <Select value="" onValueChange={(v) => addService(Number(v))}>
-                              <SelectTrigger id="wiz-service" className="booking-select-trigger">
-                                <SelectValue
-                                  placeholder={
-                                    selectedIds.length === 0 ? "Choose a service" : "Add another"
-                                  }
-                                />
-                              </SelectTrigger>
-                              <SelectContent
-                                className="booking-select-content"
-                                style={{ maxHeight: "22rem" }}
-                              >
-                                {availableToAdd.length === 0 ? (
-                                  <div
-                                    style={{
-                                      padding: "0.75rem 1rem",
-                                      fontSize: "13px",
-                                      color: "var(--muted-foreground)",
-                                    }}
-                                  >
-                                    {visible.length === 0
-                                      ? "No services in this category"
-                                      : "All services from this category added"}
-                                  </div>
-                                ) : (
-                                  grouped
-                                    .map(([cat, list]) => {
-                                      const filtered = list.filter(
-                                        (s) => !selectedIds.includes(s.id),
-                                      );
-                                      if (filtered.length === 0) return null;
-                                      return (
-                                        <SelectGroup key={cat}>
-                                          <SelectLabel className="booking-select-label">
-                                            {cat}
-                                          </SelectLabel>
-                                          {filtered.map((s) => {
-                                            const price = formatPrice(s.price_cents);
-                                            return (
-                                              <SelectItem key={s.id} value={String(s.id)}>
-                                                <span className="svc-select-item">
-                                                  <span>{s.name}</span>
-                                                  <span className="svc-select-meta">
-                                                    {price ?? "Price on request"} ·{" "}
-                                                    {s.duration_minutes || 30} min
-                                                  </span>
-                                                </span>
-                                              </SelectItem>
-                                            );
-                                          })}
-                                        </SelectGroup>
-                                      );
-                                    })
-                                    .filter(Boolean)
-                                )}
-                              </SelectContent>
-                            </Select>
-                            <span className="field-hint">
-                              {selectedIds.length === 0
-                                ? `${visible.length} services · pick one or many`
-                                : `${selectedIds.length} selected · ${totalDuration} min`}
-                            </span>
-                          </div>
-                        </div>
-
-                        {selectedServices.length > 0 && (
-                          <div className="booking-clean-list">
-                            {selectedServices.map((s) => {
-                              const price = formatPrice(s.price_cents);
-                              return (
-                                <div key={s.id} className="booking-clean-item">
-                                  <span className="booking-clean-dot" aria-hidden>
-                                    <Sparkles size={12} />
-                                  </span>
-                                  <span className="booking-clean-main">
-                                    <strong>{s.name}</strong>
-                                    <span>
-                                      {s.category} · {s.duration_minutes || 30} min ·{" "}
-                                      {price ?? "Price on request"}
-                                    </span>
-                                  </span>
-                                  <button
-                                    type="button"
-                                    className="booking-clean-remove"
-                                    aria-label={`Remove ${s.name}`}
-                                    onClick={() => removeService(s.id)}
-                                  >
-                                    <X size={14} />
-                                  </button>
-                                </div>
-                              );
-                            })}
-                            <div className="booking-clean-total">
-                              <span>
-                                {selectedServices.length} service
-                                {selectedServices.length > 1 ? "s" : ""} · {totalDuration} min
-                              </span>
-                              <strong>
-                                {totalPrice != null
-                                  ? (formatPrice(totalPrice) ?? "—")
-                                  : "Price on request"}
-                              </strong>
-                            </div>
-                          </div>
-                        )}
-
+                    <div className="booking-service-grid" role="radiogroup" aria-label="Service">
+                      {services.map((s, index) => (
                         <button
+                          key={s.id}
                           type="button"
-                          className="wiz-undecided-link"
-                          onClick={toggleUndecided}
+                          role="radio"
+                          aria-checked={selectedId === s.id}
+                          className={`booking-service${selectedId === s.id ? " is-selected" : ""}`}
+                          onClick={() => chooseService(s.id)}
                         >
-                          <HelpCircle size={14} /> Not sure what you need?{" "}
-                          <span>Book a consultation — we’ll help you decide</span>
-                        </button>
-                      </>
-                    ) : (
-                      <div className="booking-consultation-card">
-                        <div className="booking-consultation-icon">
-                          <HelpCircle size={18} />
-                        </div>
-                        <div className="booking-consultation-main">
-                          <strong>Consultation — we’ll help you decide</strong>
-                          <span>
-                            60 min · Talk through what suits you at the salon · Price to be
-                            confirmed
+                          <span className="booking-service-index">
+                            {String(index + 1).padStart(2, "0")}
                           </span>
-                        </div>
-                        <button
-                          type="button"
-                          className="booking-consultation-change"
-                          onClick={toggleUndecided}
-                        >
-                          Change
+                          <span className="booking-service-name">{s.name}</span>
+                          {s.amharic !== "" && (
+                            <span lang="am" className="booking-service-am">
+                              {s.amharic}
+                            </span>
+                          )}
                         </button>
-                      </div>
-                    )}
+                      ))}
+                    </div>
                   </>
                 )}
               </>
@@ -721,10 +393,7 @@ function Booking() {
                       type="button"
                       className="editorial-link"
                       onClick={() => {
-                        if (isUndecided) void loadCalendar({ isUndecided: true });
-                        else if (selectedIds.length > 1)
-                          void loadCalendar({ serviceIds: selectedIds });
-                        else if (selectedIds[0]) void loadCalendar({ serviceId: selectedIds[0] });
+                        if (selectedId !== null) void loadCalendar(selectedId);
                       }}
                     >
                       Try again
@@ -733,30 +402,14 @@ function Booking() {
                 )}
                 {!calendarBusy && calendarError === "" && calendar.length > 0 && (
                   <>
-                    {(isUndecided || selectedServices.length > 0) && (
-                      <p className="step-service-hint">
-                        {isUndecided ? (
-                          <>
-                            For <strong>Consultation (not sure yet)</strong> · 60 min
-                          </>
-                        ) : selectedServices.length === 1 ? (
-                          <>
-                            For <strong>{selectedServices[0]?.name}</strong> ·{" "}
-                            {selectedServices[0]?.category} · {totalDuration} min
-                          </>
-                        ) : (
-                          <>
-                            For <strong>{selectedServices.map((s) => s.name).join(" + ")}</strong> ·{" "}
-                            {totalDuration} min
-                          </>
-                        )}
-                      </p>
-                    )}
+                    <p className="step-service-hint">
+                      For <strong>{service?.name ?? "your appointment"}</strong>
+                    </p>
                     <div className="date-grid" role="radiogroup" aria-label="Choose a date">
                       {calendar.map((day) => {
                         const d = parseIso(day.date);
-                        const free = day.slots.length;
-                        const full = free === 0;
+                        const full = day.slots.length === 0;
+
                         return (
                           <Button
                             variant="ghost"
@@ -765,7 +418,11 @@ function Booking() {
                             aria-checked={date === day.date}
                             aria-disabled={full}
                             disabled={full}
-                            title={full ? (day.reason ?? "Fully booked") : `${free} times free`}
+                            title={
+                              full
+                                ? (day.reason ?? "Fully booked")
+                                : `${day.slots.length} times free`
+                            }
                             key={day.date}
                             className={`date-cell h-auto rounded-none ${date === day.date ? "is-selected" : ""} ${full ? "is-full" : ""}`}
                             onClick={() => chooseDate(day)}
@@ -778,7 +435,7 @@ function Booking() {
                       })}
                     </div>
                     <span className="demo-note">
-                      Days the salon is closed are shown greyed out. Times are in Addis Ababa time.
+                      Days the salon is closed are greyed out. Times are in Addis Ababa time.
                     </span>
                   </>
                 )}
@@ -787,7 +444,7 @@ function Booking() {
 
             {step === 2 && (
               <>
-                <p className="step-hint">{date && fmt(date)}</p>
+                <p className="step-hint">{date !== "" ? fmt(date) : ""}</p>
                 {submitError !== "" && (
                   <p className="step-note" role="alert">
                     {submitError}
@@ -859,13 +516,7 @@ function Booking() {
                     rows={3}
                     value={details.notes}
                     onChange={(e) => setDetails({ ...details, notes: e.target.value })}
-                    placeholder={
-                      isUndecided
-                        ? "Tell us what you’re hoping for — we’ll help you decide at the salon."
-                        : selectedServices.length > 1
-                          ? "Anything we should know about your services?"
-                          : "Anything we should know?"
-                    }
+                    placeholder="Anything we should know?"
                   />
                 </label>
                 {!validDetails && (details.name !== "" || details.phone !== "") && (
@@ -876,35 +527,23 @@ function Booking() {
               </div>
             )}
 
-            {step === 4 && (isUndecided || selectedServices.length > 0) && (
+            {step === 4 && (
               <Summary
-                services={isUndecided ? [] : selectedServices}
-                isUndecided={isUndecided}
-                totalDuration={totalDuration}
-                totalPrice={totalPrice}
+                serviceName={service?.name ?? "Appointment"}
                 date={date}
                 time={time}
                 details={details}
               />
             )}
 
-            {step === 5 && confirmed !== null && (
+            {step === CONFIRMED_STEP && confirmed !== null && (
               <div className="confirmation" role="status">
                 <p className="conf-ref">
                   Reference <strong>{confirmed.reference}</strong>
                 </p>
+
                 <Summary
-                  services={confirmed.isUndecided ? [] : confirmedServices}
-                  isUndecided={confirmed.isUndecided}
-                  totalDuration={confirmedDuration}
-                  totalPrice={
-                    confirmed.isUndecided
-                      ? null
-                      : confirmedServices.reduce((sum, s) => {
-                          if (s.price_cents == null) return sum;
-                          return sum + s.price_cents;
-                        }, 0) || null
-                  }
+                  serviceName={confirmed.serviceName}
                   date={confirmed.date}
                   time={confirmed.time}
                   details={confirmed.details}
@@ -913,7 +552,7 @@ function Booking() {
                 <div className="confirm-banner">
                   <ShieldCheck size={18} />
                   <div>
-                    <strong>Request received — we’ll call to confirm</strong>
+                    <strong>Request received — we'll call to confirm</strong>
                     <span>It is not booked until the salon confirms. You can manage it below.</span>
                   </div>
                 </div>
@@ -958,17 +597,16 @@ function Booking() {
                       </a>
                     </div>
                     <div className="manage-actions-grid manage-actions-grid--2">
-                      <button type="button" className="btn btn-outline" onClick={buildIcs}>
-                        <CalendarPlus size={14} /> Add to calendar (.ics)
-                      </button>
                       <a
-                        href={googleCalendarHref}
-                        target="_blank"
-                        rel="noreferrer"
+                        href={icsHref}
+                        download={`WIZ-${confirmed.reference}.ics`}
                         className="btn btn-outline"
                       >
-                        <CalendarPlus size={14} /> Google Calendar
+                        <CalendarPlus size={14} /> Add to calendar (.ics)
                       </a>
+                      <Link to="/booking/recover" className="btn btn-outline">
+                        <CalendarPlus size={14} /> Find this booking later
+                      </Link>
                     </div>
                     <p className="manage-policy">
                       Free to change or cancel until 24 hours before your time. After that, please
@@ -979,8 +617,8 @@ function Booking() {
                   <div className="manage-card manage-card--muted">
                     <h3>Manage link unavailable</h3>
                     <p>
-                      We couldn’t create a manage link for this request. Check your email/SMS or
-                      call the salon and give your reference.
+                      We couldn't create a manage link for this request. Check your email or call
+                      the salon and give your reference.
                     </p>
                   </div>
                 )}
@@ -1018,7 +656,7 @@ function Booking() {
             )}
           </div>
 
-          {step < 5 && (
+          {step < CONFIRMED_STEP && (
             <div className="step-nav">
               {step > 0 ? (
                 <Button
@@ -1048,14 +686,15 @@ function Booking() {
                   type="button"
                   className="btn btn-ink h-auto rounded-none"
                   disabled={!canContinue || submitting}
-                  onClick={() => void submit()}
+                  onClick={submit}
                 >
                   {submitting ? "Sending…" : "Request appointment"} <Check size={16} />
                 </Button>
               )}
             </div>
           )}
-          {step < 5 && (
+
+          {step < CONFIRMED_STEP && (
             <p style={{ marginTop: "1.1rem", textAlign: "center" }}>
               <Link to="/booking/recover" className="editorial-link" style={{ fontSize: "13px" }}>
                 Find your booking with phone or email <ArrowRight size={12} />
@@ -1069,82 +708,44 @@ function Booking() {
 }
 
 function Summary({
-  services,
-  isUndecided,
-  totalDuration,
-  totalPrice,
+  serviceName,
   date,
   time,
   details,
 }: {
-  services: ApiService[];
-  isUndecided: boolean;
-  totalDuration: number;
-  totalPrice: number | null;
+  serviceName: string;
   date: string;
   time: string;
   details: Details;
 }) {
-  const price = totalPrice != null ? formatPrice(totalPrice) : null;
-  const name = isUndecided
-    ? "Not sure — we'll help you decide"
-    : services.length === 0
-      ? "—"
-      : services.length === 1
-        ? (services[0]?.name ?? "—")
-        : services.map((s) => s.name).join(" + ");
-  const cat = isUndecided
-    ? "Consultation · We'll decide together"
-    : services.length === 1
-      ? (services[0]?.category ?? "")
-      : `${services.length} services · ${totalDuration} min`;
   return (
-    <dl className="summary">
+    <div className="summary">
       <div>
-        <dt>Service</dt>
-        <dd>
-          {name} <small>{cat}</small>
-        </dd>
+        <span>Service</span>
+        <strong>{serviceName}</strong>
       </div>
-      {services.length > 1 && (
+      <div>
+        <span>Day</span>
+        <strong>{date === "" ? "—" : fmt(date)}</strong>
+      </div>
+      <div>
+        <span>Time</span>
+        <strong>{time === "" ? "—" : time}</strong>
+      </div>
+      <div>
+        <span>Name</span>
+        <strong>{details.name === "" ? "—" : details.name}</strong>
+      </div>
+      <div>
+        <span>Phone</span>
+        <strong>{details.phone === "" ? "—" : details.phone}</strong>
+      </div>
+      {details.notes.trim() !== "" && (
         <div>
-          <dt>Selected</dt>
-          <dd>
-            {services.map((s) => s.name).join(" + ")}
-            <small>
-              {services.map((s) => `${s.category} · ${s.duration_minutes || 30} min`).join(" · ")}
-            </small>
-          </dd>
+          <span>Notes</span>
+          <strong>{details.notes}</strong>
         </div>
       )}
-      <div>
-        <dt>Date</dt>
-        <dd>{date ? fmt(date) : "—"}</dd>
-      </div>
-      <div>
-        <dt>Time</dt>
-        <dd>
-          {time || "—"} {totalDuration ? <small>· {totalDuration} min</small> : null}
-        </dd>
-      </div>
-      <div>
-        <dt>Name</dt>
-        <dd>{details.name}</dd>
-      </div>
-      <div>
-        <dt>Phone</dt>
-        <dd>{details.phone}</dd>
-      </div>
-      {details.email && (
-        <div>
-          <dt>Email</dt>
-          <dd>{details.email}</dd>
-        </div>
-      )}
-      <div>
-        <dt>Price</dt>
-        <dd>{isUndecided ? "To be confirmed at salon" : (price ?? "Price on request")}</dd>
-      </div>
-    </dl>
+    </div>
   );
 }

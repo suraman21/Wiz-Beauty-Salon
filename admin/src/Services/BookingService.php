@@ -11,6 +11,7 @@ use Wiz\Domain\Enums\BookingStatus;
 use Wiz\Repositories\ActivityLogRepository;
 use Wiz\Repositories\BookingRepository;
 use Wiz\Repositories\BookingSlotRepository;
+use Wiz\Repositories\CategoryRepository;
 use Wiz\Repositories\ServiceRepository;
 
 /**
@@ -35,6 +36,7 @@ final class BookingService
         private readonly ActivityLogRepository $activity,
         private readonly Logger $logger,
         private readonly ?BookingNotifier $notifier = null,
+        private readonly ?CategoryRepository $categories = null,
     ) {
     }
 
@@ -73,9 +75,12 @@ final class BookingService
         }
         // also support single service_id inside service_ids array via service_id fallback
         $singleId = (int) ($input['service_id'] ?? 0);
+        // The website and the panel now book one of the salon's services by
+        // name; how long it takes is decided at the salon.
+        $categoryId = (int) ($input['category_id'] ?? 0);
         // If no explicit service_ids but singleId provided, treat as single (handled below)
         // If undecided flag or no service info at all -> undecided
-        $isUndecided = $isUndecided || (empty($serviceIds) && $singleId === 0);
+        $isUndecided = $isUndecided || (empty($serviceIds) && $singleId === 0 && $categoryId === 0);
 
         $serviceId = null;
         $serviceName = '';
@@ -84,7 +89,20 @@ final class BookingService
         $serviceIdsJson = null;
         $isUndecidedFlag = 0;
 
-        if ($isUndecided) {
+        if ($categoryId > 0) {
+            $category = $this->categories?->find($categoryId);
+
+            if ($category === null || (int) ($category['is_active'] ?? 0) !== 1) {
+                return ['ok' => false, 'error' => 'That service is not available any more.'];
+            }
+
+            // One slot, the salon's own grid length — no price and no published
+            // running time, because both are settled with the customer.
+            $duration = $this->availability->gridMinutes();
+            $serviceName = (string) $category['name'];
+            $priceCents = null;
+            $isUndecidedFlag = 0;
+        } elseif ($isUndecided) {
             $duration = 60;
             $serviceName = 'Not sure — we’ll help you decide';
             $priceCents = null;

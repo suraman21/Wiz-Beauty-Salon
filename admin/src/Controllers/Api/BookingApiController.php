@@ -41,11 +41,11 @@ final class BookingApiController
     /**
      * GET /api/v1/services
      *
-     * The public catalogue, as the salon has it right now: the services with
-     * their prices and durations, and the categories in the order staff put
-     * them. The React site renders its Services page from this instead of a
-     * hard-coded list, so a service, price or category added, renamed or hidden
-     * in the panel shows up (or disappears) on the site immediately.
+     * The public catalogue, as the salon has it right now: one flat list of
+     * the services the salon offers, in the order staff put them. The React
+     * site renders its Services page from this instead of a hard-coded list, so
+     * a service added, renamed or hidden in the panel shows up (or disappears)
+     * on the site immediately.
      *
      * @param array<string, string> $params
      */
@@ -53,61 +53,30 @@ final class BookingApiController
     {
         $this->guardRead('services', $request);
 
-        $categories = [];
-
         $base = rtrim($this->uploadUrl, '/');
+        $out = [];
 
+        // What staff manage in the panel are the services the salon offers —
+        // Hair, Nails, Makeup, Skin. They are bookable as they are: what happens
+        // inside one is agreed with the customer at the salon, so there is no
+        // price list or running time to publish.
         foreach ($this->categories->published() as $row) {
             $image = (string) ($row['image_path'] ?? '');
 
-            $categories[] = [
+            $out[] = [
                 'id' => (int) $row['id'],
                 'name' => (string) $row['name'],
                 'slug' => (string) $row['slug'],
                 'amharic' => (string) ($row['amharic'] ?? ''),
                 'description' => (string) ($row['description'] ?? ''),
-                'sort_order' => (int) $row['sort_order'],
+                'show_on_home' => (int) ($row['show_on_home'] ?? 0) === 1,
                 'image_url' => $image === '' ? null : $base . '/' . rawurlencode($image),
             ];
         }
 
-        // Hiding a category in the panel hides what is filed under it — that is
-        // what "Visible on the website" promises. A service with no category at
-        // all stays: the salon can still sell it while deciding where it goes.
-        $visible = [];
-
-        foreach ($categories as $category) {
-            $visible[$category['id']] = true;
-        }
-
-        $rows = array_filter(
-            $this->services->activeWithCategory(),
-            static fn (array $row): bool => $row['category_id'] === null
-                || isset($visible[(int) $row['category_id']]),
-        );
-
-        $out = [];
-
-        foreach ($rows as $row) {
-            $duration = (int) ($row['duration_minutes'] ?? 0);
-            $price = $row['price_cents'] === null ? null : (int) $row['price_cents'];
-
-            $out[] = [
-                'id' => (int) $row['id'],
-                'name' => (string) $row['name'],
-                'slug' => (string) ($row['slug'] ?? ''),
-                'category' => $row['category_name'] === null ? 'Other' : (string) $row['category_name'],
-                'description' => (string) ($row['short_description'] ?? ''),
-                'duration_minutes' => $duration > 0 ? $duration : $this->availability->gridMinutes(),
-                'price_cents' => $price,
-                'featured' => (int) ($row['is_featured'] ?? 0) === 1,
-                'image_url' => (($row['image_path'] ?? '') === '' ? null : $base . '/' . rawurlencode((string) $row['image_path'])),
-            ];
-        }
-
         // A minute of caching keeps repeat page views cheap without leaving
-        // staff staring at yesterday's price after they save a change.
-        return Response::json(['services' => $out, 'categories' => $categories])
+        // staff staring at yesterday's list after they save a change.
+        return Response::json(['services' => $out])
             ->withHeader('Cache-Control', 'public, max-age=60');
     }
 
@@ -178,6 +147,27 @@ final class BookingApiController
      */
     private function resolveDuration(Request $request): ?array
     {
+        $categoryId = (int) $request->queryString('category_id');
+
+        if ($categoryId > 0) {
+            $category = $this->categories->find($categoryId);
+
+            if ($category === null || (int) ($category['is_active'] ?? 0) !== 1) {
+                return null;
+            }
+
+            $duration = $this->availability->gridMinutes();
+
+            return [
+                'duration' => $duration,
+                'service' => [
+                    'id' => $categoryId,
+                    'name' => (string) $category['name'],
+                    'duration_minutes' => $duration,
+                ],
+            ];
+        }
+
         $durationParam = $request->queryString('duration');
         if ($durationParam !== '' && ctype_digit($durationParam) && (int) $durationParam > 0) {
             $d = (int) $durationParam;
@@ -322,6 +312,7 @@ final class BookingApiController
                 'customer_email' => $request->string('email'),
                 'service_id' => $request->string('service_id'),
                 'service_ids' => $rawServiceIds,
+                'category_id' => $request->string('category_id'),
                 'is_undecided' => $rawIsUndecided,
                 'date' => $request->string('date'),
                 'time' => $request->string('time'),
@@ -333,6 +324,7 @@ final class BookingApiController
                 'customer_email' => 'email|max:190',
                 'service_id' => 'integer',
                 'service_ids' => 'string',
+                'category_id' => 'integer',
                 'is_undecided' => 'string',
                 'date' => 'required|date',
                 'time' => 'required|time',
@@ -343,6 +335,7 @@ final class BookingApiController
                 'customer_phone' => 'Phone number',
                 'customer_email' => 'Email address',
                 'service_id' => 'Service',
+                'category_id' => 'Service',
                 'date' => 'Date',
                 'time' => 'Time',
                 'notes' => 'Notes',
@@ -359,8 +352,9 @@ final class BookingApiController
         $hasServiceId = isset($input['service_id']) && (string) $input['service_id'] !== '' && (int) $input['service_id'] > 0;
         $hasServiceIds = isset($input['service_ids']) && (string) $input['service_ids'] !== '' && (string) $input['service_ids'] !== '[]';
         $isUndecidedFlag = isset($input['is_undecided']) && in_array(strtolower((string) $input['is_undecided']), ['1', 'true', 'yes'], true);
-        if (!$hasServiceId && !$hasServiceIds && !$isUndecidedFlag) {
-            throw HttpException::validation('Please select a service, add more than one, or choose “Not sure — we’ll help you decide”.');
+        $hasCategoryId = isset($input['category_id']) && (string) $input['category_id'] !== '' && (int) $input['category_id'] > 0;
+        if (!$hasServiceId && !$hasServiceIds && !$hasCategoryId && !$isUndecidedFlag) {
+            throw HttpException::validation('Please choose a service.');
         }
 
         $result = $this->bookings->create([
@@ -369,6 +363,7 @@ final class BookingApiController
             'customer_email' => (string) ($input['customer_email'] ?? ''),
             'service_id' => $hasServiceId ? (int) $input['service_id'] : null,
             'service_ids' => $hasServiceIds ? (string) $input['service_ids'] : null,
+            'category_id' => $hasCategoryId ? (int) $input['category_id'] : null,
             'is_undecided' => $isUndecidedFlag ? 1 : 0,
             'date' => (string) $input['date'],
             'time' => (string) $input['time'],

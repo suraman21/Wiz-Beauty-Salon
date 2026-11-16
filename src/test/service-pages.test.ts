@@ -1,197 +1,116 @@
 import { describe, expect, it } from "vitest";
-import {
-  PRICE_UNDISCLOSED,
-  buildServicePages,
-  formatPrice,
-  hasUnpricedItems,
-  localServicePages,
-  taglineFor,
-} from "@/lib/service-pages";
+import { buildServices, localServices, servicesForHome } from "@/lib/service-pages";
 import type { ServiceCatalogue } from "@/lib/booking-api";
 
 const catalogue: ServiceCatalogue = {
-  categories: [
+  services: [
     {
       id: 4,
       name: "Braids",
       slug: "braids",
       amharic: "ጋሻ",
-      description: "",
-      sort_order: 0,
+      description: "Cornrows, knotless, feed-ins",
       image_url: null,
+      show_on_home: true,
     },
     {
       id: 2,
-      name: "Nail",
+      name: "Nails",
       slug: "nail",
       amharic: "ጥፍር",
-      description: "Hands and feet",
-      sort_order: 10,
-      image_url: null,
-    },
-  ],
-  services: [
-    {
-      id: 21,
-      name: "Box braids",
-      category: "Braids",
-      slug: "braids-box-braids",
       description: "",
-      duration_minutes: 120,
-      price_cents: 250000,
-      featured: false,
-      image_url: null,
+      image_url: "/uploads/nails.jpg",
+      show_on_home: false,
     },
     {
-      id: 7,
-      name: "Shellac",
-      category: "Nail",
-      slug: "nail-shellac",
-      description: "",
-      duration_minutes: 45,
-      price_cents: null,
-      featured: true,
+      id: 9,
+      name: "Makeup",
+      slug: "makeup",
+      amharic: "",
+      description: "For the day that matters",
       image_url: null,
-    },
-    {
-      id: 8,
-      name: "Manicure",
-      category: "Nail",
-      slug: "nail-manicure",
-      description: "",
-      duration_minutes: 45,
-      price_cents: 120050,
-      featured: false,
-      image_url: null,
+      show_on_home: true,
     },
   ],
 };
 
-describe("service pages", () => {
-  it("keeps the panel's category order, names and Amharic", () => {
-    const pages = buildServicePages(catalogue);
+describe("the salon's services", () => {
+  it("keeps the panel's order, names, Amharic and descriptions", () => {
+    const services = buildServices(catalogue);
 
-    expect(pages.map((page) => page.id)).toEqual(["braids", "nail"]);
-    expect(pages[0]?.name).toBe("Braids");
-    expect(pages[0]?.amharic).toBe("ጋሻ");
-    expect(pages[1]?.description).toBe("Hands and feet");
+    expect(services.map((service) => service.id)).toEqual(["braids", "nail", "makeup"]);
+    expect(services[0]?.name).toBe("Braids");
+    expect(services[0]?.amharic).toBe("ጋሻ");
+    expect(services[0]?.description).toBe("Cornrows, knotless, feed-ins");
+    expect(services[2]?.amharic).toBe("");
   });
 
-  it("links each service to its database id and shows its price", () => {
-    const pages = buildServicePages(catalogue);
-    const nail = pages.find((page) => page.id === "nail");
+  it("uses the photo staff uploaded, and the bundle's picture otherwise", () => {
+    const services = buildServices(catalogue);
 
-    expect(nail?.items).toEqual([
-      { id: "7", slug: "nail-shellac", name: "Shellac", price: "", image: null },
-      { id: "8", slug: "nail-manicure", name: "Manicure", price: "ETB 1,200.50", image: null },
-    ]);
-    expect(hasUnpricedItems(pages)).toBe(true);
+    expect(services[1]?.image).toBe("/uploads/nails.jpg");
+    expect(services[1]?.fromPanel).toBe(true);
+    expect(services[0]?.fromPanel).toBe(false);
+    expect(services[0]?.image).not.toBe("");
   });
 
-  it("formats whole prices without decimals and hides absent ones", () => {
-    expect(formatPrice(250000)).toBe("ETB 2,500");
-    expect(formatPrice(120050)).toBe("ETB 1,200.50");
-    expect(formatPrice(null)).toBe("");
-    expect(formatPrice(0)).toBe("");
-  });
+  it("carries no price and no running time", () => {
+    const service = buildServices(catalogue)[0];
 
-  it("keeps an orphaned service visible under its own heading", () => {
-    const pages = buildServicePages({
-      categories: [],
-      services: [
-        {
-          id: 3,
-          name: "Wash and blow-dry",
-          category: "Other",
-          slug: "wash-blow-dry",
-          description: "",
-          duration_minutes: 60,
-          price_cents: null,
-          featured: false,
-          image_url: null,
-        },
-      ],
-    });
-
-    expect(pages).toHaveLength(1);
-    expect(pages[0]?.name).toBe("Other");
-    expect(pages[0]?.items[0]?.id).toBe("3");
-  });
-
-  it("returns nothing when the salon has hidden everything", () => {
-    expect(buildServicePages({ categories: [], services: [] })).toEqual([]);
-  });
-
-  it("falls back to the local catalogue when the API has nothing", () => {
-    const pages = localServicePages();
-
-    expect(pages.length).toBeGreaterThan(0);
-    expect(pages[0]?.items.every((item) => item.price === "")).toBe(true);
-    expect(pages[0]?.items[0]?.id).toMatch(/^[a-z-]+-\d+$/);
-    expect(pages[0]?.items[0]?.slug).toBe(pages[0]?.items[0]?.id);
-    expect(taglineFor(pages[0]!)).toMatch(/^\d+ services?$/);
-  });
-
-  it("uses the placeholder wording the page prints", () => {
-    expect(PRICE_UNDISCLOSED).toBe("Price on request");
-    expect(taglineFor(buildServicePages(catalogue)[1]!)).toBe("Hands and feet");
+    expect(service).not.toHaveProperty("price");
+    expect(service).not.toHaveProperty("duration");
   });
 });
 
-describe("category and service pictures", () => {
-  it("prefers the picture staff chose in the panel", () => {
-    const pages = buildServicePages({
-      categories: [
-        {
-          id: 1,
-          name: "Nail",
-          slug: "nail",
-          amharic: "ጥፍር",
-          description: "",
-          sort_order: 0,
-          image_url: "/uploads/category.jpg",
-        },
-      ],
-      services: [
-        {
-          id: 5,
-          name: "Shellac",
-          slug: "nail-shellac",
-          category: "Nail",
-          description: "",
-          duration_minutes: 45,
-          price_cents: null,
-          featured: false,
-          image_url: "/uploads/service.jpg",
-        },
-      ],
-    });
+describe("the home page's four services", () => {
+  it("leads with the services staff ticked in the panel", () => {
+    const home = servicesForHome(buildServices(catalogue), 4);
 
-    expect(pages[0]?.image).toBe("/uploads/category.jpg");
-    expect(pages[0]?.fromPanel).toBe(true);
-    expect(pages[0]?.items[0]?.image).toBe("/uploads/service.jpg");
+    expect(home.slice(0, 2).map((service) => service.id)).toEqual(["braids", "makeup"]);
+    expect(home).toHaveLength(3);
   });
 
-  it("keeps the bundled illustration when the panel has no picture", () => {
-    const pages = buildServicePages({
-      categories: [],
+  it("fills the section with the next services when fewer are ticked", () => {
+    const only = buildServices({
       services: [
-        {
-          id: 9,
-          name: "Manicure",
-          slug: "nail-manicure",
-          category: "Nail",
-          description: "",
-          duration_minutes: 45,
-          price_cents: null,
-          featured: false,
-          image_url: null,
-        },
+        { ...catalogue.services[0]!, show_on_home: false },
+        { ...catalogue.services[1]!, show_on_home: true },
+        { ...catalogue.services[2]!, show_on_home: false },
       ],
     });
 
-    expect(pages[0]?.fromPanel).toBe(false);
-    expect(pages[0]?.image).not.toBe("");
-    expect(pages[0]?.items[0]?.image).toBeNull();
+    expect(servicesForHome(only, 4).map((service) => service.id)).toEqual([
+      "nail",
+      "braids",
+      "makeup",
+    ]);
+  });
+
+  it("falls back to the panel's order when nothing is ticked", () => {
+    const none = buildServices({
+      services: catalogue.services.map((service) => ({ ...service, show_on_home: false })),
+    });
+
+    expect(servicesForHome(none, 4).map((service) => service.id)).toEqual([
+      "braids",
+      "nail",
+      "makeup",
+    ]);
+  });
+
+  it("never shows more than the section holds", () => {
+    expect(servicesForHome(localServices(), 4)).toHaveLength(4);
+  });
+});
+
+describe("the bundled catalogue", () => {
+  it("has names, pictures and the first four on the home page", () => {
+    const services = localServices();
+
+    expect(services.length).toBeGreaterThan(3);
+    expect(services[0]?.name).toBe("Make Up");
+    expect(services[0]?.image).not.toBe("");
+    expect(services.slice(0, 4).every((service) => service.showOnHome)).toBe(true);
+    expect(services[4]?.showOnHome).toBe(false);
   });
 });

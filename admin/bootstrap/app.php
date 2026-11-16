@@ -26,7 +26,6 @@ use Wiz\Controllers\Admin\WebsiteImagesController;
 use Wiz\Controllers\Admin\MessageController;
 use Wiz\Controllers\Admin\ReviewController;
 use Wiz\Controllers\Admin\ScheduleController;
-use Wiz\Controllers\Admin\ServiceController;
 use Wiz\Controllers\Admin\SettingsController;
 use Wiz\Controllers\Admin\UserController;
 use Wiz\Controllers\Api\BookingApiController;
@@ -183,6 +182,7 @@ $app->singleton(BookingService::class, static fn (App $a): BookingService => new
     $a->get(ActivityLogRepository::class),
     $a->get(Logger::class),
     $a->get(BookingNotifier::class),
+    $a->get(CategoryRepository::class),
 ));
 
 $app->singleton(AuthService::class, static fn (App $a): AuthService => new AuthService(
@@ -273,17 +273,10 @@ $app->singleton(DashboardController::class, static fn (App $a): DashboardControl
     $a->get(MessageRepository::class),
     $a->get(ReviewRepository::class),
     $a->get(ServiceRepository::class),
+    $a->get(CategoryRepository::class),
     $a->get(ActivityLogRepository::class),
     $a->get(UserRepository::class),
     $a->get(Logger::class),
-));
-
-$app->singleton(ServiceController::class, static fn (App $a): ServiceController => new ServiceController(
-    $a->get(View::class),
-    $a->get(ServiceRepository::class),
-    $a->get(CategoryRepository::class),
-    $a->get(Uploader::class),
-    $a->get(Session::class),
 ));
 
 $app->singleton(CategoryController::class, static fn (App $a): CategoryController => new CategoryController(
@@ -323,6 +316,7 @@ $app->singleton(BookingController::class, static fn (App $a): BookingController 
     $a->get(View::class),
     $a->get(BookingRepository::class),
     $a->get(ServiceRepository::class),
+    $a->get(CategoryRepository::class),
     $a->get(AvailabilityService::class),
     $a->get(BookingService::class),
     $a->get(Session::class),

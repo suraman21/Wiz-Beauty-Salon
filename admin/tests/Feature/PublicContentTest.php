@@ -78,74 +78,15 @@ final class PublicContentTest extends TestCase
         $this->salon = new SalonDetails(new SettingsRepository($this->db));
     }
 
-    public function testCatalogueCarriesCategoriesAndPricesForTheWebsite(): void
+    public function testCatalogueCarriesTheSalonsServicesInStaffOrder(): void
     {
-        $second = $this->categories->create('Braids', 'braids', null, true, 'ጋሻ');
-        $first = $this->categories->create('Nail', 'nail', null, true, 'ጥፍር');
-        $this->categories->create('Hidden', 'hidden', null, false);
+        $second = $this->categories->create('Nails', 'nail', 'Hands and feet', true, 'ጥፍር');
+        $first = $this->categories->create('Braids', 'braids', null, true, 'ጋሻ');
+        $this->categories->create('Retired', 'retired', null, false);
 
-        // Staff decide the order; "Braids" was added first but moved above.
+        // Staff decide the order; "Nails" was added first but moved above.
         $this->db->execute('UPDATE service_categories SET sort_order = 0 WHERE id = :id', [':id' => $second]);
         $this->db->execute('UPDATE service_categories SET sort_order = 10 WHERE id = :id', [':id' => $first]);
-
-        $this->services->create([
-            'category_id' => $first,
-            'name' => 'Shellac',
-            'slug' => 'shellac',
-            'short_description' => 'Long-lasting colour',
-            'description' => null,
-            'price_cents' => 95000,
-            'duration_minutes' => 45,
-            'image_path' => null,
-            'is_active' => 1,
-            'is_featured' => 1,
-        ]);
-
-        $controller = $this->bookingApi();
-        $response = $controller->services(new Request('GET', '/api/v1/services'));
-        $body = json_decode($response->body(), true, 512, JSON_THROW_ON_ERROR);
-
-        self::assertSame([
-            ['id' => $second, 'name' => 'Braids', 'slug' => 'braids', 'amharic' => 'ጋሻ'],
-            ['id' => $first, 'name' => 'Nail', 'slug' => 'nail', 'amharic' => 'ጥፍር'],
-        ], array_map(
-            static fn (array $category): array => [
-                'id' => $category['id'],
-                'name' => $category['name'],
-                'slug' => $category['slug'],
-                'amharic' => $category['amharic'],
-            ],
-            $body['categories'],
-        ), 'Hidden categories stay hidden, and staff order wins.');
-
-        self::assertCount(1, $body['services']);
-        self::assertSame('Shellac', $body['services'][0]['name']);
-        self::assertSame('shellac', $body['services'][0]['slug']);
-        self::assertSame(95000, $body['services'][0]['price_cents']);
-        self::assertSame('Nail', $body['services'][0]['category']);
-        self::assertSame('Long-lasting colour', $body['services'][0]['description']);
-        self::assertTrue($body['services'][0]['featured']);
-    }
-
-    public function testHidingACategoryHidesItsServicesButNotUncategorisedOnes(): void
-    {
-        $hidden = $this->categories->create('Retired', 'retired', null, false);
-        $shown = $this->categories->create('Nail', 'nail', null, true);
-
-        foreach ([[$hidden, 'Gone'], [$shown, 'Kept'], [null, 'Loose']] as $index => [$categoryId, $name]) {
-            $this->services->create([
-                'category_id' => $categoryId,
-                'name' => $name,
-                'slug' => 'svc-' . $index,
-                'short_description' => null,
-                'description' => null,
-                'price_cents' => null,
-                'duration_minutes' => 60,
-                'image_path' => null,
-                'is_active' => 1,
-                'is_featured' => 0,
-            ]);
-        }
 
         $body = json_decode(
             $this->bookingApi()->services(new Request('GET', '/api/v1/services'))->body(),
@@ -154,11 +95,51 @@ final class PublicContentTest extends TestCase
             JSON_THROW_ON_ERROR,
         );
 
-        $names = array_column($body['services'], 'name');
+        self::assertSame([
+            ['id' => $second, 'name' => 'Nails', 'slug' => 'nail', 'amharic' => 'ጥፍር', 'description' => 'Hands and feet'],
+            ['id' => $first, 'name' => 'Braids', 'slug' => 'braids', 'amharic' => 'ጋሻ', 'description' => ''],
+        ], array_map(
+            static fn (array $service): array => [
+                'id' => $service['id'],
+                'name' => $service['name'],
+                'slug' => $service['slug'],
+                'amharic' => $service['amharic'],
+                'description' => $service['description'],
+            ],
+            $body['services'],
+        ), 'Hidden services stay hidden, and staff order wins.');
 
-        self::assertContains('Kept', $names);
-        self::assertContains('Loose', $names, 'A service with no category is still sellable.');
-        self::assertNotContains('Gone', $names, 'Hiding a category hides what is filed under it.');
+        // The salon settles prices and running times with the customer, so the
+        // catalogue carries neither.
+        self::assertArrayNotHasKey('price_cents', $body['services'][0]);
+        self::assertArrayNotHasKey('duration_minutes', $body['services'][0]);
+    }
+
+    public function testCategoriesCarryTheirHomePageFlagToTheWebsite(): void
+    {
+        $leads = $this->categories->create('Hair', 'hair', null, true, null, true);
+        $this->categories->create('Skin', 'skin', null, true);
+
+        $body = json_decode(
+            $this->bookingApi()->services(new Request('GET', '/api/v1/services'))->body(),
+            true,
+            512,
+            JSON_THROW_ON_ERROR,
+        );
+
+        $flags = [];
+
+        foreach ($body['services'] as $service) {
+            $flags[(string) $service['slug']] = $service['show_on_home'];
+        }
+
+        self::assertTrue($flags['hair'], 'A service ticked for the home page says so.');
+        self::assertFalse($flags['skin'], 'A service left unticked is not on the home page.');
+
+        // Unticking it in the panel is what takes it off the home page again.
+        $this->categories->update($leads, 'Hair', null, true, null, false);
+
+        self::assertFalse((bool) $this->categories->find($leads)['show_on_home']);
     }
 
     public function testRenamingACategoryIsVisibleToTheWebsiteAtOnce(): void
@@ -273,28 +254,14 @@ final class PublicContentTest extends TestCase
         self::assertSame(1, $body['categories'][0]['photo_count']);
     }
 
-    public function testServiceAndCategoryPhotosReachTheWebsite(): void
+    public function testThePhotoStaffUploadForAServiceReachesTheWebsite(): void
     {
         $categoryId = $this->categories->create('Braids', 'braids', null, true, null);
         $this->categories->setImage($categoryId, 'cccccccccccccccccccccccc.jpg');
 
-        $this->services->create([
-            'category_id' => $categoryId,
-            'name' => 'Box braids',
-            'slug' => 'box-braids',
-            'short_description' => null,
-            'description' => null,
-            'price_cents' => null,
-            'duration_minutes' => 120,
-            'image_path' => 'dddddddddddddddddddddddd.jpg',
-            'is_active' => 1,
-            'is_featured' => 0,
-        ]);
-
         $body = json_decode($this->bookingApi()->services(new Request('GET', '/api/v1/services'))->body(), true, 512, JSON_THROW_ON_ERROR);
 
-        self::assertSame('/uploads/cccccccccccccccccccccccc.jpg', $body['categories'][0]['image_url']);
-        self::assertSame('/uploads/dddddddddddddddddddddddd.jpg', $body['services'][0]['image_url']);
+        self::assertSame('/uploads/cccccccccccccccccccccccc.jpg', $body['services'][0]['image_url']);
     }
 
     public function testAFileSharedByTwoScreensIsNotDeletedWithOne(): void

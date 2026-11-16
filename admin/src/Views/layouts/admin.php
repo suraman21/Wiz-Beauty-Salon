@@ -62,7 +62,7 @@ $navItem = static function (string $key, string $href, string $label, int $badge
 
         <p class="nav__heading">Manage</p>
         <?= $navItem('bookings', '/admin/bookings', 'Bookings', $navPending) ?>
-        <?= $navItem('services', '/admin/services', 'Services') ?>
+        <?= $navItem('services', '/admin/categories', 'Services') ?>
         <?= $navItem('gallery', '/admin/gallery', 'Gallery') ?>
         <?= $navItem('images', '/admin/images', 'Website images') ?>
         <?= $navItem('reviews', '/admin/reviews', 'Reviews') ?>

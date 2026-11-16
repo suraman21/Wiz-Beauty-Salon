@@ -1,6 +1,6 @@
 <?php
 /**
- * Categories: the list on the left, the add/edit form on the right.
+ * Services: the list on the left, the add/edit form on the right.
  *
  * @var list<array<string, mixed>> $categories
  * @var array<string, mixed>|null $editing
@@ -17,16 +17,15 @@ $currentImage = $isEdit && is_string($editing['image_path'] ?? null) ? $editing[
     <section class="card card--flush">
         <?php if ($categories === []): ?>
             <div class="empty-state empty-state--plain">
-                <h2 class="card__title">No categories yet</h2>
-                <p class="card__sub">Add one on the right — “Hair”, “Nails”, “Skin”.</p>
+                <h2 class="card__title">No services yet</h2>
+                <p class="card__sub">Add one on the right — “Hair”, “Nails”, “Makeup”, “Skin”.</p>
             </div>
         <?php else: ?>
             <table class="table">
                 <thead>
                     <tr>
                         <th class="table__order" aria-label="Order"></th>
-                        <th>Category</th>
-                        <th class="table__num">Services</th>
+                        <th>Service</th>
                         <th>Status</th>
                         <th class="table__actions"><span class="sr-only">Actions</span></th>
                     </tr>
@@ -58,18 +57,19 @@ $currentImage = $isEdit && is_string($editing['image_path'] ?? null) ? $editing[
                             <?php endif; ?>
                         </td>
 
-                        <td class="table__num"><?= (int) $category['service_count'] ?></td>
-
                         <td>
                             <span class="badge <?= (int) $category['is_active'] === 1 ? 'badge--ok' : 'badge--muted' ?>">
                                 <?= (int) $category['is_active'] === 1 ? 'Visible' : 'Hidden' ?>
                             </span>
+                            <?php if ((int) ($category['show_on_home'] ?? 0) === 1): ?>
+                                <span class="badge badge--ok">Home</span>
+                            <?php endif; ?>
                         </td>
 
                         <td class="table__actions">
                             <a class="btn btn--ghost btn--sm" href="/admin/categories?edit=<?= $id ?>">Edit</a>
                             <form method="post" action="/admin/categories/<?= $id ?>/delete"
-                                  onsubmit="return confirm('Delete “<?= e($category['name']) ?>”? Its services stay, but become uncategorised.');">
+                                  onsubmit="return confirm('Remove “<?= e($category['name']) ?>” from the website?');">
                                 <?= csrf_field() ?>
                                 <button type="submit" class="btn btn--danger btn--sm">Delete</button>
                             </form>
@@ -82,8 +82,8 @@ $currentImage = $isEdit && is_string($editing['image_path'] ?? null) ? $editing[
     </section>
 
     <section class="card">
-        <h2 class="card__title"><?= $isEdit ? 'Edit category' : 'Add a category' ?></h2>
-        <p class="card__sub"><?= $isEdit ? 'Changes apply as soon as you save.' : 'Group the services list into sections customers recognise.' ?></p>
+        <h2 class="card__title"><?= $isEdit ? 'Edit service' : 'Add a service' ?></h2>
+        <p class="card__sub"><?= $isEdit ? 'Changes apply as soon as you save.' : 'The services customers choose between — “Hair”, “Nails”, “Makeup”, “Skin”.' ?></p>
 
         <?php if (!empty($error)): ?>
             <div class="alert alert--error" role="alert"><?= e($error) ?></div>
@@ -108,7 +108,7 @@ $currentImage = $isEdit && is_string($editing['image_path'] ?? null) ? $editing[
             <div class="field">
                 <label for="description">Description <span class="field__hint">optional</span></label>
                 <input type="text" id="description" name="description" maxlength="255"
-                       value="<?= e($editing['description'] ?? '') ?>" placeholder="Shown under the category name">
+                       value="<?= e($editing['description'] ?? '') ?>" placeholder="Shown under the service name">
             </div>
 
             <div class="field">
@@ -116,7 +116,7 @@ $currentImage = $isEdit && is_string($editing['image_path'] ?? null) ? $editing[
                 <?php if ($currentImage !== null): ?>
                     <div class="current-image">
                         <img src="<?= e($uploads->url($currentImage)) ?>" alt="" width="72" height="72">
-                        <span class="field__hint">Shown beside this category on the Services page.</span>
+                        <span class="field__hint">Shown on this service's card and page.</span>
                     </div>
                 <?php endif; ?>
                 <input type="file" id="image" name="image" accept="image/jpeg,image/png,image/webp">
@@ -128,11 +128,21 @@ $currentImage = $isEdit && is_string($editing['image_path'] ?? null) ? $editing[
                 Visible on the website
             </label>
 
+            <label class="check">
+                <input type="checkbox" name="show_on_home" value="1"
+                    <?= (int) ($editing['show_on_home'] ?? 0) === 1 ? 'checked' : '' ?>>
+                Show in “Our services” on the home page
+            </label>
+            <p class="field__hint">
+                The home page takes these services in the order set by the arrows, up to four.
+                Leave none ticked and it falls back to the first four.
+            </p>
+
             <div class="form-actions">
                 <?php if ($isEdit): ?>
                     <a class="btn btn--ghost" href="/admin/categories">Cancel</a>
                 <?php endif; ?>
-                <button type="submit" class="btn btn--primary"><?= $isEdit ? 'Save' : 'Add category' ?></button>
+                <button type="submit" class="btn btn--primary"><?= $isEdit ? 'Save' : 'Add service' ?></button>
             </div>
         </form>
     </section>

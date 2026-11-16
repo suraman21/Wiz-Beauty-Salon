@@ -45,9 +45,9 @@ final class CategoryController
         }
 
         return $this->view->render('admin/categories/index', [
-            'title' => 'Categories',
-            'heading' => 'Service categories',
-            'subheading' => 'How the services list is grouped on the website.',
+            'title' => 'Services',
+            'heading' => 'Services',
+            'subheading' => 'What the salon offers. Each one becomes a card on the website and a choice when booking.',
             'active' => 'services',
             'backHref' => $editing !== null ? '/admin/categories' : null,
             'categories' => $this->categories->allWithCounts(),
@@ -85,6 +85,7 @@ final class CategoryController
             $data['description'],
             $data['is_active'],
             $data['amharic'],
+            $data['show_on_home'],
         );
 
         if (is_string($image['path']) && $image['path'] !== '') {
@@ -124,7 +125,14 @@ final class CategoryController
             throw new RedirectException('/admin/categories?edit=' . $id);
         }
 
-        $this->categories->update($id, $data['name'], $data['description'], $data['is_active'], $data['amharic']);
+        $this->categories->update(
+            $id,
+            $data['name'],
+            $data['description'],
+            $data['is_active'],
+            $data['amharic'],
+            $data['show_on_home'],
+        );
 
         if (is_string($image['path']) && $image['path'] !== '') {
             $this->categories->setImage($id, $image['path']);
@@ -155,10 +163,7 @@ final class CategoryController
 
         $this->categories->delete($id);
 
-        $this->session->flash(
-            'success',
-            sprintf('“%s” was deleted. Its services are still there, now uncategorised.', (string) $category['name']),
-        );
+        $this->session->flash('success', sprintf('“%s” was removed from the website.', (string) $category['name']));
 
         throw new RedirectException('/admin/categories');
     }
@@ -230,6 +235,7 @@ final class CategoryController
             'amharic' => $amharic === '' ? null : $amharic,
             'description' => $description === '' ? null : $description,
             'is_active' => $request->input('is_active') !== null,
+            'show_on_home' => $request->input('show_on_home') !== null,
         ];
     }
 }

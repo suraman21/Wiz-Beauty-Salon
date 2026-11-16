@@ -59,6 +59,8 @@ foreach ($catalogue as $order => $category) {
             'slug' => $slug,
             'sort_order' => $order * 10,
             'is_active' => 1,
+            // The first four lead the home page, as the site always did.
+            'show_on_home' => $order < 4 ? 1 : 0,
         ]);
         $categories++;
         $existing = $db->first('SELECT id FROM service_categories WHERE slug = :slug', [':slug' => $slug]);

@@ -34,7 +34,7 @@ foreach ($services as $service) {
     <form method="get" action="/admin/bookings/new" class="picker-form">
         <div class="field">
             <label for="service_id">Service</label>
-            <select id="service_id" name="service_id" required>
+            <select id="service_id" name="category_id" required>
                 <option value="">Choose a service…</option>
                 <?php foreach ($services as $service): ?>
                     <option value="<?= (int) $service['id'] ?>" <?= (int) $service['id'] === $serviceId ? 'selected' : '' ?>>
@@ -58,7 +58,7 @@ foreach ($services as $service) {
     </form>
 
     <?php if ($services === []): ?>
-        <p class="empty">There are no active services yet. <a href="/admin/services/new">Add a service first</a>.</p>
+        <p class="empty">There are no services yet. <a href="/admin/categories">Add a service first</a>.</p>
     <?php endif; ?>
 </section>
 
@@ -73,7 +73,7 @@ foreach ($services as $service) {
         <?php else: ?>
             <form method="post" action="/admin/bookings" autocomplete="off">
                 <?= csrf_field() ?>
-                <input type="hidden" name="service_id" value="<?= $serviceId ?>">
+                <input type="hidden" name="category_id" value="<?= $serviceId ?>">
                 <input type="hidden" name="date" value="<?= e($date) ?>">
 
                 <fieldset class="slot-fieldset">

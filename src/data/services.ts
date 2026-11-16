@@ -136,20 +136,9 @@ export const serviceCategories = [
     "Chele",
   ]),
 ];
-export const bookableServices = serviceCategories.flatMap((c) =>
-  c.items.map((s) => ({ ...s, categoryId: c.id, category: c.name, amharic: c.amharic })),
-);
-export type BookableService = (typeof bookableServices)[number];
-export const UNDECIDED_SERVICE = "undecided";
-export const UNDECIDED_LABEL = "I'm not sure what to book";
-export const findBookableService = (id?: string) => bookableServices.find((s) => s.id === id);
-export const isValidServiceSelection = (id: string) =>
-  id === UNDECIDED_SERVICE || Boolean(findBookableService(id));
 export const bookingDetailsSchema = z.object({
   name: z.string().trim().min(1),
   phone: z.string().trim().min(1),
   email: z.union([z.literal(""), z.string().trim().email()]),
   notes: z.string(),
 });
-export const filterServiceCategories = (id: ServiceCategoryId | "all") =>
-  id === "all" ? serviceCategories : serviceCategories.filter((c) => c.id === id);

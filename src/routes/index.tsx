@@ -5,12 +5,7 @@ import { BeforeAfter, BookingBand, EditorialLink, SiteLayout } from "@/component
 import { useSiteImages } from "@/lib/site-content";
 import heroPurple from "@/assets/hero-wiz-purple.jpg";
 import { fetchCatalogue } from "@/lib/booking-api";
-import {
-  buildServicePages,
-  featuredPages,
-  localServicePages,
-  taglineFor,
-} from "@/lib/service-pages";
+import { buildServices, localServices, servicesForHome } from "@/lib/service-pages";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -33,24 +28,30 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
-const layout = ["service-hair", "service-nails", "service-makeup", "service-skin"];
+/** "Four ways…" — the line follows whatever the panel puts on the home page. */
+function countWord(count: number): string {
+  const words = ["No", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight"];
+
+  return words[count] ?? String(count);
+}
 
 function Home() {
   const images = useSiteImages();
   const feeling = useReveal<HTMLElement>();
+  const services = useReveal<HTMLElement>();
 
   // The four cards are the first four categories in the panel's order, so the
   // salon decides what its home page leads with — no deploy needed.
-  const [featured, setFeatured] = useState(() => featuredPages(localServicePages(), 4));
+  const [featured, setFeatured] = useState(() => servicesForHome(localServices(), 4));
 
   useEffect(() => {
     const controller = new AbortController();
 
     fetchCatalogue(controller.signal)
       .then((catalogue) => {
-        const live = buildServicePages(catalogue);
+        const live = buildServices(catalogue);
 
-        if (live.length > 0) setFeatured(featuredPages(live, 4));
+        if (live.length > 0) setFeatured(servicesForHome(live, 4));
       })
       .catch(() => {
         // Keep the local four.
@@ -154,37 +155,46 @@ function Home() {
         </div>
       </section>
 
-      <section className="services-section">
+      <section
+        id="services"
+        ref={services.ref}
+        className={`services-section${services.revealed ? " is-revealed" : ""}`}
+      >
+        <noscript>
+          <style>{`.services-eyebrow,.service-card,.services-lede,.service-end,.services-title .feeling-line{opacity:1!important;animation:none!important;transform:none!important}.services-bloom{opacity:1!important}`}</style>
+        </noscript>
+        <span className="services-bloom" aria-hidden="true" />
         <div className="section-wrap services-inner">
-          <div className="section-heading">
-            <div>
-              <span className="overline">02 / Our services</span>
-              <h2>
-                Every detail,
-                <br />
-                <em>beautifully you.</em>
-              </h2>
-            </div>
-            <p>Four ways to make a moment your own.</p>
+          <div className="services-head">
+            <p className="services-eyebrow">
+              <span className="feeling-rule" aria-hidden="true" />
+              <span>
+                <span className="feeling-index">02</span>
+                <span className="feeling-sep">/</span> Our services
+              </span>
+            </p>
+            <h2 className="services-title">
+              <span className="feeling-line">Every detail,</span>
+              <span className="feeling-line feeling-line-em">beautifully you.</span>
+            </h2>
+            <p className="services-lede">{`${countWord(featured.length)} ${featured.length === 1 ? "way" : "ways"} to make a moment your own.`}</p>
           </div>
-          <div className="services-grid">
+          <div className="service-cards">
             {featured.map((c, i) => (
               <Link
                 to="/services"
                 hash={c.id}
-                className={`service-item ${layout[i] ?? ""}`}
+                className="service-card"
                 key={c.id}
+                style={{ "--i": i } as CSSProperties}
               >
-                <div className="service-image img-frame">
+                <div className="service-card-media">
                   <img src={c.image} alt={c.alt} loading="lazy" />
+                  <span className="service-card-sheen" aria-hidden="true" />
+                  <span className="service-card-index">{String(i + 1).padStart(2, "0")}</span>
                 </div>
-                <div className="service-caption">
-                  <span className="service-index">0{i + 1}</span>
-                  <div>
-                    <h3>{c.name}</h3>
-                    <p>{taglineFor(c)}</p>
-                  </div>
-                  <ArrowRight size={22} strokeWidth={1.3} />
+                <div className="service-card-body">
+                  <h3 className="service-card-name">{c.name}</h3>
                 </div>
               </Link>
             ))}

@@ -1,15 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
-import { ArrowRight, Heart, Sparkles } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ArrowRight, Heart } from "lucide-react";
 import { BookingBand, PageHero, SiteLayout } from "@/components/site/SiteChrome";
 import { useSiteImages } from "@/lib/site-content";
 import { fetchCatalogue } from "@/lib/booking-api";
-import {
-  PRICE_UNDISCLOSED,
-  buildServicePages,
-  localServicePages,
-  type ServicePage,
-} from "@/lib/service-pages";
+import { buildServices, localServices, type SalonService } from "@/lib/service-pages";
 
 export const Route = createFileRoute("/services")({
   head: () => ({
@@ -18,16 +13,15 @@ export const Route = createFileRoute("/services")({
       {
         name: "description",
         content:
-          "Explore WIZ Beauty Salon's 14 service categories in English and Amharic, including hair, nails, makeup and kids' braids.",
+          "The services WIZ Beauty Salon offers — hair, nails, makeup, skin and more, in English and Amharic. Pick one and book your time.",
       },
       { property: "og:title", content: "Services | WIZ Beauty Salon" },
       {
         property: "og:description",
-        content:
-          "Explore WIZ's bilingual service menu and choose your appointment or an undecided request.",
+        content: "The services WIZ offers, and a booking that takes a minute.",
       },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
+      { property: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Services,
@@ -35,41 +29,23 @@ export const Route = createFileRoute("/services")({
 
 function Services() {
   const images = useSiteImages();
-  const [pages, setPages] = useState<ServicePage[]>(() => localServicePages());
-  const [selected, setSelected] = useState<string | null>(null);
+  const [services, setServices] = useState<SalonService[]>(() => localServices());
 
   useEffect(() => {
     const controller = new AbortController();
+
     fetchCatalogue(controller.signal)
       .then((catalogue) => {
-        const live = buildServicePages(catalogue);
-        if (live.length > 0) setPages(live);
+        const live = buildServices(catalogue);
+
+        if (live.length > 0) setServices(live);
       })
-      .catch(() => {});
+      .catch(() => {
+        // Keep the bundled list.
+      });
+
     return () => controller.abort();
   }, []);
-
-  useEffect(() => {
-    const hash = window.location.hash.slice(1);
-    if (hash && pages.some((p) => p.id === hash)) setSelected(hash);
-  }, [pages]);
-
-  const activePage = useMemo(
-    () => (selected ? (pages.find((p) => p.id === selected) ?? null) : null),
-    [pages, selected],
-  );
-
-  const handleSelect = (id: string) => {
-    setSelected(id);
-    window.location.hash = id;
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const handleBack = () => {
-    setSelected(null);
-    history.replaceState(null, "", window.location.pathname);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
 
   return (
     <SiteLayout>
@@ -82,154 +58,78 @@ function Services() {
             <em>every moment.</em>
           </>
         }
-        copy="Fourteen ways to feel more like you — pick a category, then choose the detail that’s yours."
+        copy="Everything the salon offers. Pick the one you want, choose a time, and we take it from there."
         image={images.makeup.url}
         alt={images.makeup.alt}
       />
 
-      {activePage === null ? (
-        <section className="svc-hub section-wrap">
-          <div className="svc-hub-head">
-            <div>
-              <span className="overline">Browse by category</span>
-              <h2>
-                What would you <em>like today?</em>
-              </h2>
-              <p>Tap a card to see the services inside — each one books in a tap.</p>
-            </div>
-            <div className="svc-hub-meta">
-              <span className="svc-count-badge">
-                <Heart size={12} /> {pages.length} categories
-              </span>
-              <span className="svc-count-badge svc-count-badge--muted">
-                {pages.reduce((n, p) => n + p.items.length, 0)} services
-              </span>
-            </div>
+      <section className="svc-hub section-wrap">
+        <div className="svc-hub-head">
+          <div>
+            <span className="overline">What we offer</span>
+            <h2>
+              Choose your <em>service</em>
+            </h2>
+            <p>One tap books it. What happens inside is decided together at the salon.</p>
           </div>
+          <div className="svc-hub-meta">
+            <span className="svc-count-badge">
+              <Heart size={12} /> {services.length} {services.length === 1 ? "service" : "services"}
+            </span>
+          </div>
+        </div>
 
-          <div className="svc-category-grid">
-            {pages.map((cat, idx) => (
-              <button
-                key={cat.id}
-                onClick={() => handleSelect(cat.id)}
-                className="svc-category-card"
-                aria-label={`Open ${cat.name}`}
-              >
-                <div className="svc-category-image">
-                  <img src={cat.image} alt={cat.alt} loading="lazy" />
-                  <span className="svc-category-index">0{idx + 1}</span>
-                </div>
-                <div className="svc-category-body">
-                  <h3>{cat.name}</h3>
-                  {cat.amharic !== "" && (
-                    <span lang="am" className="svc-category-am">
-                      {cat.amharic}
-                    </span>
-                  )}
-                  <span className="svc-category-count">
-                    <Sparkles size={11} /> {cat.items.length}{" "}
-                    {cat.items.length === 1 ? "service" : "services"}
-                  </span>
-                  <span className="svc-category-cta">
-                    Explore <ArrowRight size={14} />
-                  </span>
-                </div>
-              </button>
-            ))}
-          </div>
-
-          <div className="svc-hub-help">
-            <p>
-              Not sure?{" "}
-              <Link to="/booking" className="editorial-link">
-                Book a time and tell us what you have in mind <ArrowRight size={14} />
-              </Link>
-            </p>
-          </div>
-        </section>
-      ) : (
-        <section className="svc-detail">
-          <div className="section-wrap svc-detail-head">
-            <button onClick={handleBack} className="svc-back">
-              ← Back to categories
-            </button>
-            <div className="svc-detail-hero">
-              <figure className="svc-detail-image img-frame">
-                <img src={activePage.image} alt={activePage.alt} />
-              </figure>
-              <div className="svc-detail-copy">
-                <span className="overline">
-                  {pages.findIndex((p) => p.id === activePage.id) + 1 < 10
-                    ? `0${pages.findIndex((p) => p.id === activePage.id) + 1}`
-                    : pages.findIndex((p) => p.id === activePage.id) + 1}{" "}
-                  / {activePage.name}
-                </span>
-                <h2>
-                  {activePage.name}
-                  {activePage.amharic && (
-                    <>
-                      <br />
-                      <em lang="am">{activePage.amharic}</em>
-                    </>
-                  )}
-                </h2>
-                {activePage.description ? (
-                  <p>{activePage.description}</p>
-                ) : (
-                  <p>
-                    {activePage.items.length} services — pick the one that feels right and book in
-                    one tap.
-                  </p>
-                )}
-                <div className="svc-detail-meta">
-                  <span className="svc-chip-count">{activePage.items.length} options</span>
-                </div>
+        <div className="svc-category-grid">
+          {services.map((service, index) => (
+            <Link
+              key={service.id}
+              id={service.id}
+              to="/booking"
+              search={{ service: service.id }}
+              className="svc-category-card"
+              aria-label={`Book ${service.name}`}
+            >
+              <div className="svc-category-image">
+                <img src={service.image} alt={service.alt} loading="lazy" />
+                <span className="svc-category-index">{String(index + 1).padStart(2, "0")}</span>
               </div>
-            </div>
-          </div>
+              <div className="svc-category-body">
+                <h3>{service.name}</h3>
+                {service.amharic !== "" && (
+                  <span lang="am" className="svc-category-am">
+                    {service.amharic}
+                  </span>
+                )}
+                {service.description !== "" && (
+                  <p className="svc-category-desc">{service.description}</p>
+                )}
+                <span className="svc-category-cta">
+                  Book <ArrowRight size={14} />
+                </span>
+              </div>
+            </Link>
+          ))}
+        </div>
 
-          <div className="section-wrap svc-sub-list-wrap">
-            <div className="svc-sub-head">
-              <h3>All services in {activePage.name}</h3>
-              <span className="svc-sub-hint">
-                Tap Book to continue • Prices are confirmed at the salon
-              </span>
-            </div>
-            <ul className="svc-sub-list">
-              {activePage.items.map((item) => (
-                <li key={item.id} className="svc-sub-item">
-                  <div className="svc-sub-main">
-                    {item.image ? (
-                      <img className="svc-sub-thumb" src={item.image} alt="" loading="lazy" />
-                    ) : (
-                      <span className="svc-sub-dot" aria-hidden="true" />
-                    )}
-                    <div>
-                      <h4>{item.name}</h4>
-                      <span className="svc-sub-price">
-                        {item.price === "" ? PRICE_UNDISCLOSED : item.price}
-                      </span>
-                    </div>
-                  </div>
-                  <Link to="/booking" search={{ service: item.slug }} className="svc-sub-book">
-                    Book <ArrowRight size={14} />
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </section>
-      )}
+        <div className="svc-hub-help">
+          <p>
+            Not sure which one?{" "}
+            <Link to="/contact" className="editorial-link">
+              Call the salon and we will help <ArrowRight size={14} />
+            </Link>
+          </p>
+        </div>
+      </section>
 
       <BookingBand
         title={
           <>
-            Not sure what
+            Ready when
             <br />
-            <em>to choose?</em>
+            <em>you are.</em>
           </>
         }
-        copy="Book a time and tell us what you have in mind — we'll guide you from there."
+        copy="Choose a service and a time — we'll confirm the rest with you."
       />
     </SiteLayout>
   );
