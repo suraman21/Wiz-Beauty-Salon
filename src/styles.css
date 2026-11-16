@@ -6820,7 +6820,8 @@ body {
    turns: the hero is bright, "01 / The WIZ feeling" is the deep plum, and
    "02 / Our services" is the first light room — a soft pink blush with the same
    typography, the same drawn rules and the same choreography, just inverted.
-   "03 / A visual mood" answers it with the plum again, and so on down the page.
+   "03 / A visual mood" answers it with the plum again, "04 / The transformation" is
+   bright once more, and the pink booking band carries the light to the footer.
    ========================================================================== */
 
 /* --------------------------------------------------------------- 02, bright */
@@ -7296,5 +7297,250 @@ body {
   }
   .gallery-figure img {
     transition: none;
+  }
+}
+
+/* ------------------------------------------------------- 04, the bright room
+   The gallery page keeps its own dark "02 / Transformations" under the same
+   class names, so everything below is scoped to the home section's modifier. */
+
+.transformation-section.transformation-home {
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+  padding: clamp(4.75rem, 11vh, 7.5rem) 0 clamp(4.5rem, 10vh, 7rem);
+  color: #2c0729;
+  background:
+    radial-gradient(115% 88% at 12% -10%, rgba(255, 122, 210, 0.42), transparent 58%),
+    radial-gradient(85% 65% at 96% 106%, rgba(255, 168, 226, 0.7), transparent 62%),
+    linear-gradient(180deg, #ffe3f4 0%, #fdd3ec 46%, #f9c2e5 100%);
+}
+
+/* the seam it shares with the plum section above: plum ink, not pink light */
+.transformation-home::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 2;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(150, 30, 120, 0.26) 24%,
+    rgba(150, 30, 120, 0.1) 62%,
+    transparent
+  );
+}
+
+/* A whisper of grain: without it the pale ground bands on a wide display. */
+.transformation-home::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.035;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+}
+
+.transformation-bloom {
+  position: absolute;
+  z-index: 0;
+  top: -30%;
+  left: -16%;
+  width: min(50rem, 104vw);
+  aspect-ratio: 1;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(255, 255, 255, 0.95),
+    rgba(255, 172, 230, 0.38) 42%,
+    transparent 70%
+  );
+  filter: blur(34px);
+  opacity: 0;
+}
+
+.transformation-home .transformation-inner {
+  position: relative;
+  z-index: 1;
+  display: block;
+}
+
+.transformation-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.7rem, 1.4vw, 1.1rem);
+  margin: 0 0 clamp(1.7rem, 4vh, 2.6rem);
+  font-size: clamp(0.6rem, 0.78vw, 0.74rem);
+  font-weight: 600;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: #6f2f61;
+  opacity: 0;
+}
+
+.transformation-eyebrow .feeling-index {
+  color: #c2158c;
+}
+
+.transformation-eyebrow .feeling-sep {
+  color: rgba(70, 20, 64, 0.4);
+}
+
+.transformation-eyebrow .feeling-rule {
+  background: linear-gradient(90deg, transparent, #e59fd2);
+}
+
+.transformation-eyebrow .feeling-rule-end {
+  background: linear-gradient(90deg, #e59fd2, transparent);
+}
+
+.transformation-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: clamp(1.2rem, 3vw, 3rem);
+}
+
+.transformation-title {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  font-family: "Bodoni Moda", "Playfair Display", var(--font-display);
+  font-size: clamp(2.4rem, 5.6vw, 5rem);
+  font-weight: 400;
+  line-height: 0.98;
+  letter-spacing: -0.012em;
+  text-wrap: pretty;
+}
+
+.transformation-title .feeling-line {
+  background-image: linear-gradient(96deg, #33082f 2%, #581150 52%, #8b1476 100%);
+}
+
+.transformation-title .feeling-line-em {
+  background-image: linear-gradient(96deg, #9c1379 0%, #c8158e 46%, #ee3f9c 100%);
+}
+
+.transformation-lede {
+  margin: 0 0 0.4rem;
+  max-width: 20rem;
+  text-align: right;
+  font-size: clamp(0.92rem, 1vw, 1rem);
+  line-height: 1.7;
+  color: rgba(62, 16, 57, 0.8);
+  opacity: 0;
+}
+
+/* the slider takes the stage, framed the way the gallery frames its photographs */
+.comparison-wrap {
+  max-width: 54rem;
+  margin: clamp(2.2rem, 5.5vh, 3.4rem) auto 0;
+  opacity: 0;
+}
+
+.transformation-home .comparison {
+  border-radius: 20px;
+  background: #f6dcee;
+  box-shadow:
+    0 24px 58px rgba(122, 20, 102, 0.22),
+    inset 0 0 0 1px rgba(61, 15, 61, 0.1);
+}
+
+.transformation-home .comparison:focus-within {
+  outline-color: #c2158c;
+}
+
+.transformation-end {
+  margin-top: clamp(2rem, 5vh, 3rem);
+  opacity: 0;
+}
+
+.transformation-end .editorial-link {
+  color: #33082f;
+  border-bottom-color: rgba(61, 15, 61, 0.28);
+}
+
+.transformation-end .editorial-link:hover {
+  color: #c2158c;
+  border-bottom-color: #c2158c;
+}
+
+/* Entrance — rules draw, the headline zooms, then the frame lands. */
+.transformation-home.is-revealed .transformation-eyebrow {
+  animation: wiz-rise 0.85s var(--ease-quiet) both;
+}
+
+.transformation-home.is-revealed .feeling-rule {
+  animation: feeling-rule 0.95s var(--ease-quiet) both 0.1s;
+}
+
+.transformation-home.is-revealed .transformation-line:nth-child(1) {
+  animation: wiz-zoom 1.05s var(--ease-quiet) both 0.08s;
+}
+
+.transformation-home.is-revealed .transformation-line:nth-child(2) {
+  animation: wiz-zoom 1.05s var(--ease-quiet) both 0.22s;
+}
+
+.transformation-home.is-revealed .transformation-lede {
+  animation: wiz-rise 0.9s var(--ease-quiet) both 0.32s;
+}
+
+.transformation-home.is-revealed .comparison-wrap {
+  animation: wiz-zoom 1.05s var(--ease-quiet) both 0.4s;
+}
+
+.transformation-home.is-revealed .transformation-end {
+  animation: wiz-rise 0.9s var(--ease-quiet) both 0.95s;
+}
+
+.transformation-home.is-revealed .transformation-bloom {
+  animation: feeling-glow 2.2s var(--ease-quiet) both;
+}
+
+@media (max-width: 900px) {
+  .transformation-head {
+    grid-template-columns: 1fr;
+  }
+  .transformation-title {
+    font-size: clamp(2.3rem, 8.8vw, 3.5rem);
+  }
+  .transformation-lede {
+    max-width: none;
+    margin: 0.9rem 0 0;
+    text-align: left;
+  }
+}
+
+@media (max-width: 600px) {
+  .transformation-section.transformation-home {
+    padding: 4rem 0 3.75rem;
+  }
+  .transformation-title {
+    font-size: clamp(2.05rem, 9.6vw, 2.8rem);
+  }
+  .transformation-eyebrow {
+    letter-spacing: 0.28em;
+  }
+  .transformation-home .comparison {
+    border-radius: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .transformation-home .transformation-eyebrow,
+  .transformation-home .transformation-line,
+  .transformation-home .transformation-lede,
+  .transformation-home .comparison-wrap,
+  .transformation-home .transformation-end,
+  .transformation-home .transformation-bloom,
+  .transformation-home .feeling-rule {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
   }
 }

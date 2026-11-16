@@ -40,6 +40,7 @@ function Home() {
   const feeling = useReveal<HTMLElement>();
   const services = useReveal<HTMLElement>();
   const gallery = useReveal<HTMLElement>();
+  const transformation = useReveal<HTMLElement>();
 
   // The four cards are the first four categories in the panel's order, so the
   // salon decides what its home page leads with — no deploy needed.
@@ -263,25 +264,41 @@ function Home() {
         </div>
       </section>
 
-      <section className="transformation-section">
+      <section
+        ref={transformation.ref}
+        className={`transformation-section transformation-home${transformation.revealed ? " is-revealed" : ""}`}
+      >
+        <noscript>
+          <style>{`.transformation-eyebrow,.transformation-line,.transformation-lede,.comparison-wrap,.transformation-end,.feeling-rule{opacity:1!important;animation:none!important;transform:none!important}.transformation-bloom{opacity:1!important}`}</style>
+        </noscript>
+        <span className="transformation-bloom" aria-hidden="true" />
         <div className="section-wrap transformation-inner">
-          <div className="transformation-copy">
-            <span className="overline">04 / The transformation</span>
-            <h2>
-              See the
-              <br />
-              <em>difference.</em>
+          <p className="transformation-eyebrow">
+            <span className="feeling-rule" aria-hidden="true" />
+            <span>
+              <span className="feeling-index">04</span>
+              <span className="feeling-sep">/</span> The transformation
+            </span>
+            <span className="feeling-rule feeling-rule-end" aria-hidden="true" />
+          </p>
+
+          <div className="transformation-head">
+            <h2 className="transformation-title">
+              <span className="feeling-line transformation-line">See the</span>
+              <span className="feeling-line feeling-line-em transformation-line">difference.</span>
             </h2>
-            <p>
+            <p className="transformation-lede">
               Sometimes a change in the mirror changes everything. Move the slider to see the
               difference side by side.
             </p>
-            <EditorialLink to="/gallery" light>
-              See more transformations
-            </EditorialLink>
           </div>
+
           <div className="comparison-wrap">
             <BeforeAfter before={images.before.url} after={images.after.url} />
+          </div>
+
+          <div className="transformation-end">
+            <EditorialLink to="/gallery">See more transformations</EditorialLink>
           </div>
         </div>
       </section>
