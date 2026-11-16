@@ -4846,15 +4846,13 @@ body {
 
 .home-hero-wiz .wiz-title-wiz {
   /* the reference lockup sets WIZ larger and tracked out, BEAUTY SALON tighter */
-  font-size: clamp(2.9rem, 7.2vw, 6.3rem);
-  letter-spacing: 0.09em;
+  font-size: clamp(2.7rem, 6.4vw, 5.5rem);
   font-weight: 600;
   background-image: linear-gradient(96deg, #ffffff 6%, #fdf0fa 52%, #f4c2e8 100%);
 }
 
 .home-hero-wiz .wiz-title-salon {
-  font-size: clamp(2.3rem, 5.15vw, 4.65rem);
-  letter-spacing: 0.004em;
+  font-size: clamp(2.1rem, 4.65vw, 4.1rem);
   font-weight: 600;
   background-image: linear-gradient(96deg, #fdeaf8 0%, #f9a0dd 46%, #fa4fc0 100%);
 }
@@ -5033,7 +5031,7 @@ body {
   /* keeps the whole hero — picture, copy and both buttons — inside one phone
      screen, so the primary action is never half-cut by the fold */
   .home-hero-wiz .home-hero-image {
-    height: 46svh;
+    height: 40svh;
   }
 
   .home-hero-wiz .wiz-eyebrow {
@@ -5394,5 +5392,164 @@ body {
 
   .nav-book {
     letter-spacing: 0.01em;
+  }
+}
+
+/* ============================================================================
+   Hero refinements — matched against the salon's own crops
+   ========================================================================== */
+
+/* 1. Display lockup: heavier face, metallic white-to-silver-purple sheen. */
+.home-hero-wiz .wiz-title-line {
+  font-family: "Playfair Display", var(--font-display);
+  font-weight: 800;
+  letter-spacing: 0.055em;
+}
+
+.home-hero-wiz .wiz-title-wiz,
+.home-hero-wiz .wiz-title-salon {
+  background-image: linear-gradient(
+    100deg,
+    #ffffff 0%,
+    #f6ecfc 9%,
+    #d8bae9 20%,
+    #fffdff 31%,
+    #cfaae4 45%,
+    #a97fc9 58%,
+    #8b5cb0 71%,
+    #d9bfec 84%,
+    #ffffff 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* 2. Active nav item: the line carries a hot spark at its centre. */
+.site-header .desktop-nav a.is-active::after {
+  left: -12px;
+  right: -12px;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 208, 242, 0.85) 16%,
+    #ffffff 50%,
+    rgba(255, 208, 242, 0.85) 84%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  box-shadow:
+    0 0 8px rgba(255, 190, 245, 0.95),
+    0 0 18px rgba(255, 120, 225, 0.85),
+    0 0 34px rgba(240, 80, 200, 0.5);
+}
+
+/* 3. Headroom above the artwork so the bar never crosses her crown. The plate
+   is untouched — the section simply starts before it does. */
+.home-hero-wiz {
+  background:
+    linear-gradient(180deg, #3d0d3a 0px, var(--wiz-void) var(--site-header-height) 100%),
+    var(--wiz-void);
+}
+
+@media (min-width: 901px) {
+  .home-hero-wiz .home-hero-image {
+    top: var(--site-header-height);
+    height: auto;
+    bottom: 0;
+    -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 46px, #000 100%);
+    mask-image: linear-gradient(180deg, transparent 0, #000 46px, #000 100%);
+  }
+}
+
+@media (max-width: 900px) {
+  /* same headroom, expressed as a push rather than an inset */
+  .home-hero-wiz .home-hero-image {
+    margin-top: var(--site-header-height);
+    height: 44svh;
+  }
+}
+
+/* 4. Glass bar, as in the reference crop. */
+.site-header-over-hero {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.15) 0%,
+    rgba(255, 255, 255, 0.06) 100%
+  );
+  backdrop-filter: blur(20px) saturate(1.45);
+  -webkit-backdrop-filter: blur(20px) saturate(1.45);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 0 0 22px 22px;
+  box-shadow:
+    0 12px 34px rgba(29, 4, 32, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.site-header-over-hero::before {
+  display: none;
+}
+
+.site-header-over-hero.is-scrolled {
+  background: linear-gradient(
+    180deg,
+    rgba(61, 13, 58, 0.94) 0%,
+    rgba(39, 6, 41, 0.92) 100%
+  );
+  border-bottom-color: rgba(255, 255, 255, 0.16);
+}
+
+/* 5. Scroll cue: a spread of purple light instead of a dark plate. */
+.home-hero-wiz .wiz-scroll {
+  gap: 0.55rem;
+  padding: 1.3rem 1.7rem 1.1rem;
+  border-radius: 50%;
+  background: radial-gradient(
+    66% 76% at 50% 50%,
+    rgba(205, 82, 190, 0.74) 0%,
+    rgba(160, 44, 160, 0.5) 42%,
+    rgba(126, 26, 126, 0.24) 64%,
+    rgba(120, 24, 120, 0) 82%
+  );
+  filter: drop-shadow(0 0 22px rgba(255, 140, 235, 0.5));
+  text-shadow:
+    0 0 10px rgba(255, 150, 238, 0.95),
+    0 0 26px rgba(226, 80, 200, 0.8),
+    0 1px 3px rgba(60, 10, 60, 0.5);
+}
+
+.home-hero-wiz .wiz-scroll > span:not(.wiz-scroll-pill) {
+  padding: 0;
+  border: 0;
+  background: none;
+  backdrop-filter: none;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+/* the little wheel notch inside the mouse outline */
+.home-hero-wiz .wiz-scroll-pill {
+  position: relative;
+}
+
+.home-hero-wiz .wiz-scroll-pill::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 21%;
+  width: 2px;
+  height: 7px;
+  border-radius: 2px;
+  background: currentColor;
+  transform: translateX(-50%);
+  box-shadow: 0 0 8px rgba(255, 160, 240, 0.9);
+}
+
+@media (max-width: 30rem) {
+  /* phones: a shorter picture so the whole hero — both buttons included —
+     still lands inside one screen now that the bar has its own headroom */
+  .home-hero-wiz .home-hero-image {
+    height: 40svh;
   }
 }
