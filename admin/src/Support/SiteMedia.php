@@ -92,6 +92,12 @@ final class SiteMedia
         $source = dirname(__DIR__, 2) . '/database/seeds/media';
         $target = rtrim((string) Env::get('UPLOAD_PATH', dirname(__DIR__, 2) . '/storage/uploads'), '/');
 
+        // A fresh server has no uploads folder yet. Returning early here used to
+        // seed the database with paths to files that were never written.
+        if (is_dir($source) && !is_dir($target)) {
+            @mkdir($target, 0o755, true);
+        }
+
         if (!is_dir($source) || !is_dir($target)) {
             return [];
         }

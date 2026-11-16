@@ -6818,7 +6818,7 @@ body {
    Up to here every section below the hero sat on the same plum void, which made
    the page read as one long dark room. From the hero down the grounds now take
    turns: the hero is bright, "01 / The WIZ feeling" is the deep plum, and
-   "02 / Our services" is the first light room — blush porcelain with the same
+   "02 / Our services" is the first light room — a soft pink blush with the same
    typography, the same drawn rules and the same choreography, just inverted.
    "03 / A visual mood" answers it with the plum again, and so on down the page.
    ========================================================================== */
@@ -6828,9 +6828,9 @@ body {
 .services-section {
   color: #2c0729;
   background:
-    radial-gradient(115% 88% at 88% -10%, rgba(255, 138, 216, 0.34), transparent 58%),
-    radial-gradient(85% 65% at 4% 106%, rgba(255, 196, 234, 0.6), transparent 62%),
-    linear-gradient(180deg, #fff7fc 0%, #fdeaf5 44%, #fadbee 100%);
+    radial-gradient(115% 88% at 88% -10%, rgba(255, 122, 210, 0.42), transparent 58%),
+    radial-gradient(85% 65% at 4% 106%, rgba(255, 168, 226, 0.7), transparent 62%),
+    linear-gradient(180deg, #ffe3f4 0%, #fdd3ec 46%, #f9c2e5 100%);
 }
 
 /* A whisper of grain: without it the pale ground bands on a wide display. */
