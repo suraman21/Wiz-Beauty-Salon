@@ -30,6 +30,7 @@ export const bundledImages: SiteImageSet = {
   skin: { url: bundled.skin, alt: "Skincare portrait" },
   before: { url: bundled.before, alt: "Before a transformation" },
   after: { url: bundled.after, alt: "After a transformation" },
+  servicesHero: { url: bundled.servicesHero, alt: "Bride in a white gown holding a bouquet" },
 };
 
 export type ImagePayload = { images?: Record<string, { url?: string; alt?: string }> };

@@ -9,8 +9,20 @@ import space from "@/assets/salon-space.jpg";
 import hero from "@/assets/home-hero.jpg";
 import before from "@/assets/transformation-before.jpg";
 import after from "@/assets/transformation-after.jpg";
+import servicesHero from "@/assets/services-hero-bride.png";
 
-export const images = { hair, nails, makeup, skin, portrait, space, hero, before, after };
+export const images = {
+  hair,
+  nails,
+  makeup,
+  skin,
+  portrait,
+  space,
+  hero,
+  before,
+  after,
+  servicesHero,
+};
 
 export const nav = [
   { label: "Home", to: "/" },

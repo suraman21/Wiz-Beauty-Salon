@@ -49,7 +49,7 @@ function Services() {
 
   return (
     <SiteLayout>
-      <ServicesHero image={images.makeup.url} alt={images.makeup.alt} />
+      <ServicesHero image={images.servicesHero.url} alt={images.servicesHero.alt} />
 
       <section id="service-list" className="svc-hub section-wrap">
         <div className="svc-hub-head">
