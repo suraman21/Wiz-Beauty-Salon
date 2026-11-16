@@ -5984,3 +5984,367 @@ body {
     max-width: 36rem;
   }
 }
+
+/* ============================================================================
+   Home — "The WIZ feeling"
+   ----------------------------------------------------------------------------
+   The hero's language carried one section down: the same void ground, the same
+   pink ramp on the type, the same blown-out bloom behind it, and the same
+   choreography — rules draw, the two headline lines zoom into place, the copy
+   rises. Nothing plays until the section is on screen.
+   ========================================================================== */
+
+.feeling-section {
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+  padding: clamp(5.5rem, 12vh, 8.5rem) 0 clamp(5rem, 11vh, 7.5rem);
+  background:
+    radial-gradient(120% 92% at 6% -4%, rgba(88, 14, 82, 0.9), transparent 60%),
+    linear-gradient(180deg, #2b072a 0%, var(--void) 42%, #200420 100%);
+}
+
+/* the seam under the hero: a pink hairline that dissolves at both ends */
+.feeling-section::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 2;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 167, 236, 0.42) 24%,
+    rgba(255, 167, 236, 0.14) 62%,
+    transparent
+  );
+}
+
+.feeling-section::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+}
+
+.feeling-bloom {
+  position: absolute;
+  z-index: 0;
+  top: -26%;
+  left: -18%;
+  width: min(64rem, 120vw);
+  aspect-ratio: 1;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 42% 46%, rgba(255, 120, 214, 0.38), rgba(255, 120, 214, 0.13) 40%, transparent 66%),
+    radial-gradient(circle at 68% 68%, rgba(160, 70, 255, 0.12), transparent 60%);
+  filter: blur(44px);
+  opacity: 0;
+}
+
+/* the logo's disc, rebuilt as a slow light */
+.feeling-orb {
+  position: absolute;
+  z-index: 0;
+  top: 22%;
+  right: clamp(-22rem, -14vw, -9rem);
+  width: clamp(17rem, 34vw, 31rem);
+  aspect-ratio: 1;
+  translate: 0 -50%;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at 40% 34%,
+    rgba(255, 214, 245, 0.2),
+    rgba(255, 140, 224, 0.12) 38%,
+    rgba(240, 90, 192, 0.05) 62%,
+    transparent 74%
+  );
+  box-shadow:
+    inset 0 0 90px rgba(255, 167, 236, 0.16),
+    0 0 140px rgba(240, 90, 192, 0.14);
+  opacity: 0;
+}
+
+/* a hairline of light around the disc, brightest where it faces the bloom */
+.feeling-orb::after {
+  content: "";
+  position: absolute;
+  inset: -2.2rem;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 167, 236, 0.1);
+  border-left-color: rgba(255, 200, 244, 0.42);
+  border-bottom-color: rgba(255, 167, 236, 0.26);
+  mask-image: radial-gradient(circle, transparent 62%, #000 63%);
+  -webkit-mask-image: radial-gradient(circle, transparent 62%, #000 63%);
+}
+
+.feeling-inner {
+  position: relative;
+  z-index: 1;
+}
+
+.feeling-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.7rem, 1.4vw, 1.1rem);
+  margin: 0 0 clamp(1.7rem, 4vh, 2.6rem);
+  font-size: clamp(0.6rem, 0.78vw, 0.74rem);
+  font-weight: 600;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: #f0d8ec;
+}
+
+.feeling-index {
+  color: var(--pink-2);
+}
+
+.feeling-sep {
+  color: rgba(240, 216, 236, 0.42);
+}
+
+.feeling-rule {
+  display: block;
+  width: clamp(26px, 4vw, 62px);
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #edb9e4);
+  opacity: 0;
+  transform: scaleX(0.2);
+  transform-origin: left center;
+}
+
+.feeling-rule-end {
+  background: linear-gradient(90deg, #edb9e4, transparent);
+  transform-origin: right center;
+}
+
+.feeling-title {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  max-width: 60rem;
+  font-family: "Bodoni Moda", "Playfair Display", var(--font-display);
+  font-size: clamp(2.6rem, 6.6vw, 6rem);
+  font-weight: 400;
+  line-height: 0.98;
+  letter-spacing: -0.012em;
+  text-wrap: pretty;
+}
+
+.feeling-line {
+  display: block;
+  padding-bottom: 0.06em;
+  background-image: linear-gradient(96deg, #ffffff 4%, #fdf0fa 46%, #f6c7ea 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  opacity: 0;
+}
+
+.feeling-line-em {
+  font-style: italic;
+  background-image: linear-gradient(96deg, #ffe3f7 0%, #ffa7ec 44%, #f65cc4 100%);
+}
+
+.feeling-foot {
+  /* the hero's glass bar, laid flat under the headline */
+  display: grid;
+  grid-template-columns: minmax(0, 33rem) 1fr;
+  align-items: end;
+  gap: clamp(1.5rem, 4vw, 4rem);
+  position: relative;
+  margin-top: clamp(2rem, 5vh, 3.2rem);
+  padding-top: clamp(1.5rem, 3.6vh, 2.3rem);
+  border-top: 1px solid rgba(255, 167, 236, 0.2);
+  opacity: 0;
+}
+
+/* the same spark the bar puts on its active link, here on the rule */
+.feeling-foot::before {
+  content: "";
+  position: absolute;
+  top: -3px;
+  left: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--pink-2);
+  box-shadow: 0 0 14px rgba(255, 167, 236, 0.95);
+}
+
+.feeling-body {
+  margin: 0;
+  max-width: 33rem;
+  font-size: clamp(0.95rem, 1.15vw, 1.06rem);
+  line-height: 1.72;
+  color: #e7cfe3;
+}
+
+.feeling-foot .editorial-link {
+  justify-self: end;
+  gap: 22px;
+  border-bottom-color: rgba(255, 167, 236, 0.45);
+  font-size: 0.7rem;
+  letter-spacing: 0.24em;
+  color: var(--paper);
+  transition:
+    gap 0.35s var(--ease-quiet),
+    color 0.35s var(--ease-quiet),
+    border-color 0.35s var(--ease-quiet);
+}
+
+.feeling-foot .editorial-link:hover {
+  gap: 32px;
+  color: var(--pink-2);
+  border-bottom-color: var(--pink-2);
+}
+
+/* Entrance — only once the section is on screen. */
+.feeling-section.is-revealed .feeling-eyebrow {
+  animation: wiz-rise 0.85s var(--ease-quiet) both;
+}
+
+.feeling-section.is-revealed .feeling-rule {
+  animation: feeling-rule 0.95s var(--ease-quiet) both 0.1s;
+}
+
+.feeling-section.is-revealed .feeling-line:nth-child(1) {
+  animation: wiz-zoom 1.05s var(--ease-quiet) both 0.08s;
+}
+
+.feeling-section.is-revealed .feeling-line-em {
+  animation: wiz-zoom 1.05s var(--ease-quiet) both 0.22s;
+}
+
+.feeling-section.is-revealed .feeling-foot {
+  animation: wiz-rise 0.9s var(--ease-quiet) both 0.4s;
+}
+
+.feeling-section.is-revealed .feeling-section::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+}
+
+.feeling-bloom {
+  animation: feeling-glow 2.2s var(--ease-quiet) both;
+}
+
+.feeling-section.is-revealed .feeling-orb {
+  animation: feeling-orb-in 2.4s var(--ease-quiet) both 0.15s;
+}
+
+@keyframes feeling-rule {
+  to {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+}
+
+@keyframes feeling-glow {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes feeling-orb-in {
+  from {
+    opacity: 0;
+    transform: scale(0.86);
+  }
+  to {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+}
+
+@media (max-width: 900px) {
+  .feeling-section {
+    padding: clamp(4.5rem, 9vh, 6rem) 0 clamp(4rem, 8vh, 5rem);
+  }
+  .feeling-title {
+    font-size: clamp(2.35rem, 9vw, 3.6rem);
+    max-width: none;
+  }
+  .feeling-foot {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  .feeling-foot .editorial-link {
+    justify-self: start;
+  }
+  .feeling-orb {
+    top: auto;
+    right: -9rem;
+    bottom: -8rem;
+    translate: none;
+    width: 19rem;
+    opacity: 0.4;
+  }
+}
+
+@media (max-width: 600px) {
+  .feeling-section {
+    padding: 4.25rem 0 3.75rem;
+  }
+  .feeling-title {
+    font-size: clamp(2.1rem, 10.2vw, 2.9rem);
+    line-height: 1.02;
+  }
+  .feeling-eyebrow {
+    letter-spacing: 0.28em;
+  }
+  .feeling-body {
+    font-size: 0.95rem;
+    line-height: 1.68;
+  }
+  .feeling-orb {
+    width: 16rem;
+    right: -10.5rem;
+    bottom: -7rem;
+    opacity: 0.3;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .feeling-eyebrow,
+  .feeling-line,
+  .feeling-foot,
+  .feeling-rule {
+    opacity: 1;
+    animation: none;
+    transform: none;
+  }
+  .feeling-section::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+}
+
+.feeling-bloom {
+    opacity: 1;
+    animation: none;
+  }
+  .feeling-orb {
+    opacity: 0.8;
+    animation: none;
+  }
+}

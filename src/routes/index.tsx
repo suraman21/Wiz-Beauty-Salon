@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { ArrowRight, CalendarDays, ChevronDown, Play } from "lucide-react";
 import { BeforeAfter, BookingBand, EditorialLink, SiteLayout } from "@/components/site/SiteChrome";
 import { useSiteImages } from "@/lib/site-content";
@@ -37,6 +37,7 @@ const layout = ["service-hair", "service-nails", "service-makeup", "service-skin
 
 function Home() {
   const images = useSiteImages();
+  const feeling = useReveal<HTMLElement>();
 
   // The four cards are the first four categories in the panel's order, so the
   // salon decides what its home page leads with — no deploy needed.
@@ -120,19 +121,31 @@ function Home() {
         </a>
       </section>
 
-      <section id="about" className="intro-section section-wrap">
-        <div className="intro-aside">
-          <span className="overline">01 / The WIZ feeling</span>
-          <div className="intro-line" />
-        </div>
-        <div className="intro-main">
-          <h2>
-            Beauty is personal.
-            <br />
-            <em>Make it yours.</em>
+      <section
+        id="about"
+        ref={feeling.ref}
+        className={`feeling-section${feeling.revealed ? " is-revealed" : ""}`}
+      >
+        <noscript>
+          <style>{`.feeling-eyebrow,.feeling-line,.feeling-foot,.feeling-rule{opacity:1!important;animation:none!important;transform:none!important}.feeling-bloom{opacity:1!important}.feeling-orb{opacity:.8!important}`}</style>
+        </noscript>
+        <span className="feeling-bloom" aria-hidden="true" />
+        <span className="feeling-orb" aria-hidden="true" />
+        <div className="section-wrap feeling-inner">
+          <p className="feeling-eyebrow">
+            <span className="feeling-rule" aria-hidden="true" />
+            <span>
+              <span className="feeling-index">01</span>
+              <span className="feeling-sep">/</span> The WIZ feeling
+            </span>
+            <span className="feeling-rule feeling-rule-end" aria-hidden="true" />
+          </p>
+          <h2 className="feeling-title">
+            <span className="feeling-line">Beauty is personal.</span>
+            <span className="feeling-line feeling-line-em">Make it yours.</span>
           </h2>
-          <div className="intro-bottom">
-            <p>
+          <div className="feeling-foot">
+            <p className="feeling-body">
               A space for your own expression of beauty — from the smallest detail to a whole new
               look. Come as you are; leave feeling more like you.
             </p>
@@ -239,4 +252,38 @@ function Home() {
       <BookingBand />
     </SiteLayout>
   );
+}
+
+/**
+ * Flips on the first time the wrapped section scrolls into view, so the
+ * section can play the hero's entrance far below the fold.
+ */
+function useReveal<T extends HTMLElement>() {
+  const ref = useRef<T | null>(null);
+  const [revealed, setRevealed] = useState(false);
+
+  useEffect(() => {
+    const node = ref.current;
+
+    if (!node || typeof IntersectionObserver === "undefined") {
+      setRevealed(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setRevealed(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.18, rootMargin: "0px 0px -10% 0px" },
+    );
+
+    observer.observe(node);
+
+    return () => observer.disconnect();
+  }, []);
+
+  return { ref, revealed };
 }
