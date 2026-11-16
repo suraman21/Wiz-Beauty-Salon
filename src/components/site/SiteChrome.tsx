@@ -274,7 +274,7 @@ export function BookingBand({
         </p>
         <h2 className="booking-title">{title}</h2>
         <p className="booking-copy">{copy}</p>
-        <Link to="/booking" className="btn btn-ink btn-lg booking-cta">
+        <Link to="/booking" className="btn btn-blush btn-lg booking-cta">
           Book an appointment <ArrowRight size={18} />
         </Link>
       </div>
