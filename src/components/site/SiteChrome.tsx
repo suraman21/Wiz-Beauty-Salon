@@ -1,6 +1,6 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
-import { ArrowRight, Menu, X } from "lucide-react";
+import { ArrowRight, CalendarDays, Menu, X } from "lucide-react";
 import logo from "@/assets/wiz-logo.png";
 import { nav } from "@/data/wiz";
 import { useSalonInfo } from "@/lib/site-content";
@@ -8,6 +8,10 @@ import { hasDetails, whatsappHref } from "@/lib/salon-api";
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const overHero = pathname === "/";
+
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
 
@@ -15,8 +19,28 @@ export function SiteHeader() {
       document.body.style.overflow = "";
     };
   }, [open]);
+
+  // Over the hero the bar floats on the artwork; once the page moves it fades
+  // to a solid plum so the links never sit on stray photography.
+  useEffect(() => {
+    if (!overHero) return;
+    const onScroll = () => setScrolled(window.scrollY > 24);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [overHero]);
+
   return (
-    <header className="site-header">
+    <header
+      className={[
+        "site-header",
+        overHero ? "site-header-over-hero" : "",
+        overHero && scrolled ? "is-scrolled" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
       <Link
         to="/"
         aria-label="WIZ Beauty Salon home"
@@ -24,6 +48,7 @@ export function SiteHeader() {
         onClick={() => setOpen(false)}
       >
         <img className="brand-logo" src={logo} alt="WIZ Beauty Salon" width={56} height={56} />
+        <span className="brand-wordmark">WIZ Beauty Salon</span>
       </Link>
       <nav className="desktop-nav" aria-label="Main navigation">
         {nav.map((item) => (
@@ -41,8 +66,9 @@ export function SiteHeader() {
         <Link to="/booking/recover" className="nav-manage">
           Manage booking
         </Link>
-        <Link to="/booking" className="btn btn-ink nav-book">
-          Book Now <ArrowRight size={15} />
+        <Link to="/booking" className="btn btn-pink nav-book">
+          <CalendarDays size={15} />
+          Book Now
         </Link>
         <button
           type="button"

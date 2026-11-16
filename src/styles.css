@@ -11,7 +11,7 @@
  */
 
 @theme inline {
-  --font-display: "Cormorant Garamond", ui-serif, Georgia, serif;
+  --font-display: "Bodoni Moda", "Cormorant Garamond", ui-serif, Georgia, serif;
   --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
 
   --radius-sm: 2px;
@@ -533,7 +533,7 @@ tokens it uses. */
   margin-top: 35px;
 }
 .transformation-copy h2 em {
-  color: var(--lilac);
+  color: var(--pink-2);
 }
 .transformation-copy p {
   max-width: 320px;
@@ -670,14 +670,14 @@ tokens it uses. */
   padding-bottom: 85px;
 }
 .footer-top .overline {
-  color: var(--lilac);
+  color: var(--pink-2);
 }
 .footer-top p {
   font: 400 clamp(65px, 10vw, 150px) / 0.9 var(--font-display);
   margin-top: 18px;
 }
 .footer-top em {
-  color: var(--lilac);
+  color: var(--pink-2);
 }
 .footer-back {
   font-size: 12px;
@@ -1078,7 +1078,7 @@ tokens it uses. */
   margin-top: 26px;
 }
 .page-hero h1 em {
-  color: var(--lilac);
+  color: var(--pink-2);
 }
 .page-hero-mist h1 em {
   color: var(--orchid);
@@ -1321,7 +1321,7 @@ tokens it uses. */
 }
 .svc-category-card {
   text-align: left;
-  background: white;
+  background: var(--surface);
   border-radius: 18px;
   overflow: hidden;
   border: 1px solid var(--border);
@@ -1372,7 +1372,7 @@ tokens it uses. */
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.1em;
-  background: white;
+  background: var(--surface);
   color: var(--plum);
   padding: 6px 10px;
   border-radius: 999px;
@@ -1462,7 +1462,7 @@ tokens it uses. */
   gap: 36px;
   align-items: center;
   margin-top: 22px;
-  background: color-mix(in oklab, oklch(0.89 0.04 348) 22%, white);
+  background: color-mix(in oklab, var(--blush) 12%, var(--surface));
   border-radius: 16px;
   padding: 18px;
   border: 1px solid color-mix(in oklab, oklch(0.89 0.04 348) 40%, transparent);
@@ -1507,7 +1507,7 @@ tokens it uses. */
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  background: white;
+  background: var(--surface);
   color: var(--plum);
   border: 1px solid color-mix(in oklab, oklch(0.89 0.04 348) 50%, transparent);
   padding: 7px 12px;
@@ -1543,7 +1543,7 @@ tokens it uses. */
   flex-direction: column;
   gap: 12px;
   padding: 14px;
-  background: white;
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 14px;
   box-shadow: 0 4px 16px color-mix(in oklab, var(--ink) 4%, transparent);
@@ -1554,7 +1554,7 @@ tokens it uses. */
 }
 .svc-sub-item:hover {
   transform: translateY(-3px);
-  background: color-mix(in oklab, oklch(0.89 0.04 348) 10%, white);
+  background: color-mix(in oklab, var(--blush) 7%, var(--surface));
   border-color: color-mix(in oklab, oklch(0.89 0.04 348) 35%, var(--border));
   box-shadow: 0 10px 24px color-mix(in oklab, var(--ink) 8%, transparent);
 }
@@ -1620,7 +1620,7 @@ tokens it uses. */
   padding: 9px 14px;
   border-radius: 999px;
   background: var(--ink);
-  color: white;
+  color: var(--color-on-dark);
   border: 1px solid var(--ink);
   width: 100%;
   margin-top: auto;
@@ -2204,7 +2204,7 @@ tokens it uses. */
   margin-top: 14px;
 }
 .booking-visual-copy em {
-  color: var(--lilac);
+  color: var(--pink-2);
 }
 .booking-panel {
   padding: 60px clamp(24px, 6vw, 100px) 80px;
@@ -3362,7 +3362,7 @@ body {
   gap: 0.75rem;
   padding: 0.65rem 0.75rem;
   border-radius: 10px;
-  background: white;
+  background: var(--surface);
   border: 1px solid var(--border);
 }
 
@@ -3416,7 +3416,7 @@ body {
 
 .booking-clean-remove:hover {
   background: var(--ink);
-  color: white;
+  color: var(--color-on-dark);
 }
 
 .booking-clean-total {
@@ -3428,7 +3428,7 @@ body {
   padding: 0.75rem 0.9rem;
   border-radius: 10px;
   background: var(--ink);
-  color: white;
+  color: var(--color-on-dark);
   font-size: 13px;
 }
 
@@ -3482,7 +3482,7 @@ body {
   display: grid;
   place-items: center;
   border-radius: 50%;
-  background: white;
+  background: var(--surface);
   color: var(--plum);
   flex: none;
 }
@@ -3512,7 +3512,7 @@ body {
   padding: 0.4rem 0.75rem;
   border-radius: 999px;
   border: 1px solid var(--border);
-  background: white;
+  background: var(--surface);
   font-size: 12px;
   font-weight: 600;
   color: var(--ink);
@@ -4506,7 +4506,7 @@ body {
 
 .manage-card {
   padding: 1.25rem;
-  background: white;
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
   box-shadow: 0 8px 24px color-mix(in oklab, var(--ink) 6%, transparent);
@@ -4639,7 +4639,7 @@ body {
   font-size: 0.72rem;
   color: var(--muted-foreground);
   padding: 0.3rem 0.6rem;
-  background: white;
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 999px;
 }
@@ -4758,4 +4758,641 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
+}
+
+/* ============================================================================
+   Home hero — built from the salon's own artwork
+   ----------------------------------------------------------------------------
+   Appended after every other rule, so it overrides the earlier .home-hero
+   styles by source order. Colours are sampled from the supplied art: the void
+   #270629, the magenta swirl, and the pink ramp used on the buttons.
+   ========================================================================== */
+.home-hero-wiz {
+  --wiz-void: #270629;
+  --wiz-ink: #35072e;
+  --wiz-pink: #f86ac8;
+  --wiz-pink-soft: #ffa7ec;
+
+  justify-content: center;
+  min-height: min(46rem, calc(100svh - var(--site-header-height)));
+  padding: clamp(4rem, 8vh, 6.5rem) 0 clamp(6.5rem, 12vh, 8.5rem);
+  background: var(--wiz-void);
+}
+
+.home-hero-wiz .home-hero-image {
+  /* her face sits right of centre in the artwork */
+  object-position: 74% center;
+}
+
+/* Keeps the copy legible where the artwork's swirl is brightest, without
+   flattening the picture. */
+.home-hero-wiz .home-hero-shade {
+  background:
+    linear-gradient(
+      90deg,
+      color-mix(in oklab, var(--wiz-void) 88%, transparent) 0%,
+      color-mix(in oklab, var(--wiz-void) 62%, transparent) 30%,
+      color-mix(in oklab, var(--wiz-void) 18%, transparent) 48%,
+      transparent 62%
+    );
+}
+
+.home-hero-wiz .hero-content {
+  width: min(80rem, calc(100% - 2 * var(--site-gutter)));
+}
+
+.home-hero-wiz .wiz-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.7rem, 1.4vw, 1.1rem);
+  margin: 0 0 clamp(1rem, 2.2vh, 1.7rem);
+  font-size: clamp(0.58rem, 0.72vw, 0.72rem);
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: #f0d8ec;
+}
+
+.home-hero-wiz .wiz-eyebrow span {
+  display: block;
+  width: clamp(26px, 4vw, 62px);
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #edb9e4);
+}
+
+.home-hero-wiz .wiz-eyebrow span:last-of-type {
+  background: linear-gradient(90deg, #edb9e4, transparent);
+}
+
+.home-hero-wiz .wiz-title {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+  max-width: none;
+  font-weight: 400;
+  line-height: 0.9;
+}
+
+.home-hero-wiz .wiz-title-line {
+  display: block;
+  font-family: "Bodoni Moda", "Playfair Display", var(--font-display);
+  line-height: 0.9;
+  letter-spacing: 0.008em;
+  text-transform: uppercase;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.home-hero-wiz .wiz-title-wiz {
+  /* the reference lockup sets WIZ larger and tracked out, BEAUTY SALON tighter */
+  font-size: clamp(2.9rem, 7.2vw, 6.3rem);
+  letter-spacing: 0.09em;
+  font-weight: 600;
+  background-image: linear-gradient(96deg, #ffffff 6%, #fdf0fa 52%, #f4c2e8 100%);
+}
+
+.home-hero-wiz .wiz-title-salon {
+  font-size: clamp(2.3rem, 5.15vw, 4.65rem);
+  letter-spacing: 0.004em;
+  font-weight: 600;
+  background-image: linear-gradient(96deg, #fdeaf8 0%, #f9a0dd 46%, #fa4fc0 100%);
+}
+
+.home-hero-wiz .wiz-lede {
+  max-width: 38rem;
+  margin-top: clamp(1rem, 2.4vh, 1.7rem);
+  font-size: clamp(0.97rem, 1.3vw, 1.18rem);
+  line-height: 1.62;
+  color: #f7e7f4;
+}
+
+.home-hero-wiz .wiz-actions {
+  display: flex;
+  align-items: center;
+  gap: clamp(1.1rem, 2.6vw, 2.2rem);
+  flex-wrap: wrap;
+  margin-top: clamp(1.7rem, 3.4vh, 2.6rem);
+}
+
+.home-hero-wiz .wiz-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 1.05rem clamp(1.4rem, 2.2vw, 1.9rem);
+  border-radius: 999px;
+  background: linear-gradient(100deg, #f062c8 0%, #ff9ce6 58%, #ffb6f0 100%);
+  color: var(--wiz-ink);
+  font-size: clamp(0.82rem, 0.95vw, 0.95rem);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  box-shadow:
+    0 16px 38px rgba(226, 64, 178, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  transition:
+    transform 0.22s ease,
+    box-shadow 0.22s ease;
+}
+
+.home-hero-wiz .wiz-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 20px 44px rgba(226, 64, 178, 0.44),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.home-hero-wiz .wiz-btn-video {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.85rem;
+  font-size: clamp(0.85rem, 0.98vw, 0.98rem);
+  color: #fbeef9;
+  text-decoration: none;
+}
+
+.home-hero-wiz .wiz-video-label {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 7px;
+}
+
+.home-hero-wiz .wiz-play {
+  display: grid;
+  place-items: center;
+  width: 2.9rem;
+  height: 2.9rem;
+  border: 1px solid rgba(255, 255, 255, 0.62);
+  border-radius: 50%;
+  transition:
+    background-color 0.22s ease,
+    border-color 0.22s ease;
+}
+
+.home-hero-wiz .wiz-btn-video:hover .wiz-play {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.9);
+}
+
+.home-hero-wiz .wiz-scroll {
+  position: absolute;
+  left: var(--hero-gutter);
+  bottom: clamp(1rem, 2.4vh, 1.9rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: clamp(0.6rem, 0.72vw, 0.72rem);
+  letter-spacing: 0.06em;
+  color: #f3e2f1;
+  text-decoration: none;
+}
+
+.home-hero-wiz .wiz-scroll-pill {
+  width: 21px;
+  height: 34px;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 12px;
+}
+
+@media (max-width: 1024px) {
+  .home-hero-wiz .home-hero-image {
+    object-position: 78% center;
+  }
+}
+
+@media (max-width: 900px) {
+  /* The artwork is 16:9. On a phone a cover-crop can't hold both her and a
+     readable block of copy, so the picture becomes the top of a stack and the
+     copy sits on the artwork's own void colour underneath it. */
+  .home-hero-wiz {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    min-height: 0;
+    padding: 0;
+  }
+
+  .home-hero-wiz .home-hero-image {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    height: 50svh;
+    object-position: 72% 14%;
+    -webkit-mask-image: linear-gradient(180deg, #000 72%, transparent 100%);
+    mask-image: linear-gradient(180deg, #000 72%, transparent 100%);
+  }
+
+  .home-hero-wiz .home-hero-shade {
+    display: none;
+  }
+
+  .home-hero-wiz .hero-content {
+    width: 100%;
+    padding: 1.6rem var(--site-gutter) 2.8rem;
+  }
+
+  .home-hero-wiz .wiz-title-wiz {
+    font-size: clamp(2rem, 11.5vw, 3.1rem);
+    letter-spacing: 0.24em;
+  }
+
+  .home-hero-wiz .wiz-title-salon {
+    font-size: clamp(1.62rem, 9.3vw, 2.55rem);
+  }
+
+  .home-hero-wiz .wiz-eyebrow {
+    font-size: 0.55rem;
+    letter-spacing: 0.22em;
+    margin-bottom: 0.9rem;
+  }
+
+  .home-hero-wiz .wiz-lede {
+    max-width: 32ch;
+    font-size: 0.94rem;
+  }
+
+  .home-hero-wiz .wiz-actions {
+    gap: 1.15rem;
+    margin-top: 1.5rem;
+  }
+
+  .home-hero-wiz .wiz-btn-primary {
+    flex: 1 1 100%;
+    justify-content: center;
+  }
+
+  .home-hero-wiz .wiz-scroll {
+    display: none;
+  }
+}
+
+@media (max-width: 30rem) {
+  /* The eyebrow is the one line that can't wrap gracefully — at this width the
+     flanking rules are what push it over, so they go. */
+  /* keeps the whole hero — picture, copy and both buttons — inside one phone
+     screen, so the primary action is never half-cut by the fold */
+  .home-hero-wiz .home-hero-image {
+    height: 46svh;
+  }
+
+  .home-hero-wiz .wiz-eyebrow {
+    gap: 0;
+    letter-spacing: 0.16em;
+  }
+
+  .home-hero-wiz .wiz-eyebrow span {
+    display: none;
+  }
+}
+
+/* ============================================================================
+   Palette and chrome — taken from the salon's own hero artwork
+   ----------------------------------------------------------------------------
+   Last block in the file on purpose: it re-points the shared tokens, so every
+   page inherits the plum ground and the pink ramp without each section having
+   to be rewritten.
+   ========================================================================== */
+:root {
+  --void: #270629;
+  --void-2: #2e0730;
+  --void-3: #390b38;
+  --surface: #341033;
+  --pink-1: #f677d6;
+  --pink-2: #ffa7ec;
+  --pink-deep: #f05ac0;
+  --plum-ink: #3d0f3d;
+  --paper: #fbeef8;
+  --paper-dim: #d4aecf;
+
+  /* re-pointed brand tokens */
+  --ink: var(--paper);
+  --ivory: var(--void);
+  --stone: var(--void-2);
+  --plum: #e3a3d8;
+  --orchid: #f58bd7;
+  --blush: #ffb6e8;
+  --plum-dark: #1d0420;
+  --mist: var(--void-3);
+  --lilac: #5c1a56;
+  --lilac-deep: #b45aa6;
+  --bronze: #edbda4;
+  --color-on-dark: var(--paper);
+
+  --background: var(--void);
+  --foreground: var(--paper);
+  --card: var(--surface);
+  --card-foreground: var(--paper);
+  --popover: var(--surface);
+  --popover-foreground: var(--paper);
+  --primary: var(--pink-1);
+  --primary-foreground: var(--plum-ink);
+  --primary-hover: var(--pink-2);
+  --secondary: var(--void-3);
+  --secondary-foreground: var(--paper);
+  --muted: var(--void-3);
+  --muted-foreground: var(--paper-dim);
+  --accent: var(--blush);
+  --accent-foreground: var(--plum-ink);
+  --border: rgba(255, 255, 255, 0.15);
+  --input: rgba(255, 255, 255, 0.22);
+  --ring: var(--pink-1);
+}
+
+::selection {
+  background: var(--pink-1);
+  color: var(--plum-ink);
+}
+
+.home-page h1,
+.home-page h2,
+.home-page h3 {
+  font-weight: 500;
+}
+
+/* --- header --------------------------------------------------------------- */
+.site-header {
+  background: color-mix(in oklab, var(--void) 94%, transparent);
+  backdrop-filter: blur(18px) saturate(1.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+  color: var(--paper);
+}
+
+/* On the home page the bar floats on the hero, as in the artwork. */
+.site-header-over-hero {
+  position: fixed;
+  inset: 0 0 auto 0;
+  background: transparent;
+  backdrop-filter: none;
+  border-bottom-color: transparent;
+  transition:
+    background-color 0.3s ease,
+    border-color 0.3s ease,
+    backdrop-filter 0.3s ease;
+}
+
+.site-header-over-hero.is-scrolled {
+  background: color-mix(in oklab, var(--void) 90%, transparent);
+  backdrop-filter: blur(18px) saturate(1.1);
+  border-bottom-color: rgba(255, 255, 255, 0.09);
+}
+
+.brand-wordmark {
+  font-family: var(--font-display);
+  font-size: 1.16rem;
+  font-weight: 500;
+  letter-spacing: 0.075em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--paper);
+}
+
+.nav-manage {
+  color: var(--paper-dim);
+}
+
+.nav-manage:hover {
+  color: var(--paper);
+}
+
+.btn.btn-pink {
+  padding: 0.9rem 1.35rem;
+  border-radius: 999px;
+  background: linear-gradient(100deg, #f062c8 0%, #ff9ce6 58%, #ffb6f0 100%);
+  color: var(--plum-ink);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  box-shadow:
+    0 12px 30px rgba(226, 64, 178, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.btn.btn-pink:hover:not(:disabled) {
+  background: linear-gradient(100deg, #f472d0 0%, #ffa9ea 58%, #ffc2f4 100%);
+  color: var(--plum-ink);
+}
+
+.menu-button {
+  border-color: rgba(255, 255, 255, 0.25);
+  color: var(--paper);
+}
+
+/* anchors have to clear the floating bar */
+.home-page section {
+  scroll-margin-top: calc(var(--site-header-height) + 8px);
+}
+
+/* --- hero: the bar is fixed, so the picture runs to the top of the screen -- */
+.home-hero-wiz {
+  min-height: 100svh;
+  padding-top: calc(var(--site-header-height) + clamp(2.5rem, 7vh, 5rem));
+}
+
+.home-hero-wiz .wiz-lede {
+  display: flex;
+  flex-direction: column;
+  margin-top: clamp(1.1rem, 2.4vh, 1.7rem);
+  max-width: 33rem;
+}
+
+.home-hero-wiz .wiz-lede-line {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 2vw, 2.05rem);
+  font-weight: 500;
+  line-height: 1.1;
+  color: #ffeefb;
+}
+
+.home-hero-wiz .wiz-lede-line em {
+  font-style: italic;
+  color: var(--pink-2);
+}
+
+.home-hero-wiz .wiz-lede-body {
+  margin: 0.7rem 0 0;
+  max-width: 26rem;
+  font-size: clamp(0.94rem, 1.05vw, 1.04rem);
+  line-height: 1.6;
+  color: #f0d9ee;
+}
+
+/* --- scroll cue, centred as in the reference ------------------------------ */
+.home-hero-wiz .wiz-scroll {
+  left: 50%;
+  transform: translateX(-50%);
+  text-shadow: 0 2px 14px rgba(29, 4, 32, 0.9);
+  filter: drop-shadow(0 2px 10px rgba(29, 4, 32, 0.55));
+}
+
+@media (max-width: 900px) {
+  .home-hero-wiz {
+    min-height: 0;
+    padding-top: 0;
+  }
+
+  .home-hero-wiz .wiz-lede {
+    max-width: 30rem;
+  }
+
+  .home-hero-wiz .wiz-lede-line {
+    font-size: clamp(1.3rem, 4.6vw, 1.6rem);
+  }
+}
+
+@media (max-width: 640px) {
+  .brand-wordmark {
+    display: none;
+  }
+}
+
+/* ---- light pink surfaces keep dark plum type ----------------------------- */
+/* These blocks were built as blush panels with ink type. Ink is now light, so
+   they take the reference's other half: pink panel, plum type. */
+.booking-section,
+.stories {
+  color: var(--plum-ink);
+}
+
+.booking-section :is(h1, h2, h3, h4, p) ,
+.stories :is(h1, h2, h3, h4, p, blockquote, footer, span, li) {
+  color: inherit;
+}
+
+.booking-section .overline,
+.stories .overline {
+  color: color-mix(in oklab, var(--plum-ink) 68%, transparent);
+}
+
+.booking-section .btn-ink,
+.stories .btn-ink {
+  background: var(--plum-ink);
+  color: #ffd8f4;
+}
+
+.booking-section .btn-ink:hover:not(:disabled),
+.stories .btn-ink:hover:not(:disabled) {
+  background: #2a0729;
+  color: #ffe6f9;
+}
+
+.booking-section .editorial-link,
+.stories .editorial-link {
+  color: var(--plum-ink);
+  border-color: color-mix(in oklab, var(--plum-ink) 45%, transparent);
+}
+
+.btn-blush {
+  color: var(--plum-ink);
+}
+
+.btn-blush:hover {
+  color: var(--plum-ink);
+}
+
+/* ---- footer sits on the deepest plum, not on paper ---------------------- */
+.site-footer {
+  background: var(--plum-dark);
+  color: var(--paper);
+}
+
+.site-footer .overline {
+  color: var(--pink-2);
+}
+
+/* ---- stragglers that were still painted for a light theme ----------------- */
+.booking-section :is(em, strong, blockquote, small),
+.stories :is(em, strong, blockquote, small) {
+  color: inherit;
+}
+
+.booking-section h2 em,
+.stories h2 em {
+  color: color-mix(in oklab, var(--plum-ink) 78%, transparent);
+}
+
+.booking-manage-card {
+  background: var(--surface);
+  color: var(--paper);
+  border: 1px solid var(--border);
+}
+
+.booking-manage-card :is(span, a) {
+  color: var(--paper);
+}
+
+.booking-clean-dot {
+  background: var(--pink-2);
+}
+
+.booking-consultation-card {
+  background: linear-gradient(135deg, #3d0f3d 0%, #4c1449 100%);
+  color: var(--paper);
+}
+
+.booking-consultation-card :is(p, span, strong) {
+  color: var(--paper);
+}
+
+/* form fields on the dark ground */
+.wiz-form input,
+.wiz-form textarea,
+.booking-select-trigger {
+  color: var(--paper);
+  background: transparent;
+}
+
+.wiz-form input::placeholder,
+.wiz-form textarea::placeholder {
+  color: color-mix(in oklab, var(--paper) 45%, transparent);
+}
+
+/* The bar floats on the artwork, so it carries its own soft scrim — without it
+   the lighter links disappear over the lit mirror. */
+.site-header-over-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(29, 4, 32, 0.72) 0%,
+    rgba(29, 4, 32, 0.34) 62%,
+    rgba(29, 4, 32, 0) 100%
+  );
+  transition: opacity 0.3s ease;
+}
+
+.site-header-over-hero.is-scrolled::before {
+  opacity: 0;
+}
+
+/* Centred scroll cue: the label carries its own glass pill so it reads over
+   the gown instead of sitting on it as a smudge. */
+.home-hero-wiz .wiz-scroll {
+  gap: 0.4rem;
+  text-shadow: 0 1px 10px rgba(29, 4, 32, 0.8);
+}
+
+.home-hero-wiz .wiz-scroll > span:not(.wiz-scroll-pill) {
+  padding: 0.28rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(29, 4, 32, 0.44);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+@media (max-width: 640px) {
+  .btn.btn-pink.nav-book {
+    gap: 0.45rem;
+    padding: 0.68rem 1rem;
+    font-size: 0.72rem;
+  }
+
+  .nav-book {
+    letter-spacing: 0.01em;
+  }
 }

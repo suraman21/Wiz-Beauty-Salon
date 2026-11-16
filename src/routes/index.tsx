@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowDown, ArrowRight } from "lucide-react";
+import { ArrowRight, CalendarDays, ChevronDown, Play } from "lucide-react";
 import { BeforeAfter, BookingBand, EditorialLink, SiteLayout } from "@/components/site/SiteChrome";
 import { useSiteImages } from "@/lib/site-content";
+import heroPurple from "@/assets/hero-wiz-purple.jpg";
 import { fetchCatalogue } from "@/lib/booking-api";
 import {
   buildServicePages,
@@ -59,48 +60,59 @@ function Home() {
 
   return (
     <SiteLayout>
-      <section className="home-hero" aria-labelledby="hero-title">
-        <picture className="home-hero-media">
-          {/* The hero photograph is shot twice: wide for desktop, and a portrait
-              crop for phones, where a slice of the wide one would cut her face. */}
-          {images.hero.portrait ? (
-            <source media="(max-width: 47.5rem)" srcSet={images.hero.portrait} />
-          ) : null}
-          <img
-            className="home-hero-image"
-            src={images.hero.url}
-            alt={images.hero.alt}
-            width={2400}
-            height={1350}
-            fetchPriority="high"
-          />
-        </picture>
+      <section className="home-hero home-hero-wiz" aria-labelledby="hero-title">
+        <img
+          className="home-hero-image"
+          src={heroPurple}
+          alt="Model in a white off-shoulder gown and crystal tiara, in a softly lit purple salon"
+          width={1672}
+          height={941}
+          fetchPriority="high"
+        />
         <div className="home-hero-shade" />
-        <div className="hero-content reveal-up">
-          <p className="overline hero-overline">A new expression of beauty</p>
-          <h1 id="hero-title">
-            <span className="hero-name">WIZ Beauty Salon</span>
-            <span>
+
+        <div className="hero-content">
+          <p className="wiz-eyebrow">
+            <span aria-hidden="true" />
+            Look good · Feel beautiful · Be confident
+            <span aria-hidden="true" />
+          </p>
+
+          <h1 id="hero-title" className="wiz-title">
+            <span className="wiz-title-line wiz-title-wiz">WIZ</span>
+            <span className="wiz-title-line wiz-title-salon">Beauty Salon</span>
+          </h1>
+
+          <div className="hero-copy wiz-lede">
+            <p className="wiz-lede-line">
               Beauty,
               <br />
               <em>your way.</em>
-            </span>
-          </h1>
-          <p className="hero-copy">
-            A moment to express yourself, feel beautiful, and make it entirely yours.
-          </p>
-          <div className="hero-actions">
-            <Link to="/booking" className="btn btn-blush">
-              Book an appointment <ArrowRight size={17} />
+            </p>
+            <p className="wiz-lede-body">
+              A moment to express yourself, feel beautiful, and make it entirely yours.
+            </p>
+          </div>
+
+          <div className="wiz-actions">
+            <Link to="/booking" className="wiz-btn-primary">
+              <CalendarDays size={17} aria-hidden="true" />
+              Book Appointment
+              <ArrowRight size={17} aria-hidden="true" />
             </Link>
-            <Link className="hero-secondary" to="/services">
-              Explore services <ArrowRight size={17} />
-            </Link>
+            <a className="wiz-btn-video" href="#about">
+              <span className="wiz-play" aria-hidden="true">
+                <Play size={15} fill="currentColor" strokeWidth={0} />
+              </span>
+              <span className="wiz-video-label">Watch Video</span>
+            </a>
           </div>
         </div>
-        <a className="hero-scroll" href="#about" aria-label="Scroll to introduction">
-          <ArrowDown size={18} />
-          <span>SCROLL TO DISCOVER</span>
+
+        <a className="wiz-scroll" href="#about" aria-label="Scroll to introduction">
+          <span className="wiz-scroll-pill" aria-hidden="true" />
+          <span>Scroll Down</span>
+          <ChevronDown size={16} aria-hidden="true" />
         </a>
       </section>
 
