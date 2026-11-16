@@ -11,8 +11,8 @@ import {
   Search,
   ShieldCheck,
 } from "lucide-react";
-import { SiteLayout } from "@/components/site/SiteChrome";
 import heroPortrait from "@/assets/hero-portrait.jpg";
+import { SiteLayout } from "@/components/site/SiteChrome";
 import { Button } from "@/components/ui/button";
 import { ApiError } from "@/lib/api";
 import { recoverBookings, type RecoverBooking } from "@/lib/booking-api";

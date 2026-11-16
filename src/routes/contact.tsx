@@ -1,8 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { Clock, Mail, MapPin, MessageCircle, Phone, Instagram, Music2 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { ClosingCta, PageHead, SiteLayout } from "@/components/site/SiteChrome";
+import { EditorialLink, SiteLayout } from "@/components/site/SiteChrome";
 import { contact } from "@/data/wiz";
 import { ApiError } from "@/lib/api";
 import { sendMessage } from "@/lib/contact-api";
@@ -89,8 +89,6 @@ function Contact() {
   const hours = salon !== null && salon.hours.length > 0 ? hoursRows(salon.hours) : contact.hours;
   const closures = salon?.closures ?? [];
 
-  const hasAnything = channels.length > 0 || hours.length > 0 || address !== "";
-
   const [form, setForm] = useState<FormState>(emptyForm);
   const [sent, setSent] = useState(false);
   const [sending, setSending] = useState(false);
@@ -122,95 +120,110 @@ function Contact() {
   };
   return (
     <SiteLayout>
-      <PageHead
-        title={
-          <>
-            Talk to
-            <br />
-            the salon.
-          </>
-        }
-        amharic="ያግኙን"
-        intro="Questions about a service, a price or whether a style will suit your hair — ask before you book. Phone and WhatsApp reach us fastest."
-      />
-
-      <section className={`wz-wrap wz-contact${hasAnything ? "" : " wz-contact-solo"}`}>
-        {hasAnything && (
-          <div>
-            <h2 className="wz-h2">Reach us</h2>
-
-            {channels.length > 0 ? (
-              <dl className="wz-contact-list wz-mt-md">
-                {channels.map(({ label, value, href }) => (
-                  <div className="wz-contact-row" key={label}>
-                    <dt>{label}</dt>
-                    <dd>
-                      {href === undefined ? (
-                        value
-                      ) : (
-                        <a href={href} rel="noreferrer">
-                          {value}
-                        </a>
-                      )}
-                    </dd>
-                  </div>
-                ))}
-                {address !== "" && (
-                  <div className="wz-contact-row">
-                    <dt>Address</dt>
-                    <dd>{address}</dd>
-                  </div>
-                )}
-              </dl>
-            ) : null}
-
-            {hours.length > 0 && (
-              <>
-                <h3
-                  className="wz-mt-lg"
-                  style={{ fontFamily: "var(--wz-sans)", fontSize: "0.9375rem", fontWeight: 600 }}
-                >
-                  Opening hours
-                </h3>
-                <dl className="wz-contact-list wz-mt-sm">
-                  {hours.map((row) => (
-                    <div className="wz-contact-row" key={row.day}>
-                      <dt>{row.day}</dt>
-                      <dd>{row.time}</dd>
-                    </div>
-                  ))}
-                </dl>
-              </>
+      <section className="contact-hero">
+        <div className="section-wrap contact-grid">
+          <div className="reveal-up">
+            <span className="overline">Contact</span>
+            <h1>
+              Let's talk
+              <br />
+              <em>beauty.</em>
+            </h1>
+            <p className="contact-lead">
+              Questions, ideas or special requests — reach us the way that suits you.
+            </p>
+            {channels.length === 0 && (
+              <a className="editorial-link contact-write" href="#message">
+                Send us a message <span aria-hidden="true">→</span>
+              </a>
             )}
+            <ul className="channels" hidden={channels.length === 0}>
+              {channels.map(({ icon: Icon, label, value, href }) => (
+                <li key={label}>
+                  <Icon size={18} strokeWidth={1.4} />
+                  <span className="ch-label">{label}</span>
+                  {href === undefined ? (
+                    <span className="ch-value">{value}</span>
+                  ) : (
+                    <a className="ch-value" href={href} rel="noreferrer">
+                      {value}
+                    </a>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <figure className="contact-image img-frame reveal">
+            <img src={images.skin.url} alt={images.skin.alt} />
+          </figure>
+        </div>
+      </section>
 
-            {closures.length > 0 && (
-              <p className="wz-note wz-mt-md">
-                {closures
-                  .slice(0, 3)
-                  .map((closure) => `Closed ${closureLabel(closure)}`)
-                  .join(". ")}
-                .
-              </p>
-            )}
+      <section className={`visit section-wrap${address === "" ? " visit-solo" : ""}`}>
+        {address !== "" && (
+          <div className="map-placeholder" role="img" aria-label={`Salon location — ${address}`}>
+            <MapPin size={30} strokeWidth={1.2} />
+            <span>{address}</span>
           </div>
         )}
+        <div className="visit-copy">
+          <span className="overline">Visit us</span>
+          <h2>
+            Location
+            <br />
+            <em>&amp; hours.</em>
+          </h2>
+          {address !== "" && (
+            <p className="visit-address">
+              <MapPin size={16} /> {address}
+            </p>
+          )}
+          {hours.length > 0 && (
+            <dl className="hours">
+              {hours.map((h) => (
+                <div key={h.day}>
+                  <dt>
+                    <Clock size={14} /> {h.day}
+                  </dt>
+                  <dd>{h.time}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
+          {closures.length > 0 && (
+            <ul className="closures">
+              {closures.slice(0, 3).map((closure) => (
+                <li key={`${closure.from}-${closure.to}`}>Closed {closureLabel(closure)}</li>
+              ))}
+            </ul>
+          )}
+          <EditorialLink to="/booking">Book an appointment</EditorialLink>
+        </div>
+      </section>
 
-        <div id="message">
-          <h2 className="wz-h2">Write to us</h2>
-          <p className="wz-prose wz-mt-sm">
-            One message is enough. Tell us what you have in mind and when you would like to come in.
-          </p>
-
+      <section className="message-section" id="message">
+        <div className="section-wrap message-inner">
+          <div>
+            <span className="overline">Send a message</span>
+            <h2>
+              Write
+              <br />
+              <em>to us.</em>
+            </h2>
+          </div>
           {sent ? (
-            <div className="wz-form-done" role="status">
-              <h3>Message sent.</h3>
-              <p>It is with the salon. We reply by email or phone, usually the same day.</p>
-              <button type="button" className="wz-btn wz-btn-ghost" onClick={() => setSent(false)}>
+            <div className="form-done" role="status">
+              <h3>Thank you.</h3>
+              <p>
+                Your message is with the salon. We will get back to you by email or phone — usually
+                the same day.
+              </p>
+              <button className="btn btn-ink" onClick={() => setSent(false)}>
                 Write another
               </button>
             </div>
           ) : (
-            <form className="wz-form" onSubmit={(event) => void submit(event)}>
+            <form className="wiz-form" onSubmit={(e) => void submit(e)}>
               <label>
                 Name
                 <input
@@ -218,7 +231,7 @@ function Contact() {
                   name="name"
                   autoComplete="name"
                   value={form.name}
-                  onChange={(event) => setForm({ ...form, name: event.target.value })}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
                 />
               </label>
               <label>
@@ -227,56 +240,33 @@ function Contact() {
                   required
                   name="contact"
                   value={form.contact}
-                  onChange={(event) => setForm({ ...form, contact: event.target.value })}
+                  onChange={(e) => setForm({ ...form, contact: e.target.value })}
                 />
               </label>
-              <label className="wz-form-full">
+              <label className="full">
                 Message
                 <textarea
                   required
                   name="message"
-                  rows={5}
+                  rows={4}
                   value={form.message}
-                  onChange={(event) => setForm({ ...form, message: event.target.value })}
+                  onChange={(e) => setForm({ ...form, message: e.target.value })}
                 />
               </label>
 
               {error !== "" && (
-                <p className="wz-form-error wz-form-full" role="alert">
+                <p className="form-error full" role="alert">
                   {error}
                 </p>
               )}
 
-              <div className="wz-form-full">
-                <button type="submit" className="wz-btn" disabled={sending}>
-                  {sending ? "Sending…" : "Send message"}
-                </button>
-              </div>
+              <button type="submit" className="btn btn-ink" disabled={sending}>
+                {sending ? "Sending…" : "Send message"}
+              </button>
             </form>
           )}
-
-          <p className="wz-meta wz-mt-md">
-            Booking an appointment is faster than messaging — the date and time are confirmed
-            straight away.
-          </p>
-          <p className="wz-mt-sm">
-            <Link to="/booking" className="wz-link">
-              Book an appointment
-            </Link>
-          </p>
         </div>
       </section>
-
-      <ClosingCta
-        title={
-          <>
-            Not sure what to ask for?
-            <br />
-            Say it in your own words.
-          </>
-        }
-        copy="You do not need the name of the service. Describe what you want in the booking notes and we will work it out together when you arrive."
-      />
     </SiteLayout>
   );
 }

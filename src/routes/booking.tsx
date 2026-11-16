@@ -185,7 +185,11 @@ function Booking() {
 
   const loadCalendar = useCallback(
     (
-      opts: { serviceId?: number | null; serviceIds?: number[]; isUndecided?: boolean },
+      opts: {
+        serviceId?: number | null | undefined;
+        serviceIds?: number[] | undefined;
+        isUndecided?: boolean | undefined;
+      },
       signal?: AbortSignal,
     ) => {
       setCalendarBusy(true);
@@ -218,8 +222,7 @@ function Booking() {
     if (selectedIds.length === 0) return undefined;
     const controller = new AbortController();
     if (selectedIds.length === 1) {
-      const only = selectedIds[0];
-      if (only !== undefined) void loadCalendar({ serviceId: only }, controller.signal);
+      void loadCalendar({ serviceId: selectedIds[0] }, controller.signal);
     } else {
       void loadCalendar({ serviceIds: selectedIds }, controller.signal);
     }
@@ -346,8 +349,21 @@ function Booking() {
   };
 
   const heading = (() => {
-    if (step === 5) return <>Request received.</>;
-    return <>Book an appointment.</>;
+    if (step === 5)
+      return (
+        <>
+          Request
+          <br />
+          <em>received.</em>
+        </>
+      );
+    return (
+      <>
+        Book an
+        <br />
+        <em>appointment.</em>
+      </>
+    );
   })();
 
   const copyManageLink = async () => {
@@ -459,7 +475,10 @@ function Booking() {
           </div>
           <div className="booking-visual-copy">
             <span className="overline">Book your moment</span>
-            <p>Beauty, your way.</p>
+            <p>
+              Beauty,
+              <br /> <em>your way.</em>
+            </p>
             <span className="booking-visual-note">Addis Ababa · By appointment</span>
           </div>
         </aside>
@@ -1036,10 +1055,10 @@ function Booking() {
               )}
             </div>
           )}
-          {step > 0 && step < 5 && (
+          {step < 5 && (
             <p style={{ marginTop: "1.1rem", textAlign: "center" }}>
               <Link to="/booking/recover" className="editorial-link" style={{ fontSize: "13px" }}>
-                Find a booking you already made <ArrowRight size={12} />
+                Find your booking with phone or email <ArrowRight size={12} />
               </Link>
             </p>
           )}

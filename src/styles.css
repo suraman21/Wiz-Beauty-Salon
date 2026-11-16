@@ -1,7 +1,6 @@
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
-@import "./styles/editorial.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -12,9 +11,8 @@
  */
 
 @theme inline {
-  --font-display: "Newsreader", ui-serif, Georgia, serif;
-  --font-sans: "Archivo", ui-sans-serif, system-ui, sans-serif;
-  --font-ethiopic: "Noto Serif Ethiopic", "Nyala", serif;
+  --font-display: "Cormorant Garamond", ui-serif, Georgia, serif;
+  --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
 
   --radius-sm: 2px;
   --radius-md: 4px;
@@ -37,8 +35,6 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-lilac: var(--lilac);
-  --color-oxblood: var(--oxblood);
-  --color-mute: var(--mute);
   --color-lilac-deep: var(--lilac-deep);
   --color-plum: var(--plum);
   --color-bronze: var(--bronze);
@@ -54,19 +50,14 @@
 :root {
   --radius: 6px;
 
-  /* Brand — retuned: lilac and plum keep their hue (they come from the logo
-     disc) but lose their area. Ink and paper carry the page now. */
-  --ink: #221a1f; /* logo ink, plum-black */
-  --plum: #3a2334; /* deep aubergine — dark bands only */
-  --plum-deep: #2b1826;
-  --lilac: #d9c8d2; /* the logo disc, used as tint not as ground */
-  --lilac-deep: #b598a8; /* dusty mauve, muted meta */
-  --bronze: #8a6a44;
-  --oxblood: #7c2033; /* the single accent: price, active, one CTA */
-  --ivory: #faf8f7; /* page base — off-white, deliberately not cream */
-  --stone: #f0ebe9; /* secondary surface */
-  --mute: #6b5c64; /* secondary text */
-  --rule: #e0d8dc; /* hairlines that encode a boundary */
+  /* Brand */
+  --ink: oklch(0.19 0.012 330); /* logo ink, warm plum-black */
+  --plum: oklch(0.33 0.045 330); /* deep aubergine — secondary brand */
+  --lilac: oklch(0.86 0.035 318); /* the logo disc */
+  --lilac-deep: oklch(0.66 0.055 318); /* dusty mauve */
+  --bronze: oklch(0.6 0.075 55); /* restrained warm accent */
+  --ivory: oklch(0.975 0.008 80); /* main background */
+  --stone: oklch(0.935 0.012 70); /* secondary background */
 
   --background: var(--ivory);
   --foreground: var(--ink);
@@ -80,13 +71,13 @@
   --secondary: var(--stone);
   --secondary-foreground: var(--ink);
   --muted: var(--stone);
-  --muted-foreground: var(--mute);
+  --muted-foreground: oklch(0.47 0.018 330);
   --accent: var(--lilac);
   --accent-foreground: var(--ink);
   --destructive: oklch(0.55 0.17 27);
   --destructive-foreground: var(--ivory);
-  --border: var(--rule);
-  --input: #d8cfd3;
+  --border: oklch(0.87 0.012 320);
+  --input: oklch(0.85 0.014 320);
   --ring: var(--lilac-deep);
 
   --ease-quiet: cubic-bezier(0.22, 0.61, 0.36, 1);
@@ -241,17 +232,11 @@
   width: min(100% - 88px, 1370px);
   margin-inline: auto;
 }
-/* Was an all-caps tracked 11px label above every heading — the commonest tell
-   of a generated page. Now a quiet sentence-case label at a readable size. */
 .overline {
-  display: block;
-  font-family: var(--font-sans);
-  font-size: 0.8125rem;
-  font-weight: 500;
-  letter-spacing: 0.01em;
-  line-height: 1.5;
-  text-transform: none;
-  color: var(--mute);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
 }
 .site-header {
   height: 82px;
@@ -360,23 +345,19 @@ tokens it uses. */
   line-height: 1.85;
   color: var(--muted-foreground);
 }
-/* Retuned with the editorial pass: sentence case, no tracked capitals, and a
-   gap that cannot push the booking page past the viewport at 768px. */
 .editorial-link {
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
-  border-bottom: 1px solid color-mix(in oklab, currentColor 35%, transparent);
-  padding-bottom: 3px;
-  flex: 0 1 auto;
-  font-family: var(--font-sans);
-  font-size: 0.875rem;
-  font-weight: 500;
-  text-transform: none;
-  letter-spacing: 0;
-  transition:
-    gap 0.25s var(--ease-quiet),
-    color 0.2s var(--ease-quiet);
+  justify-content: space-between;
+  gap: 30px;
+  border-bottom: 1px solid currentColor;
+  padding-bottom: 10px;
+  flex: none;
+  font-size: 12px;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  transition: gap 0.3s ease;
 }
 .editorial-link:hover {
   gap: 40px;
@@ -3130,7 +3111,7 @@ body {
 
 .booking-visual-frame {
   position: absolute;
-  inset: clamp(1.25rem, 2.5vw, 2rem) clamp(1.25rem, 2.5vw, 2rem) clamp(8rem, 11vw, 9.5rem)
+  inset: clamp(1.25rem, 2.5vw, 2rem) clamp(1.25rem, 2.5vw, 2rem) clamp(6.5rem, 10vw, 8rem)
     clamp(1.25rem, 2.5vw, 2rem);
   overflow: hidden;
   border-radius: 4px;
@@ -4761,106 +4742,4 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-}
-
-/* ============================================================================
-   Editorial pass — booking flow
-   ----------------------------------------------------------------------------
-   Appended last so it wins on source order. The booking flow keeps its own
-   layout; these rules only bring its controls and type into the site system:
-   sentence case instead of tracked capitals, one accent colour, and a left
-   panel whose display line actually fits inside its column.
-   ========================================================================== */
-
-.btn,
-.booking-page .stepper button,
-.booking-page .booking-field label,
-.booking-page .booking-manage-card span,
-.booking-page .booking-visual-note,
-.booking-page .step-hint,
-.booking-page .svc-sub-hint,
-.booking-page .date-cell,
-.booking-page .slot-cell {
-  text-transform: none;
-  letter-spacing: 0.005em;
-}
-
-.btn {
-  font-family: var(--font-sans);
-  font-size: 0.875rem;
-  font-weight: 600;
-  border-radius: 3px;
-  padding: 0.9rem 1.3rem;
-}
-
-.booking-page .stepper button {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-  gap: 0.5rem;
-  padding-top: 0.8rem;
-}
-
-.booking-page .stepper button span {
-  width: 21px;
-  height: 21px;
-  font-size: 0.6875rem;
-  font-weight: 600;
-}
-
-.booking-page .stepper .is-current button {
-  border-color: var(--oxblood);
-}
-
-.booking-page .booking-field label {
-  font-size: 0.8125rem;
-  font-weight: 500;
-  letter-spacing: 0.01em;
-  color: var(--mute);
-}
-
-/* The panel headline was clamp(48px, 5vw, 80px) and ran out of its column. */
-.booking-visual-copy {
-  padding-right: 0.5rem;
-}
-
-.booking-visual-copy p {
-  font: 400 clamp(1.5rem, 2.1vw, 2rem) / 1.24 var(--font-display);
-  margin-top: 0.6rem;
-  color: var(--ink);
-  max-width: 14ch;
-}
-
-.booking-visual-copy em {
-  color: inherit;
-  font-style: normal;
-}
-
-.booking-visual-copy .overline {
-  color: var(--mute);
-}
-
-.booking-visual-note {
-  font-size: 0.8125rem;
-  letter-spacing: 0.01em;
-  text-transform: none;
-  color: var(--mute);
-  margin-top: 0.9rem;
-}
-
-.booking-panel h1 {
-  font-size: clamp(2.4rem, 4vw, 3.5rem);
-  line-height: 1.04;
-}
-
-.booking-panel h1 em {
-  font-style: normal;
-  color: inherit;
-}
-
-@media (max-width: 900px) {
-  .booking-visual-copy p {
-    font-size: 1.375rem;
-    max-width: 20ch;
-  }
 }
