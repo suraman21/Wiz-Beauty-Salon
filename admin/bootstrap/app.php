@@ -272,7 +272,6 @@ $app->singleton(DashboardController::class, static fn (App $a): DashboardControl
     $a->get(BookingRepository::class),
     $a->get(MessageRepository::class),
     $a->get(ReviewRepository::class),
-    $a->get(ServiceRepository::class),
     $a->get(CategoryRepository::class),
     $a->get(ActivityLogRepository::class),
     $a->get(UserRepository::class),

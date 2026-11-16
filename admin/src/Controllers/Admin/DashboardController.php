@@ -13,7 +13,6 @@ use Wiz\Repositories\BookingRepository;
 use Wiz\Repositories\CategoryRepository;
 use Wiz\Repositories\MessageRepository;
 use Wiz\Repositories\ReviewRepository;
-use Wiz\Repositories\ServiceRepository;
 use Wiz\Repositories\UserRepository;
 
 /**
@@ -31,7 +30,6 @@ final class DashboardController
         private readonly BookingRepository $bookings,
         private readonly MessageRepository $messages,
         private readonly ReviewRepository $reviews,
-        private readonly ServiceRepository $services,
         private readonly CategoryRepository $categories,
         private readonly ActivityLogRepository $activity,
         private readonly UserRepository $users,
