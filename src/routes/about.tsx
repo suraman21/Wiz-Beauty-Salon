@@ -41,6 +41,7 @@ const values = [
 function About() {
   const images = useSiteImages();
   const reveal = useReveal<HTMLElement>();
+  const splitReveal = useReveal<HTMLElement>();
 
   return (
     <SiteLayout>
@@ -90,12 +91,23 @@ function About() {
         </div>
       </section>
 
-      <section className="about-split">
+      <section
+        ref={splitReveal.ref}
+        className={`about-split${splitReveal.revealed ? " is-revealed" : ""}`}
+      >
+        <noscript>
+          <style>{`.about-eyebrow,.about-split li,.about-split .editorial-link,.feeling-rule{opacity:1!important;animation:none!important;transform:none!important}.about-split figure,.about-bloom{opacity:1!important}`}</style>
+        </noscript>
         <figure className="img-frame">
           <img src={images.space.url} alt={images.space.alt} loading="lazy" />
         </figure>
         <div className="about-split-copy">
-          <span className="overline">What we stand for</span>
+          <span className="about-bloom" aria-hidden="true" />
+          <p className="about-eyebrow">
+            <span className="feeling-rule" aria-hidden="true" />
+            <span className="about-eyebrow-text">What we stand for</span>
+            <span className="feeling-rule feeling-rule-end" aria-hidden="true" />
+          </p>
           <ol>
             {values.map((v) => (
               <li key={v.n}>
