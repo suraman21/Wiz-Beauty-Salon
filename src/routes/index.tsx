@@ -39,6 +39,7 @@ function Home() {
   const images = useSiteImages();
   const feeling = useReveal<HTMLElement>();
   const services = useReveal<HTMLElement>();
+  const gallery = useReveal<HTMLElement>();
 
   // The four cards are the first four categories in the panel's order, so the
   // salon decides what its home page leads with — no deploy needed.
@@ -205,34 +206,60 @@ function Home() {
         </div>
       </section>
 
-      <section className="gallery-section section-wrap">
-        <div className="section-heading gallery-heading">
-          <div>
-            <span className="overline">03 / A visual mood</span>
-            <h2>
-              A little beauty,
-              <br />
-              <em>everywhere.</em>
+      <section
+        ref={gallery.ref}
+        className={`gallery-section${gallery.revealed ? " is-revealed" : ""}`}
+      >
+        <noscript>
+          <style>{`.gallery-eyebrow,.gallery-line,.gallery-lede,.gallery-figure,.gallery-end{opacity:1!important;animation:none!important;transform:none!important}.gallery-bloom{opacity:1!important}.gallery-orb{opacity:.7!important}`}</style>
+        </noscript>
+        <span className="gallery-bloom" aria-hidden="true" />
+        <span className="gallery-orb" aria-hidden="true" />
+        <div className="section-wrap gallery-inner">
+          <p className="gallery-eyebrow">
+            <span className="feeling-rule" aria-hidden="true" />
+            <span>
+              <span className="feeling-index">03</span>
+              <span className="feeling-sep">/</span> A visual mood
+            </span>
+            <span className="feeling-rule feeling-rule-end" aria-hidden="true" />
+          </p>
+
+          <div className="gallery-head">
+            <h2 className="gallery-title">
+              <span className="feeling-line gallery-line">A little beauty,</span>
+              <span className="feeling-line feeling-line-em gallery-line">everywhere.</span>
             </h2>
+            <p className="gallery-lede">A glimpse of the work and the mood behind it.</p>
           </div>
-          <p>A glimpse of the work and the mood behind it.</p>
-        </div>
-        <div className="gallery-composition">
-          <figure className="gallery-one img-frame">
-            <img src={images.portrait.url} alt={images.portrait.alt} loading="lazy" />
-          </figure>
-          <figure className="gallery-two img-frame">
-            <img src={images.space.url} alt={images.space.alt} loading="lazy" />
-          </figure>
-          <figure className="gallery-three img-frame">
-            <img src={images.nails.url} alt={images.nails.alt} loading="lazy" />
-          </figure>
-          <span className="gallery-word" aria-hidden="true">
-            WIZ
-          </span>
-        </div>
-        <div className="gallery-end">
-          <EditorialLink to="/gallery">View gallery</EditorialLink>
+
+          <div className="gallery-composition">
+            <figure
+              className="gallery-one gallery-figure img-frame"
+              style={{ "--i": 0 } as CSSProperties}
+            >
+              <img src={images.portrait.url} alt={images.portrait.alt} loading="lazy" />
+            </figure>
+            <figure
+              className="gallery-two gallery-figure img-frame"
+              style={{ "--i": 1 } as CSSProperties}
+            >
+              <img src={images.space.url} alt={images.space.alt} loading="lazy" />
+            </figure>
+            <figure
+              className="gallery-three gallery-figure img-frame"
+              style={{ "--i": 2 } as CSSProperties}
+            >
+              <img src={images.nails.url} alt={images.nails.alt} loading="lazy" />
+            </figure>
+            <span className="gallery-word" aria-hidden="true">
+              WIZ
+            </span>
+          </div>
+
+          <div className="gallery-end">
+            <EditorialLink to="/gallery">View gallery</EditorialLink>
+          </div>
         </div>
       </section>
 

@@ -6811,3 +6811,490 @@ body {
     margin-top: 0.5rem;
   }
 }
+
+/* ============================================================================
+   Home — the alternating ground
+   ----------------------------------------------------------------------------
+   Up to here every section below the hero sat on the same plum void, which made
+   the page read as one long dark room. From the hero down the grounds now take
+   turns: the hero is bright, "01 / The WIZ feeling" is the deep plum, and
+   "02 / Our services" is the first light room — blush porcelain with the same
+   typography, the same drawn rules and the same choreography, just inverted.
+   "03 / A visual mood" answers it with the plum again, and so on down the page.
+   ========================================================================== */
+
+/* --------------------------------------------------------------- 02, bright */
+
+.services-section {
+  color: #2c0729;
+  background:
+    radial-gradient(115% 88% at 88% -10%, rgba(255, 138, 216, 0.34), transparent 58%),
+    radial-gradient(85% 65% at 4% 106%, rgba(255, 196, 234, 0.6), transparent 62%),
+    linear-gradient(180deg, #fff7fc 0%, #fdeaf5 44%, #fadbee 100%);
+}
+
+/* A whisper of grain: without it the pale ground bands on a wide display. */
+.services-section::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.035;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+}
+
+/* the seam it shares with the plum section above: plum ink, not pink light */
+.services-section::before {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(150, 30, 120, 0.26) 24%,
+    rgba(150, 30, 120, 0.1) 62%,
+    transparent
+  );
+}
+
+.services-bloom {
+  top: -30%;
+  right: -16%;
+  width: min(50rem, 104vw);
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(255, 255, 255, 0.95),
+    rgba(255, 172, 230, 0.38) 42%,
+    transparent 70%
+  );
+  filter: blur(34px);
+}
+
+.services-eyebrow {
+  color: #6f2f61;
+}
+
+.services-eyebrow .feeling-index {
+  color: #c2158c;
+}
+
+.services-eyebrow .feeling-sep {
+  color: rgba(70, 20, 64, 0.4);
+}
+
+.services-eyebrow .feeling-rule {
+  background: linear-gradient(90deg, transparent, #e59fd2);
+}
+
+.services-eyebrow .feeling-rule-end {
+  background: linear-gradient(90deg, #e59fd2, transparent);
+}
+
+.services-title .feeling-line {
+  background-image: linear-gradient(96deg, #33082f 2%, #581150 52%, #8b1476 100%);
+}
+
+.services-title .feeling-line-em {
+  background-image: linear-gradient(96deg, #9c1379 0%, #c8158e 46%, #ee3f9c 100%);
+}
+
+.services-lede {
+  color: rgba(62, 16, 57, 0.8);
+}
+
+.service-card-media {
+  background: #f6dcee;
+  box-shadow:
+    0 18px 40px rgba(122, 20, 102, 0.16),
+    inset 0 0 0 1px rgba(61, 15, 61, 0.08);
+}
+
+.service-card-media img {
+  filter: saturate(1.04) brightness(1.04);
+}
+
+/* the sheen only has to hold the index pill, not darken the photo */ 
+.service-card-sheen {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0) 62%, rgba(43, 6, 40, 0.46) 100%);
+}
+
+.service-card-index {
+  color: #3d0f3d;
+  background: rgba(255, 255, 255, 0.86);
+  border-color: rgba(61, 15, 61, 0.1);
+  box-shadow: 0 6px 16px rgba(61, 15, 61, 0.14);
+  backdrop-filter: blur(6px);
+}
+
+.service-card-body {
+  border-top-color: rgba(61, 15, 61, 0.14);
+}
+
+.service-card-name {
+  background-image: linear-gradient(96deg, #33082f 6%, #7a1270 100%);
+}
+
+.service-card:hover .service-card-media,
+.service-card:focus-visible .service-card-media {
+  box-shadow:
+    0 26px 54px rgba(194, 21, 140, 0.24),
+    inset 0 0 0 1px rgba(194, 21, 140, 0.28);
+}
+
+.service-card:hover .service-card-media img,
+.service-card:focus-visible .service-card-media img {
+  filter: saturate(1.08) brightness(1.06);
+}
+
+.service-card:hover .service-card-name,
+.service-card:focus-visible .service-card-name {
+  background-image: linear-gradient(96deg, #8b1476 0%, #cf1590 55%, #ee3f9c 100%);
+}
+
+.service-end .editorial-link {
+  color: #33082f;
+  border-bottom-color: rgba(61, 15, 61, 0.28);
+}
+
+.service-end .editorial-link:hover {
+  color: #c2158c;
+  border-bottom-color: #c2158c;
+}
+
+/* ------------------------------------------------- 03, the plum answer again */
+
+.gallery-section {
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+  padding: clamp(4.75rem, 11vh, 7.5rem) 0 clamp(4.5rem, 10vh, 7rem);
+  color: var(--paper);
+  background:
+    radial-gradient(95% 76% at 8% -8%, rgba(126, 20, 112, 0.92), transparent 60%),
+    radial-gradient(72% 62% at 98% 106%, rgba(240, 90, 192, 0.26), transparent 64%),
+    linear-gradient(180deg, #1e0520 0%, #2b0728 46%, #190319 100%);
+}
+
+/* the seam under the bright section: the pink hairline, back again */
+.gallery-section::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 2;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 167, 236, 0.36) 24%,
+    rgba(255, 167, 236, 0.12) 62%,
+    transparent
+  );
+}
+
+.gallery-section::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+}
+
+.gallery-bloom {
+  position: absolute;
+  z-index: 0;
+  top: -30%;
+  right: -22%;
+  width: min(58rem, 112vw);
+  aspect-ratio: 1;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(255, 120, 214, 0.34),
+    rgba(255, 120, 214, 0.1) 42%,
+    transparent 68%
+  );
+  filter: blur(42px);
+  opacity: 0;
+}
+
+/* the logo's disc, low and left this time — the section above owns the right */
+.gallery-orb {
+  position: absolute;
+  z-index: 0;
+  bottom: -16%;
+  left: clamp(-20rem, -12vw, -8rem);
+  width: clamp(15rem, 30vw, 28rem);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at 58% 40%,
+    rgba(255, 214, 245, 0.18),
+    rgba(255, 140, 224, 0.1) 40%,
+    transparent 72%
+  );
+  box-shadow:
+    inset 0 0 80px rgba(255, 167, 236, 0.14),
+    0 0 130px rgba(240, 90, 192, 0.12);
+  opacity: 0;
+}
+
+.gallery-inner {
+  position: relative;
+  z-index: 1;
+}
+
+.gallery-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.7rem, 1.4vw, 1.1rem);
+  margin: 0 0 clamp(1.7rem, 4vh, 2.6rem);
+  font-size: clamp(0.6rem, 0.78vw, 0.74rem);
+  font-weight: 600;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: #f0d8ec;
+  opacity: 0;
+}
+
+.gallery-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: clamp(1.2rem, 3vw, 3rem);
+  margin-bottom: clamp(2.2rem, 5.5vh, 3.4rem);
+}
+
+.gallery-title {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  font-family: "Bodoni Moda", "Playfair Display", var(--font-display);
+  font-size: clamp(2.4rem, 5.6vw, 5rem);
+  font-weight: 400;
+  line-height: 0.98;
+  letter-spacing: -0.012em;
+  text-wrap: pretty;
+}
+
+.gallery-lede {
+  margin: 0 0 0.4rem;
+  max-width: 15rem;
+  text-align: right;
+  font-size: clamp(0.72rem, 0.85vw, 0.82rem);
+  line-height: 1.6;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(240, 216, 236, 0.72);
+  opacity: 0;
+}
+
+.gallery-composition {
+  position: relative;
+  height: clamp(30rem, 58vw, 46rem);
+  display: grid;
+  grid-template-columns: 1.05fr 1.1fr 0.67fr;
+  grid-template-rows: 1.28fr 1fr;
+  gap: clamp(0.75rem, 1.7vw, 1.5rem);
+}
+
+.gallery-figure {
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  border-radius: 20px;
+  background: #3a0c37;
+  box-shadow:
+    0 24px 58px rgba(8, 1, 10, 0.55),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  opacity: 0;
+}
+
+.gallery-figure img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  filter: saturate(1.03) brightness(1.03);
+  transition:
+    transform 1.2s var(--ease-quiet),
+    filter 0.6s var(--ease-quiet);
+}
+
+.gallery-figure:hover img {
+  transform: scale(1.04);
+  filter: saturate(1.07) brightness(1.07);
+}
+
+/* The salon's name takes the fourth quadrant, so the composition has no hole
+   in it: three photographs and one word, the way the hero sets its own name. */
+.gallery-word {
+  position: relative;
+  inset: auto;
+  z-index: 3;
+  grid-column: 2;
+  grid-row: 2;
+  place-self: end start;
+  margin: 0 0 -0.06em clamp(0.4rem, 1.4vw, 1.4rem);
+  pointer-events: none;
+  font-family: "Bodoni Moda", "Playfair Display", var(--font-display);
+  font-size: clamp(3.5rem, 10.2vw, 9.25rem);
+  line-height: 0.74;
+  letter-spacing: 0.01em;
+  background-image: linear-gradient(96deg, rgba(255, 255, 255, 0.95), rgba(255, 167, 236, 0.55) 82%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  opacity: 0;
+}
+
+.gallery-end {
+  margin-top: clamp(2rem, 5vh, 3rem);
+  opacity: 0;
+}
+
+.gallery-end .editorial-link {
+  gap: 22px;
+  border-bottom-color: rgba(255, 167, 236, 0.45);
+  font-size: 0.7rem;
+  letter-spacing: 0.24em;
+  color: var(--paper);
+  transition:
+    gap 0.35s var(--ease-quiet),
+    color 0.35s var(--ease-quiet),
+    border-color 0.35s var(--ease-quiet);
+}
+
+.gallery-end .editorial-link:hover {
+  gap: 32px;
+  color: var(--pink-2);
+  border-bottom-color: var(--pink-2);
+}
+
+/* Entrance — rules draw, the headline zooms, then the frames land. */
+.gallery-section.is-revealed .gallery-eyebrow {
+  animation: wiz-rise 0.85s var(--ease-quiet) both;
+}
+
+.gallery-section.is-revealed .feeling-rule {
+  animation: feeling-rule 0.95s var(--ease-quiet) both 0.1s;
+}
+
+.gallery-section.is-revealed .gallery-line:nth-child(1) {
+  animation: wiz-zoom 1.05s var(--ease-quiet) both 0.08s;
+}
+
+.gallery-section.is-revealed .gallery-line:nth-child(2) {
+  animation: wiz-zoom 1.05s var(--ease-quiet) both 0.22s;
+}
+
+.gallery-section.is-revealed .gallery-lede {
+  animation: wiz-rise 0.9s var(--ease-quiet) both 0.32s;
+}
+
+.gallery-section.is-revealed .gallery-figure {
+  animation: wiz-zoom 1.05s var(--ease-quiet) both;
+  animation-delay: calc(0.4s + var(--i, 0) * 0.12s);
+}
+
+.gallery-section.is-revealed .gallery-word {
+  animation: wiz-rise 1.1s var(--ease-quiet) both 0.72s;
+}
+
+.gallery-section.is-revealed .gallery-end {
+  animation: wiz-rise 0.9s var(--ease-quiet) both 0.95s;
+}
+
+.gallery-section.is-revealed .gallery-bloom {
+  animation: feeling-glow 2.2s var(--ease-quiet) both;
+}
+
+.gallery-section.is-revealed .gallery-orb {
+  animation: feeling-orb 2.4s var(--ease-quiet) both 0.2s;
+}
+
+@media (max-width: 900px) {
+  .gallery-head {
+    grid-template-columns: 1fr;
+  }
+  .gallery-title {
+    font-size: clamp(2.3rem, 8.8vw, 3.5rem);
+  }
+  .gallery-lede {
+    max-width: none;
+    margin: 0.9rem 0 0;
+    text-align: left;
+  }
+  .gallery-word {
+    left: 18%;
+  }
+}
+
+@media (max-width: 600px) {
+  .gallery-section {
+    padding: 4rem 0 3.75rem;
+  }
+  .gallery-title {
+    font-size: clamp(2.05rem, 9.6vw, 2.8rem);
+  }
+  .gallery-eyebrow {
+    letter-spacing: 0.28em;
+  }
+  .gallery-composition {
+    height: auto;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: auto auto auto;
+    gap: 0.6rem;
+  }
+  .gallery-one,
+  .gallery-three {
+    grid-column: auto;
+    grid-row: 1;
+    aspect-ratio: 3 / 4;
+  }
+  .gallery-two {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    aspect-ratio: 16 / 10;
+  }
+  .gallery-figure {
+    border-radius: 16px;
+  }
+  /* under the photographs, on the plum, where the light reads best */
+  .gallery-word {
+    position: static;
+    inset: auto;
+    grid-column: 1 / -1;
+    grid-row: 3;
+    place-self: start;
+    margin: 0.7rem 0 0 0.15rem;
+    font-size: clamp(3.2rem, 17vw, 5rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gallery-section .gallery-eyebrow,
+  .gallery-section .gallery-line,
+  .gallery-section .gallery-lede,
+  .gallery-section .gallery-figure,
+  .gallery-section .gallery-word,
+  .gallery-section .gallery-end,
+  .gallery-section .gallery-bloom,
+  .gallery-section .feeling-rule {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .gallery-section .gallery-orb {
+    animation: none !important;
+    opacity: 0.7 !important;
+    transform: none !important;
+  }
+  .gallery-figure img {
+    transition: none;
+  }
+}
