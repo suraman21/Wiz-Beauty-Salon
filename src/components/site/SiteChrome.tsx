@@ -4,6 +4,7 @@ import { ArrowRight, CalendarDays, Menu, X } from "lucide-react";
 import logo from "@/assets/wiz-logo.png";
 import { nav } from "@/data/wiz";
 import { useSalonInfo } from "@/lib/site-content";
+import { useReveal } from "@/lib/use-reveal";
 import { hasDetails, whatsappHref } from "@/lib/salon-api";
 
 export function SiteHeader() {
@@ -257,13 +258,23 @@ export function BookingBand({
   title?: ReactNode;
   copy?: string;
 }) {
+  const reveal = useReveal<HTMLElement>();
+
   return (
-    <section className="booking-section">
+    <section ref={reveal.ref} className={`booking-section${reveal.revealed ? " is-revealed" : ""}`}>
+      <noscript>
+        <style>{`.booking-eyebrow,.booking-title,.booking-copy,.booking-cta,.feeling-rule{opacity:1!important;animation:none!important;transform:none!important}.booking-bloom{opacity:1!important}`}</style>
+      </noscript>
+      <span className="booking-bloom" aria-hidden="true" />
       <div className="section-wrap booking-inner">
-        <span className="overline">Your moment awaits</span>
-        <h2>{title}</h2>
-        <p>{copy}</p>
-        <Link to="/booking" className="btn btn-ink btn-lg">
+        <p className="booking-eyebrow">
+          <span className="feeling-rule" aria-hidden="true" />
+          <span className="booking-eyebrow-text">Your moment awaits</span>
+          <span className="feeling-rule feeling-rule-end" aria-hidden="true" />
+        </p>
+        <h2 className="booking-title">{title}</h2>
+        <p className="booking-copy">{copy}</p>
+        <Link to="/booking" className="btn btn-ink btn-lg booking-cta">
           Book an appointment <ArrowRight size={18} />
         </Link>
       </div>

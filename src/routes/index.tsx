@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { ArrowRight, CalendarDays, ChevronDown, Play } from "lucide-react";
 import { BeforeAfter, BookingBand, EditorialLink, SiteLayout } from "@/components/site/SiteChrome";
 import { useSiteImages } from "@/lib/site-content";
+import { useReveal } from "@/lib/use-reveal";
 import heroPurple from "@/assets/hero-wiz-purple.jpg";
 import { fetchCatalogue } from "@/lib/booking-api";
 import { buildServices, localServices, servicesForHome } from "@/lib/service-pages";
@@ -306,38 +307,4 @@ function Home() {
       <BookingBand />
     </SiteLayout>
   );
-}
-
-/**
- * Flips on the first time the wrapped section scrolls into view, so the
- * section can play the hero's entrance far below the fold.
- */
-function useReveal<T extends HTMLElement>() {
-  const ref = useRef<T | null>(null);
-  const [revealed, setRevealed] = useState(false);
-
-  useEffect(() => {
-    const node = ref.current;
-
-    if (!node || typeof IntersectionObserver === "undefined") {
-      setRevealed(true);
-      return;
-    }
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) {
-          setRevealed(true);
-          observer.disconnect();
-        }
-      },
-      { threshold: 0.18, rootMargin: "0px 0px -10% 0px" },
-    );
-
-    observer.observe(node);
-
-    return () => observer.disconnect();
-  }, []);
-
-  return { ref, revealed };
 }
