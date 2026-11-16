@@ -5596,3 +5596,97 @@ body {
 .site-header-over-hero .nav-manage:hover {
   color: #fff;
 }
+
+/* ============================================================================
+   Hero entrance — one gesture per element, in reading order
+   ----------------------------------------------------------------------------
+   The headline rises and settles from a slight over-scale; everything else
+   slides up behind it. Stagger is set per element so the whole hero resolves in
+   about 1.9s without anything waiting on a scroll event.
+   ========================================================================== */
+@keyframes wiz-rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 22px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes wiz-zoom {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 34px, 0) scale(1.07);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes wiz-drop {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -16px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.site-header-over-hero {
+  animation: wiz-drop 0.8s var(--ease-quiet) both;
+}
+
+.home-hero-wiz .wiz-eyebrow,
+.home-hero-wiz .wiz-lede-line,
+.home-hero-wiz .wiz-lede-body,
+.home-hero-wiz .wiz-actions > *,
+.home-hero-wiz .wiz-scroll {
+  animation: wiz-rise 0.85s var(--ease-quiet) both;
+}
+
+.home-hero-wiz .wiz-title-line {
+  animation: wiz-zoom 1.05s var(--ease-quiet) both;
+}
+
+/* the order the eye reads them in */
+.home-hero-wiz .wiz-eyebrow {
+  animation-delay: 0.14s;
+}
+.home-hero-wiz .wiz-title-wiz {
+  animation-delay: 0.26s;
+}
+.home-hero-wiz .wiz-title-salon {
+  animation-delay: 0.4s;
+}
+.home-hero-wiz .wiz-lede-line {
+  animation-delay: 0.56s;
+}
+.home-hero-wiz .wiz-lede-body {
+  animation-delay: 0.66s;
+}
+.home-hero-wiz .wiz-actions > :first-child {
+  animation-delay: 0.8s;
+}
+.home-hero-wiz .wiz-actions > :last-child {
+  animation-delay: 0.9s;
+}
+.home-hero-wiz .wiz-scroll {
+  animation-delay: 1.15s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-header-over-hero,
+  .home-hero-wiz .wiz-eyebrow,
+  .home-hero-wiz .wiz-title-line,
+  .home-hero-wiz .wiz-lede-line,
+  .home-hero-wiz .wiz-lede-body,
+  .home-hero-wiz .wiz-actions > *,
+  .home-hero-wiz .wiz-scroll {
+    animation: none;
+  }
+}
