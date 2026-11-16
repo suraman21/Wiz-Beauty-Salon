@@ -81,6 +81,9 @@ export function SiteHeader() {
         </button>
       </div>
       {open && (
+        <div className="mobile-nav-scrim" aria-hidden="true" onClick={() => setOpen(false)} />
+      )}
+      {open && (
         <nav className="mobile-nav" aria-label="Mobile navigation">
           {nav.map((item) => (
             <Link

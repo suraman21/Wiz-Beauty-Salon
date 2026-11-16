@@ -5456,8 +5456,8 @@ body {
 @media (min-width: 901px) {
   .home-hero-wiz .home-hero-image {
     top: var(--site-header-height);
-    height: auto;
-    bottom: 0;
+    height: calc(100% - var(--site-header-height));
+    bottom: auto;
     -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 46px, #000 100%);
     mask-image: linear-gradient(180deg, transparent 0, #000 46px, #000 100%);
   }
@@ -5688,5 +5688,299 @@ body {
   .home-hero-wiz .wiz-actions > *,
   .home-hero-wiz .wiz-scroll {
     animation: none;
+  }
+}
+
+/* ============================================================================
+   Phone / tablet portrait — one full screen, copy over the artwork
+   ----------------------------------------------------------------------------
+   Replaces the stacked picture-then-copy layout: the artwork fills the screen
+   (still starting below the glass bar, so her crown stays clear) and the copy
+   sits on a scrim at the bottom. Only the hem of the gown is overlapped.
+   ========================================================================== */
+@media (max-width: 900px) {
+  .home-hero-wiz {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    min-height: 100svh;
+    padding: calc(var(--site-header-height) + 0.75rem) 0
+      calc(1.4rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .home-hero-wiz .home-hero-image {
+    position: absolute;
+    top: var(--site-header-height);
+    left: 0;
+    right: 0;
+    bottom: auto;
+    width: 100%;
+    height: calc(100% - var(--site-header-height));
+    margin-top: 0;
+    object-fit: cover;
+    object-position: 70% 12%;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+
+  /* the scrim: a breath at the top for the bar, a deep base for the copy */
+  .home-hero-wiz .home-hero-shade {
+    display: block;
+    inset: var(--site-header-height) 0 0 0;
+    background:
+      linear-gradient(
+        180deg,
+        rgba(39, 6, 41, 0.62) 0%,
+        rgba(39, 6, 41, 0.2) 11%,
+        rgba(39, 6, 41, 0) 26%
+      ),
+      linear-gradient(
+        0deg,
+        var(--wiz-void) 0%,
+        var(--wiz-void) 17%,
+        rgba(39, 6, 41, 0.96) 30%,
+        rgba(39, 6, 41, 0.88) 42%,
+        rgba(39, 6, 41, 0.66) 54%,
+        rgba(39, 6, 41, 0.34) 66%,
+        rgba(39, 6, 41, 0.1) 78%,
+        rgba(39, 6, 41, 0) 88%
+      );
+  }
+
+  .home-hero-wiz .hero-content {
+    width: 100%;
+    padding: 0 var(--site-gutter);
+  }
+
+  .home-hero-wiz .wiz-title-wiz {
+    font-size: clamp(2rem, 11.2vw, 3.1rem);
+    letter-spacing: 0.18em;
+  }
+
+  .home-hero-wiz .wiz-title-salon {
+    font-size: clamp(1.55rem, 8.9vw, 2.45rem);
+  }
+
+  .home-hero-wiz .wiz-lede-body {
+    font-size: 0.9rem;
+    max-width: 26rem;
+  }
+
+  .home-hero-wiz .wiz-lede-line {
+    font-size: clamp(1.35rem, 5vw, 1.7rem);
+  }
+
+  .home-hero-wiz .wiz-actions {
+    gap: 1rem;
+    margin-top: 1.35rem;
+    padding-bottom: 0.2rem;
+  }
+
+  .home-hero-wiz .wiz-btn-video {
+    padding-block: 0.35rem;
+  }
+}
+
+/* ============================================================================
+   Mobile navigation — a floating glass sheet instead of a dropdown panel
+   ========================================================================== */
+@keyframes nav-sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(-14px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes nav-item-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 900px) {
+  .site-header .mobile-nav {
+    position: fixed;
+    top: calc(var(--site-header-height) + 8px);
+    left: 10px;
+    right: 10px;
+    bottom: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 16px;
+    border-radius: 32px;
+    background:
+      radial-gradient(120% 80% at 50% 0%, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0) 58%),
+      linear-gradient(180deg, rgba(50, 11, 52, 0.975) 0%, rgba(24, 4, 26, 0.985) 100%);
+    backdrop-filter: blur(34px) saturate(1.5);
+    -webkit-backdrop-filter: blur(34px) saturate(1.5);
+    border: 1px solid rgba(255, 183, 240, 0.26);
+    box-shadow:
+      0 30px 70px rgba(15, 2, 17, 0.6),
+      0 0 44px rgba(226, 64, 178, 0.22),
+      inset 0 1px 0 rgba(255, 255, 255, 0.24);
+    overflow: hidden;
+    animation: nav-sheet-in 0.42s var(--ease-quiet) both;
+  }
+
+  .site-header .mobile-nav a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 15px 18px;
+    border: 0;
+    border-radius: 20px;
+    font-family: var(--font-display);
+    font-size: 23px;
+    font-weight: 500;
+    line-height: 1;
+    color: var(--paper);
+    background: rgba(255, 255, 255, 0.06);
+    animation: nav-item-in 0.45s var(--ease-quiet) both;
+    transition:
+      background-color 0.25s ease,
+      box-shadow 0.25s ease;
+  }
+
+  .site-header .mobile-nav a:nth-of-type(1) {
+    animation-delay: 0.08s;
+  }
+  .site-header .mobile-nav a:nth-of-type(2) {
+    animation-delay: 0.13s;
+  }
+  .site-header .mobile-nav a:nth-of-type(3) {
+    animation-delay: 0.18s;
+  }
+  .site-header .mobile-nav a:nth-of-type(4) {
+    animation-delay: 0.23s;
+  }
+  .site-header .mobile-nav a:nth-of-type(5) {
+    animation-delay: 0.28s;
+  }
+  .site-header .mobile-nav a:nth-of-type(6) {
+    animation-delay: 0.33s;
+  }
+  .site-header .mobile-nav a:nth-of-type(7) {
+    animation-delay: 0.38s;
+  }
+
+  .site-header .mobile-nav a:hover,
+  .site-header .mobile-nav a.is-active {
+    background: linear-gradient(
+      100deg,
+      rgba(246, 119, 214, 0.3) 0%,
+      rgba(255, 167, 236, 0.12) 100%
+    );
+    color: #fff;
+    box-shadow: inset 0 0 0 1px rgba(255, 167, 236, 0.42);
+  }
+
+  .site-header .mobile-nav .mobile-manage-link {
+    justify-content: center;
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(251, 238, 248, 0.78);
+    background: transparent;
+  }
+
+  .site-header .mobile-nav .btn.mobile-book {
+    margin-top: 8px;
+    justify-content: center;
+    padding: 18px;
+    border-radius: 999px;
+    background: linear-gradient(100deg, #f062c8 0%, #ff9ce6 58%, #ffb6f0 100%);
+    color: var(--plum-ink);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    text-transform: none;
+    box-shadow: 0 16px 34px rgba(226, 64, 178, 0.38);
+  }
+
+  .site-header .mobile-nav .btn.mobile-book:hover {
+    background: linear-gradient(100deg, #f472d0 0%, #ffa9ea 58%, #ffc2f4 100%);
+    color: var(--plum-ink);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-header .mobile-nav,
+  .site-header .mobile-nav a,
+  .mobile-nav-scrim {
+    animation: none;
+  }
+}
+
+@keyframes nav-scrim-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.mobile-nav-scrim {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .mobile-nav-scrim {
+    display: block;
+    /* the glass bar is the containing block for its own fixed children, so the
+       scrim is sized in viewport units from the bar's corner instead */
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 1;
+    background: rgba(12, 2, 14, 0.58);
+    -webkit-backdrop-filter: blur(3px);
+    backdrop-filter: blur(3px);
+    animation: nav-scrim-in 0.3s ease both;
+  }
+
+  .site-header .mobile-nav {
+    z-index: 2;
+  }
+}
+
+/* portrait tablets get a touch more presence than phones */
+@media (min-width: 601px) and (max-width: 900px) {
+  .home-hero-wiz .wiz-lockup {
+    font-size: clamp(2.6rem, 6.2vw, 3.7rem);
+  }
+
+  .home-hero-wiz .wiz-lockup-line:last-child {
+    font-size: clamp(2rem, 4.9vw, 2.9rem);
+  }
+
+  .home-hero-wiz .wiz-lede {
+    margin-top: 1.6rem;
+    gap: 0.6rem;
+  }
+
+  .home-hero-wiz .wiz-lede-lead {
+    font-size: clamp(1.6rem, 3.6vw, 2rem);
+  }
+
+  .home-hero-wiz .wiz-lede-body {
+    font-size: 0.98rem;
+    max-width: 36rem;
   }
 }
