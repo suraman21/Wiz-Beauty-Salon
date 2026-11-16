@@ -322,7 +322,7 @@ final class ServiceController
         }
 
         $backCategory = null;
-        if ($service !== null && isset($service['category_id']) && $service['category_id'] !== null && (int) $service['category_id'] > 0) {
+        if ($service !== null && isset($service['category_id']) && (int) $service['category_id'] > 0) {
             $backCategory = (int) $service['category_id'];
         } elseif ($preselect !== null) {
             $backCategory = (int) $preselect;

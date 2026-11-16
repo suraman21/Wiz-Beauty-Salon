@@ -314,9 +314,4 @@ final class BookingRepository
         }
         return $digits;
     }
-
-    private function normalizeEmail(string $email): string
-    {
-        return strtolower(trim($email));
-    }
 }
