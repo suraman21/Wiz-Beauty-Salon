@@ -111,17 +111,27 @@ export function SiteHeader() {
 }
 
 export function SiteFooter() {
+  const reveal = useReveal<HTMLElement>();
+
   return (
-    <footer className="site-footer">
-      <div className="section-wrap">
+    <footer ref={reveal.ref} className={`site-footer${reveal.revealed ? " is-revealed" : ""}`}>
+      <noscript>
+        <style>{`.footer-eyebrow,.footer-headline,.footer-cta,.footer-bottom,.footer-last,.feeling-rule{opacity:1!important;animation:none!important;transform:none!important}.footer-bloom{opacity:1!important}`}</style>
+      </noscript>
+      <span className="footer-bloom" aria-hidden="true" />
+      <div className="section-wrap footer-inner">
         <div className="footer-top">
-          <div>
-            <span className="overline">WIZ Beauty Salon</span>
-            <p>
+          <div className="footer-brand">
+            <p className="footer-eyebrow">
+              <span className="feeling-rule" aria-hidden="true" />
+              <span className="footer-eyebrow-text">WIZ Beauty Salon</span>
+              <span className="feeling-rule feeling-rule-end" aria-hidden="true" />
+            </p>
+            <p className="footer-headline">
               Beauty, <em>your way.</em>
             </p>
           </div>
-          <Link to="/booking" className="btn btn-blush">
+          <Link to="/booking" className="btn btn-blush footer-cta">
             Book an appointment <ArrowRight size={16} />
           </Link>
         </div>

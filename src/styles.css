@@ -7742,3 +7742,213 @@ body {
     transform: none !important;
   }
 }
+
+/* ---------------------------------------------------------------- the footer
+   The last room on the page, and the darkest: the plum deepens toward the
+   bottom, the pink hairline marks where the booking band hands over, and the
+   headline carries the hero's gradient. The rules, the bloom, the grain and
+   the choreography are the same language as the sections above it. */
+
+.site-footer {
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+  padding: clamp(3.5rem, 7vw, 5.5rem) 0 0;
+  background:
+    radial-gradient(70% 60% at 50% 115%, rgba(240, 90, 192, 0.18), transparent 65%),
+    linear-gradient(180deg, #190319 0%, #1e0520 42%, #150214 100%);
+}
+
+/* the seam where the booking band hands over: the pink hairline */
+.site-footer::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 2;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 167, 236, 0.36) 24%,
+    rgba(255, 167, 236, 0.12) 62%,
+    transparent
+  );
+}
+
+.site-footer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+}
+
+.footer-bloom {
+  position: absolute;
+  z-index: 0;
+  bottom: -30%;
+  left: 0;
+  right: 0;
+  margin-inline: auto;
+  width: min(50rem, 104vw);
+  aspect-ratio: 1;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(255, 120, 214, 0.22),
+    rgba(255, 120, 214, 0.07) 42%,
+    transparent 68%
+  );
+  filter: blur(42px);
+  opacity: 0;
+}
+
+.footer-inner {
+  position: relative;
+  z-index: 1;
+}
+
+/* scoped past the legacy .footer-top p, which would blow the eyebrow up */
+.footer-top .footer-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.7rem, 1.4vw, 1.1rem);
+  margin: 0;
+  font-size: clamp(0.6rem, 0.78vw, 0.74rem);
+  font-weight: 600;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: #f0d8ec;
+  opacity: 0;
+}
+
+/* the line never breaks: on a narrow phone the rules give way instead */
+.footer-eyebrow-text {
+  white-space: nowrap;
+}
+
+.footer-top .footer-headline {
+  margin: clamp(1.2rem, 3vh, 2rem) 0 0;
+  font-family: var(--font-display);
+  font-size: clamp(65px, 10vw, 150px);
+  font-weight: 400;
+  line-height: 0.9;
+  letter-spacing: -0.012em;
+  background-image: linear-gradient(96deg, #ffffff 4%, #fdf0fa 46%, #f6c7ea 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  opacity: 0;
+}
+
+.footer-top .footer-headline em {
+  font-style: italic;
+  background-image: linear-gradient(96deg, #ffe3f7 0%, #ffa7ec 44%, #f65cc4 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.site-footer .footer-cta {
+  border-radius: 999px;
+  box-shadow: 0 16px 34px rgba(8, 1, 10, 0.45);
+  transition:
+    background-color 0.35s var(--ease-quiet),
+    color 0.35s var(--ease-quiet),
+    border-color 0.35s,
+    transform 0.35s var(--ease-quiet),
+    box-shadow 0.35s var(--ease-quiet);
+  opacity: 0;
+}
+
+.site-footer .footer-cta:hover {
+  background: var(--pink-2);
+  box-shadow: 0 20px 42px rgba(8, 1, 10, 0.55);
+}
+
+/* the spark the feeling section puts on its rule, here on the meta row */
+.footer-bottom {
+  position: relative;
+  opacity: 0;
+}
+
+.footer-bottom::before {
+  content: "";
+  position: absolute;
+  top: -3px;
+  left: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--pink-2);
+  box-shadow: 0 0 14px rgba(255, 167, 236, 0.95);
+}
+
+.footer-last {
+  opacity: 0;
+}
+
+/* Entrance — rules draw, the headline zooms, then the meta rows land. */
+.site-footer.is-revealed .footer-eyebrow {
+  animation: wiz-rise 0.85s var(--ease-quiet) both;
+}
+
+.site-footer.is-revealed .feeling-rule {
+  animation: feeling-rule 0.95s var(--ease-quiet) both 0.1s;
+}
+
+.site-footer.is-revealed .footer-headline {
+  animation: wiz-zoom 1.05s var(--ease-quiet) both 0.08s;
+}
+
+.site-footer.is-revealed .footer-cta {
+  animation: feeling-glow 0.9s var(--ease-quiet) both 0.55s;
+}
+
+.site-footer.is-revealed .footer-bottom {
+  animation: wiz-rise 0.9s var(--ease-quiet) both 0.7s;
+}
+
+.site-footer.is-revealed .footer-last {
+  animation: wiz-rise 0.9s var(--ease-quiet) both 0.85s;
+}
+
+.site-footer.is-revealed .footer-bloom {
+  animation: feeling-glow 2.2s var(--ease-quiet) both;
+}
+
+@media (max-width: 900px) {
+  .footer-top .footer-headline {
+    font-size: clamp(3.4rem, 13vw, 5.5rem);
+  }
+  .site-footer .footer-cta {
+    margin-top: 1.75rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .footer-top .footer-eyebrow {
+    letter-spacing: 0.28em;
+  }
+  .footer-top .footer-headline {
+    font-size: clamp(2.9rem, 15vw, 4.2rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-footer .footer-eyebrow,
+  .site-footer .footer-headline,
+  .site-footer .footer-cta,
+  .site-footer .footer-bottom,
+  .site-footer .footer-last,
+  .site-footer .footer-bloom,
+  .site-footer .feeling-rule {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
