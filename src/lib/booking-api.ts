@@ -33,9 +33,9 @@ export type BookingInput = {
   name: string;
   phone: string;
   email: string;
-  service_id?: number | null;
-  service_ids?: number[];
-  is_undecided?: boolean;
+  service_id?: number | null | undefined;
+  service_ids?: number[] | undefined;
+  is_undecided?: boolean | undefined;
   date: string;
   time: string;
   notes: string;
@@ -81,10 +81,10 @@ export function fetchServices(signal?: AbortSignal): Promise<ApiService[]> {
 }
 
 export type CalendarOpts = {
-  serviceId?: number | null;
-  serviceIds?: number[];
-  isUndecided?: boolean;
-  duration?: number;
+  serviceId?: number | null | undefined;
+  serviceIds?: number[] | undefined;
+  isUndecided?: boolean | undefined;
+  duration?: number | undefined;
 };
 
 export function fetchCalendar(
@@ -94,7 +94,7 @@ export function fetchCalendar(
   signal?: AbortSignal,
 ): Promise<CalendarDay[]> {
   let opts: CalendarOpts;
-  if (typeof serviceId === 'object' && serviceId !== null) {
+  if (typeof serviceId === "object" && serviceId !== null) {
     opts = serviceId as CalendarOpts;
   } else {
     opts = { serviceId: serviceId as number };
@@ -106,15 +106,15 @@ export function fetchCalendar(
   });
 
   if (opts.isUndecided) {
-    query.set('is_undecided', '1');
+    query.set("is_undecided", "1");
   } else if (opts.serviceIds && opts.serviceIds.length > 0) {
-    query.set('service_ids', opts.serviceIds.join(','));
+    query.set("service_ids", opts.serviceIds.join(","));
   } else if (opts.serviceId != null && opts.serviceId > 0) {
-    query.set('service_id', String(opts.serviceId));
+    query.set("service_id", String(opts.serviceId));
   } else if (opts.duration && opts.duration > 0) {
-    query.set('duration', String(opts.duration));
-  } else if (typeof serviceId === 'number' && serviceId > 0) {
-    query.set('service_id', String(serviceId));
+    query.set("duration", String(opts.duration));
+  } else if (typeof serviceId === "number" && serviceId > 0) {
+    query.set("service_id", String(serviceId));
   }
 
   return apiGet<{ days: CalendarDay[] }>(`/api/v1/calendar?${query.toString()}`, signal).then(
@@ -139,19 +139,19 @@ export function createBooking(input: BookingInput): Promise<BookingResult> {
     date: input.date,
     time: input.time,
     notes: input.notes,
-    website: '',
+    website: "",
   };
   if (input.is_undecided) {
-    payload.is_undecided = 1;
-    payload.isUndecided = 1;
+    payload["is_undecided"] = 1;
+    payload["isUndecided"] = 1;
   } else if (input.service_ids && input.service_ids.length > 0) {
-    payload.service_ids = input.service_ids;
-    payload.serviceIds = input.service_ids;
-    payload.service_id = input.service_id ?? input.service_ids[0];
+    payload["service_ids"] = input.service_ids;
+    payload["serviceIds"] = input.service_ids;
+    payload["service_id"] = input.service_id ?? input.service_ids[0];
   } else if (input.service_id != null) {
-    payload.service_id = input.service_id;
+    payload["service_id"] = input.service_id;
   }
-  return apiPost<BookingResult>('/api/v1/bookings', payload);
+  return apiPost<BookingResult>("/api/v1/bookings", payload);
 }
 
 export type RecoverBooking = {
@@ -168,19 +168,25 @@ export type RecoverBooking = {
  * Find bookings with phone number OR email address.
  * identifier can be either — server detects by presence of @.
  */
-export function recoverBookings(identifier: string): Promise<{ bookings: RecoverBooking[]; count: number }> {
-  return apiPost<{ bookings: RecoverBooking[]; count: number }>('/api/v1/bookings/recover', {
+export function recoverBookings(
+  identifier: string,
+): Promise<{ bookings: RecoverBooking[]; count: number }> {
+  return apiPost<{ bookings: RecoverBooking[]; count: number }>("/api/v1/bookings/recover", {
     identifier: identifier.trim(),
-    website: '',
+    website: "",
   });
 }
 
 /** Backwards compat alias — kept so existing call sites don't break. */
-export function recoverBookingsByPhone(phone: string): Promise<{ bookings: RecoverBooking[]; count: number }> {
+export function recoverBookingsByPhone(
+  phone: string,
+): Promise<{ bookings: RecoverBooking[]; count: number }> {
   return recoverBookings(phone);
 }
 
-export function recoverBookingsByEmail(email: string): Promise<{ bookings: RecoverBooking[]; count: number }> {
+export function recoverBookingsByEmail(
+  email: string,
+): Promise<{ bookings: RecoverBooking[]; count: number }> {
   return recoverBookings(email);
 }
 

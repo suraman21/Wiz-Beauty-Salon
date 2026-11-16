@@ -13,7 +13,21 @@ afterEach(() => {
 describe("manage booking — find with phone or email", () => {
   it("sends identifier (phone) to /api/v1/bookings/recover", async () => {
     const fetchMock = vi.fn().mockResolvedValue(
-      jsonResponse({ ok: true, bookings: [{ reference: "WZ1", service_name: "Silk press", booking_date: "2026-10-30", start_time: "10:00", end_time: "11:00", status: "requested", manage_url: "https://wiz.arkeonethiopia.com/booking/manage/token" }], count: 1 }),
+      jsonResponse({
+        ok: true,
+        bookings: [
+          {
+            reference: "WZ1",
+            service_name: "Silk press",
+            booking_date: "2026-10-30",
+            start_time: "10:00",
+            end_time: "11:00",
+            status: "requested",
+            manage_url: "https://wiz.arkeonethiopia.com/booking/manage/token",
+          },
+        ],
+        count: 1,
+      }),
     );
     vi.stubGlobal("fetch", fetchMock);
 
@@ -47,7 +61,10 @@ describe("manage booking — find with phone or email", () => {
     let body = JSON.parse(String((fetchMock.mock.calls[0] as [unknown, RequestInit])[1].body));
     expect(body.identifier).toBe("0911223344");
 
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse({ ok: true, bookings: [], count: 0 })));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(jsonResponse({ ok: true, bookings: [], count: 0 })),
+    );
     const m2 = vi.fn().mockResolvedValue(jsonResponse({ ok: true, bookings: [], count: 0 }));
     vi.stubGlobal("fetch", m2);
     await recoverBookingsByEmail("Hanna@Example.com");
@@ -56,13 +73,30 @@ describe("manage booking — find with phone or email", () => {
   });
 
   it("surfaces server validation error for bad identifier", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse({ error: "Phone number must be a valid phone number. Or enter your email address." }, 422)));
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue(
+          jsonResponse(
+            { error: "Phone number must be a valid phone number. Or enter your email address." },
+            422,
+          ),
+        ),
+    );
     await expect(recoverBookings("bad")).rejects.toMatchObject({ name: "ApiError", status: 422 });
   });
 
   it("explains rate limit in friendly words", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse({ error: "Too many tries. Please wait a few minutes and try again." }, 429)));
-    const err = await recoverBookings("0911223344").catch((e) => e as ApiError);
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue(
+          jsonResponse({ error: "Too many tries. Please wait a few minutes and try again." }, 429),
+        ),
+    );
+    const err = (await recoverBookings("0911223344").catch((e: unknown) => e)) as ApiError;
     expect(err.message).toMatch(/wait a few minutes/i);
     expect(err.status).toBe(429);
   });
@@ -76,14 +110,18 @@ describe("manage booking — find with phone or email", () => {
 describe("manage page copy — not saying recover", () => {
   it("expects new booking-manage-card wording", async () => {
     // This is a contract: booking step 0 must say Find your booking with phone or email, not Recover
-    const bookingSrc = await import("node:fs").then((fs) => fs.readFileSync("src/routes/booking.tsx", "utf8"));
+    const bookingSrc = await import("node:fs").then((fs) =>
+      fs.readFileSync("src/routes/booking.tsx", "utf8"),
+    );
     expect(bookingSrc).toContain("Find your booking with phone or email");
     expect(bookingSrc).not.toContain("Recover with phone");
     expect(bookingSrc).toContain("Find your booking through your phone number or email");
   });
 
   it("manage page says Find your booking not Lost your link as title", async () => {
-    const src = await import("node:fs").then((fs) => fs.readFileSync("src/routes/booking.recover.tsx", "utf8"));
+    const src = await import("node:fs").then((fs) =>
+      fs.readFileSync("src/routes/booking_.recover.tsx", "utf8"),
+    );
     expect(src).toContain("Find your");
     expect(src).toContain("booking");
     expect(src).toContain("Phone number or email");

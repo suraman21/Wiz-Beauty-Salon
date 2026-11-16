@@ -9,8 +9,24 @@ import space from "@/assets/salon-space.jpg";
 import hero from "@/assets/home-hero.jpg";
 import before from "@/assets/transformation-before.jpg";
 import after from "@/assets/transformation-after.jpg";
+import braid from "@/assets/hero-braid.jpg";
+import braiding from "@/assets/braiding.jpg";
+import kids from "@/assets/kids-braids.jpg";
 
-export const images = { hair, nails, makeup, skin, portrait, space, hero, before, after };
+export const images = {
+  hair,
+  nails,
+  makeup,
+  skin,
+  portrait,
+  space,
+  hero,
+  before,
+  after,
+  braid,
+  braiding,
+  kids,
+};
 
 export const nav = [
   { label: "Home", to: "/" },
@@ -164,6 +180,27 @@ export const galleryWork: {
     tall: true,
   },
   { id: "g6", category: "hair", image: after, alt: "Styled waves", title: "Long waves" },
+  {
+    id: "g8",
+    category: "hair",
+    image: braid,
+    alt: "Cornrow braid pattern, finished",
+    title: "Cornrows, finished",
+  },
+  {
+    id: "g9",
+    category: "hair",
+    image: braiding,
+    alt: "A braider sectioning and plaiting hair",
+    title: "Sectioning",
+  },
+  {
+    id: "g10",
+    category: "hair",
+    image: kids,
+    alt: "A child having her hair braided with beads",
+    title: "Beads and braids",
+  },
   {
     id: "g7",
     category: "makeup",

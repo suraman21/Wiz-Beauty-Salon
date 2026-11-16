@@ -1,4 +1,4 @@
-import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
@@ -80,12 +80,6 @@ const fmt = (iso: string) =>
   parseIso(iso).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
 
 function Booking() {
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
-  // When visiting /booking/recover the child route should render, not the booking flow.
-  // Without this, the parent would swallow the child (TanStack dot nesting requires Outlet).
-  if (pathname === "/booking/recover") {
-    return <Outlet />;
-  }
   const images = useSiteImages();
   const search = Route.useSearch();
   const appliedSearch = useRef(false);
@@ -122,7 +116,10 @@ function Booking() {
   const totalDuration = useMemo(() => {
     if (isUndecided) return 60;
     if (selectedServices.length === 0) return 0;
-    return selectedServices.reduce((sum, s) => sum + (s.duration_minutes > 0 ? s.duration_minutes : 30), 0);
+    return selectedServices.reduce(
+      (sum, s) => sum + (s.duration_minutes > 0 ? s.duration_minutes : 30),
+      0,
+    );
   }, [selectedServices, isUndecided]);
   const totalPrice = useMemo(() => {
     if (isUndecided) return null;
@@ -187,7 +184,10 @@ function Booking() {
   }, [services, search.service]);
 
   const loadCalendar = useCallback(
-    (opts: { serviceId?: number | null; serviceIds?: number[]; isUndecided?: boolean }, signal?: AbortSignal) => {
+    (
+      opts: { serviceId?: number | null; serviceIds?: number[]; isUndecided?: boolean },
+      signal?: AbortSignal,
+    ) => {
       setCalendarBusy(true);
       setCalendarError("");
       const calendarOpts = {
@@ -218,7 +218,8 @@ function Booking() {
     if (selectedIds.length === 0) return undefined;
     const controller = new AbortController();
     if (selectedIds.length === 1) {
-      void loadCalendar({ serviceId: selectedIds[0] }, controller.signal);
+      const only = selectedIds[0];
+      if (only !== undefined) void loadCalendar({ serviceId: only }, controller.signal);
     } else {
       void loadCalendar({ serviceIds: selectedIds }, controller.signal);
     }
@@ -245,9 +246,8 @@ function Booking() {
   const selectedDay = calendar.find((d) => d.date === date) ?? null;
   const validDetails = bookingDetailsSchema.safeParse(details).success;
   const canContinue =
-    [isUndecided || selectedIds.length > 0, date !== "", time !== "", validDetails, true][
-      step
-    ] ?? false;
+    [isUndecided || selectedIds.length > 0, date !== "", time !== "", validDetails, true][step] ??
+    false;
 
   const addService = (id: number) => {
     if (isUndecided) setIsUndecided(false);
@@ -296,7 +296,7 @@ function Booking() {
         name: details.name.trim(),
         phone: details.phone.trim(),
         email: details.email.trim(),
-        service_id: isUndecided ? null : selectedIds[0] ?? null,
+        service_id: isUndecided ? null : (selectedIds[0] ?? null),
         service_ids: isUndecided ? undefined : selectedIds.length > 1 ? selectedIds : undefined,
         is_undecided: isUndecided,
         date,
@@ -346,21 +346,8 @@ function Booking() {
   };
 
   const heading = (() => {
-    if (step === 5)
-      return (
-        <>
-          Request
-          <br />
-          <em>received.</em>
-        </>
-      );
-    return (
-      <>
-        Book an
-        <br />
-        <em>appointment.</em>
-      </>
-    );
+    if (step === 5) return <>Request received.</>;
+    return <>Book an appointment.</>;
   })();
 
   const copyManageLink = async () => {
@@ -387,7 +374,10 @@ function Booking() {
   const confirmedDuration = useMemo(() => {
     if (!confirmed || confirmed.isUndecided) return 60;
     if (confirmedServices.length === 0) return 60;
-    return confirmedServices.reduce((sum, s) => sum + (s.duration_minutes > 0 ? s.duration_minutes : 30), 0);
+    return confirmedServices.reduce(
+      (sum, s) => sum + (s.duration_minutes > 0 ? s.duration_minutes : 30),
+      0,
+    );
   }, [confirmed, confirmedServices]);
   const confirmedName = useMemo(() => {
     if (!confirmed) return "Appointment";
@@ -401,7 +391,7 @@ function Booking() {
 
   const buildIcs = () => {
     if (!confirmed) return;
-    const duration = confirmed.isUndecided ? 60 : confirmedDuration ?? 60;
+    const duration = confirmed.isUndecided ? 60 : (confirmedDuration ?? 60);
     const start = new Date(`${confirmed.date}T${confirmed.time}:00`);
     const end = new Date(start.getTime() + duration * 60000);
     const pad = (n: number) => String(n).padStart(2, "0");
@@ -433,7 +423,7 @@ function Booking() {
 
   const googleCalendarHref = (() => {
     if (!confirmed) return "";
-    const duration = confirmed.isUndecided ? 60 : confirmedDuration ?? 60;
+    const duration = confirmed.isUndecided ? 60 : (confirmedDuration ?? 60);
     const start = new Date(`${confirmed.date}T${confirmed.time}:00`);
     const end = new Date(start.getTime() + duration * 60000);
     const pad = (n: number) => String(n).padStart(2, "0");
@@ -469,10 +459,7 @@ function Booking() {
           </div>
           <div className="booking-visual-copy">
             <span className="overline">Book your moment</span>
-            <p>
-              Beauty,
-              <br /> <em>your way.</em>
-            </p>
+            <p>Beauty, your way.</p>
             <span className="booking-visual-note">Addis Ababa · By appointment</span>
           </div>
         </aside>
@@ -525,7 +512,11 @@ function Booking() {
 
                     <div className="booking-manage-card">
                       <span>Already have a booking?</span>
-                      <Link to="/booking/recover" className="editorial-link" style={{ fontSize: "13px" }}>
+                      <Link
+                        to="/booking/recover"
+                        className="editorial-link"
+                        style={{ fontSize: "13px" }}
+                      >
                         Find your booking with phone or email <ArrowRight size={12} />
                       </Link>
                     </div>
@@ -560,25 +551,36 @@ function Booking() {
 
                           <div className="booking-field">
                             <label htmlFor="wiz-service">Add a service</label>
-                            <Select
-                              value=""
-                              onValueChange={(v) => addService(Number(v))}
-                            >
+                            <Select value="" onValueChange={(v) => addService(Number(v))}>
                               <SelectTrigger id="wiz-service" className="booking-select-trigger">
-                                <SelectValue placeholder={selectedIds.length === 0 ? "Choose a service" : "Add another"} />
+                                <SelectValue
+                                  placeholder={
+                                    selectedIds.length === 0 ? "Choose a service" : "Add another"
+                                  }
+                                />
                               </SelectTrigger>
                               <SelectContent
                                 className="booking-select-content"
                                 style={{ maxHeight: "22rem" }}
                               >
                                 {availableToAdd.length === 0 ? (
-                                  <div style={{ padding: "0.75rem 1rem", fontSize: "13px", color: "var(--muted-foreground)" }}>
-                                    {visible.length === 0 ? "No services in this category" : "All services from this category added"}
+                                  <div
+                                    style={{
+                                      padding: "0.75rem 1rem",
+                                      fontSize: "13px",
+                                      color: "var(--muted-foreground)",
+                                    }}
+                                  >
+                                    {visible.length === 0
+                                      ? "No services in this category"
+                                      : "All services from this category added"}
                                   </div>
                                 ) : (
                                   grouped
                                     .map(([cat, list]) => {
-                                      const filtered = list.filter((s) => !selectedIds.includes(s.id));
+                                      const filtered = list.filter(
+                                        (s) => !selectedIds.includes(s.id),
+                                      );
                                       if (filtered.length === 0) return null;
                                       return (
                                         <SelectGroup key={cat}>
@@ -592,7 +594,8 @@ function Booking() {
                                                 <span className="svc-select-item">
                                                   <span>{s.name}</span>
                                                   <span className="svc-select-meta">
-                                                    {price ?? "Price on request"} · {s.duration_minutes || 30} min
+                                                    {price ?? "Price on request"} ·{" "}
+                                                    {s.duration_minutes || 30} min
                                                   </span>
                                                 </span>
                                               </SelectItem>
@@ -625,7 +628,8 @@ function Booking() {
                                   <span className="booking-clean-main">
                                     <strong>{s.name}</strong>
                                     <span>
-                                      {s.category} · {s.duration_minutes || 30} min · {price ?? "Price on request"}
+                                      {s.category} · {s.duration_minutes || 30} min ·{" "}
+                                      {price ?? "Price on request"}
                                     </span>
                                   </span>
                                   <button
@@ -641,9 +645,14 @@ function Booking() {
                             })}
                             <div className="booking-clean-total">
                               <span>
-                                {selectedServices.length} service{selectedServices.length > 1 ? "s" : ""} · {totalDuration} min
+                                {selectedServices.length} service
+                                {selectedServices.length > 1 ? "s" : ""} · {totalDuration} min
                               </span>
-                              <strong>{totalPrice != null ? formatPrice(totalPrice) ?? "—" : "Price on request"}</strong>
+                              <strong>
+                                {totalPrice != null
+                                  ? (formatPrice(totalPrice) ?? "—")
+                                  : "Price on request"}
+                              </strong>
                             </div>
                           </div>
                         )}
@@ -653,7 +662,8 @@ function Booking() {
                           className="wiz-undecided-link"
                           onClick={toggleUndecided}
                         >
-                          <HelpCircle size={14} /> Not sure what you need? <span>Book a consultation — we’ll help you decide</span>
+                          <HelpCircle size={14} /> Not sure what you need?{" "}
+                          <span>Book a consultation — we’ll help you decide</span>
                         </button>
                       </>
                     ) : (
@@ -663,7 +673,10 @@ function Booking() {
                         </div>
                         <div className="booking-consultation-main">
                           <strong>Consultation — we’ll help you decide</strong>
-                          <span>60 min · Talk through what suits you at the salon · Price to be confirmed</span>
+                          <span>
+                            60 min · Talk through what suits you at the salon · Price to be
+                            confirmed
+                          </span>
                         </div>
                         <button
                           type="button"
@@ -690,7 +703,8 @@ function Booking() {
                       className="editorial-link"
                       onClick={() => {
                         if (isUndecided) void loadCalendar({ isUndecided: true });
-                        else if (selectedIds.length > 1) void loadCalendar({ serviceIds: selectedIds });
+                        else if (selectedIds.length > 1)
+                          void loadCalendar({ serviceIds: selectedIds });
                         else if (selectedIds[0]) void loadCalendar({ serviceId: selectedIds[0] });
                       }}
                     >
@@ -708,11 +722,13 @@ function Booking() {
                           </>
                         ) : selectedServices.length === 1 ? (
                           <>
-                            For <strong>{selectedServices[0].name}</strong> · {selectedServices[0].category} · {totalDuration} min
+                            For <strong>{selectedServices[0]?.name}</strong> ·{" "}
+                            {selectedServices[0]?.category} · {totalDuration} min
                           </>
                         ) : (
                           <>
-                            For <strong>{selectedServices.map((s) => s.name).join(" + ")}</strong> · {totalDuration} min
+                            For <strong>{selectedServices.map((s) => s.name).join(" + ")}</strong> ·{" "}
+                            {totalDuration} min
                           </>
                         )}
                       </p>
@@ -953,8 +969,8 @@ function Booking() {
                 <div className="recover-card">
                   <h4>Lost your link?</h4>
                   <p>
-                    Find your booking through your phone number or email — no password needed.
-                    Keep your reference <strong>{confirmed.reference}</strong> handy, or find it now.
+                    Find your booking through your phone number or email — no password needed. Keep
+                    your reference <strong>{confirmed.reference}</strong> handy, or find it now.
                   </p>
                   <div className="recover-actions">
                     <Link to="/booking/recover" className="editorial-link">
@@ -1020,10 +1036,10 @@ function Booking() {
               )}
             </div>
           )}
-          {step < 5 && (
+          {step > 0 && step < 5 && (
             <p style={{ marginTop: "1.1rem", textAlign: "center" }}>
               <Link to="/booking/recover" className="editorial-link" style={{ fontSize: "13px" }}>
-                Find your booking with phone or email <ArrowRight size={12} />
+                Find a booking you already made <ArrowRight size={12} />
               </Link>
             </p>
           )}
@@ -1056,12 +1072,12 @@ function Summary({
     : services.length === 0
       ? "—"
       : services.length === 1
-        ? services[0].name
+        ? (services[0]?.name ?? "—")
         : services.map((s) => s.name).join(" + ");
   const cat = isUndecided
     ? "Consultation · We'll decide together"
     : services.length === 1
-      ? services[0].category
+      ? (services[0]?.category ?? "")
       : `${services.length} services · ${totalDuration} min`;
   return (
     <dl className="summary">

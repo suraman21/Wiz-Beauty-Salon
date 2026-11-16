@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
-import { BeforeAfter, BookingBand, PageHero, SiteLayout } from "@/components/site/SiteChrome";
-import { categories, galleryWork, type CategoryId } from "@/data/wiz";
+import { ArrowRight, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { BeforeAfter, ClosingCta, PageHead, SiteLayout } from "@/components/site/SiteChrome";
+import { categories, galleryWork } from "@/data/wiz";
 import {
   fetchGalleryPage,
   fetchReviews,
@@ -15,15 +15,15 @@ import { useSiteImages } from "@/lib/site-content";
 export const Route = createFileRoute("/gallery")({
   head: () => ({
     meta: [
-      { title: "Gallery | WIZ Beauty Salon" },
+      { title: "Our work | WIZ Beauty Salon" },
       {
         name: "description",
-        content: "Featured work, transformations and client stories from WIZ Beauty Salon.",
+        content: "Braids, colour, nails and makeup from the WIZ Beauty Salon in Addis Ababa.",
       },
-      { property: "og:title", content: "Gallery | WIZ Beauty Salon" },
+      { property: "og:title", content: "Our work | WIZ Beauty Salon" },
       {
         property: "og:description",
-        content: "Featured work, before-and-after transformations and client stories.",
+        content: "Recent work and before-and-after appointments from WIZ Beauty Salon.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -37,15 +37,13 @@ type Item = {
   image: string;
   alt: string;
   title: string;
-  caption: string | undefined;
-  tall: boolean;
-  /** The filter chip this photo belongs to, by slug — gallery photos and demo items alike. */
+  /** Filter chip slug, when the photo knows which category it belongs to. */
   category: string | undefined;
 };
 
 function Gallery() {
   const images = useSiteImages();
-  const [filter, setFilter] = useState<string>("all");
+  const [filter, setFilter] = useState("all");
   const [open, setOpen] = useState<number | null>(null);
 
   const [photos, setPhotos] = useState<GalleryPhoto[] | null>(null);
@@ -71,16 +69,13 @@ function Gallery() {
 
   const live = photos !== null && photos.length > 0;
 
-  // The salon's own photos when there are any, the demo set until then.
   const items = useMemo<Item[]>(() => {
     if (live) {
-      return photos.map((photo, index) => ({
+      return photos.map((photo) => ({
         key: `photo-${photo.id}`,
         image: photo.url,
         alt: photo.title !== "" ? photo.title : "Work by WIZ Beauty Salon",
         title: photo.title !== "" ? photo.title : "WIZ Beauty Salon",
-        caption: photo.category ?? undefined,
-        tall: index % 3 === 1,
         category: photo.category_slug ?? undefined,
       }));
     }
@@ -90,226 +85,250 @@ function Gallery() {
       image: work.image,
       alt: work.alt,
       title: work.title,
-      caption: undefined,
-      tall: work.tall ?? false,
       category: work.category,
     }));
   }, [live, photos]);
 
-  // The panel decides which filters exist: only categories with a published
-  // photo, so a chip can never open an empty wall.
+  // The panel decides which filters exist — only categories with a published
+  // photo — so a chip can never open an empty wall.
   const filterList: { id: string; name: string }[] = live
-    ? [{ id: "all", name: "All" }, ...filters.map((c) => ({ id: c.slug, name: c.name }))]
+    ? [{ id: "all", name: "Everything" }, ...filters.map((c) => ({ id: c.slug, name: c.name }))]
     : [
-        { id: "all", name: "All" },
+        { id: "all", name: "Everything" },
         ...categories.map((c) => ({ id: c.id as string, name: c.name })),
       ];
 
   const active = filterList.some((c) => c.id === filter) ? filter : "all";
   const shown = active === "all" ? items : items.filter((i) => i.category === active);
 
-  // The three large tiles at the top: the salon's newest published photos, or
-  // the design's own three when the panel has none yet.
-  const featured = useMemo<Item[]>(() => {
-    if (live) return items.slice(0, 3);
-
-    return [
+  const featured = useMemo<Item[]>(
+    () => [
       {
         key: "f-a",
-        image: images.makeup.url,
-        alt: images.makeup.alt,
-        title: "Evening glow",
-        caption: "Makeup",
-        tall: false,
+        image: images.braid.url,
+        alt: images.braid.alt,
+        title: "Cornrows, finished",
         category: undefined,
       },
       {
         key: "f-b",
-        image: images.after.url,
-        alt: images.after.alt,
-        title: "Long waves",
-        caption: "Hair",
-        tall: false,
+        image: images.braiding.url,
+        alt: images.braiding.alt,
+        title: "Sectioning",
         category: undefined,
       },
       {
         key: "f-c",
-        image: images.skin.url,
-        alt: images.skin.alt,
-        title: "Fresh skin",
-        caption: "Skin",
-        tall: false,
+        image: images.kids.url,
+        alt: images.kids.alt,
+        title: "Beads and braids",
         category: undefined,
       },
-    ];
-  }, [live, items, images]);
+    ],
+    [images],
+  );
 
   useEffect(() => {
     if (open === null) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(null);
-      if (e.key === "ArrowRight") setOpen((o) => (o === null ? o : (o + 1) % shown.length));
-      if (e.key === "ArrowLeft")
-        setOpen((o) => (o === null ? o : (o - 1 + shown.length) % shown.length));
+
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(null);
+      if (event.key === "ArrowRight")
+        setOpen((current) => (current === null ? current : (current + 1) % shown.length));
+      if (event.key === "ArrowLeft")
+        setOpen((current) =>
+          current === null ? current : (current - 1 + shown.length) % shown.length,
+        );
     };
+
     window.addEventListener("keydown", onKey);
+
     return () => window.removeEventListener("keydown", onKey);
   }, [open, shown.length]);
 
   return (
     <SiteLayout>
-      <PageHero
-        overline="Gallery"
+      <PageHead
         title={
           <>
-            A little beauty,
+            Work done
             <br />
-            <em>everywhere.</em>
+            in this room.
           </>
         }
-        copy="Recent work from the salon, shared with our clients' permission."
-        image={images.hair.url}
-        alt={images.hair.alt}
+        amharic="ስራዎቻችን"
+        intro="Braids, colour, nails and makeup, photographed at the salon and shared with each client's permission. No filters on the hair."
       />
 
-      <section className="featured section-wrap">
-        <div className="section-heading">
-          <div>
-            <span className="overline">01 / Featured work</span>
-            <h2>
-              The looks
-              <br />
-              <em>we love.</em>
-            </h2>
-          </div>
-          <p>A selection of recent looks.</p>
-        </div>
-        <div className="featured-grid">
-          {featured.map((tile, index) => (
-            <figure className={`img-frame ${["f-a", "f-b", "f-c"][index] ?? "f-a"}`} key={tile.key}>
+      <section className="wz-wrap" style={{ paddingBottom: "clamp(2rem, 4vw, 3.5rem)" }}>
+        <div className="wz-featured">
+          {featured.map((tile) => (
+            <figure className="wz-gallery-item" key={tile.key}>
               <img src={tile.image} alt={tile.alt} loading="lazy" />
-              <figcaption>
-                {tile.title}
-                {tile.caption !== undefined ? ` · ${tile.caption}` : ""}
+              <figcaption className="wz-gallery-cap">
+                <span>{tile.title}</span>
               </figcaption>
             </figure>
           ))}
         </div>
       </section>
 
-      <section className="transformation-section">
-        <div className="section-wrap transformation-inner">
-          <div className="transformation-copy">
-            <span className="overline">02 / Transformations</span>
-            <h2>
-              Before
-              <br />
-              <em>&amp; after.</em>
-            </h2>
-            <p>Drag the slider to compare, side by side.</p>
+      <section className="wz-dark">
+        <div className="wz-wrap wz-dark-inner">
+          <div>
+            <h2>Four hours between these two photographs.</h2>
           </div>
-          <BeforeAfter before={images.before.url} after={images.after.url} />
+          <div>
+            <p>
+              Drag the handle. Same person, same shirt, same afternoon light — a wash and go on one
+              side, a full blow-dry on the other.
+            </p>
+            <p className="wz-meta wz-mt-sm" style={{ color: "var(--wz-mauve)" }}>
+              Illustrative work. Results depend on hair type and length.
+            </p>
+          </div>
         </div>
       </section>
 
-      <section className="more-work section-wrap">
-        <div className="section-heading">
-          <div>
-            <span className="overline">03 / More work</span>
-            <h2>
-              Browse
-              <br />
-              <em>by mood.</em>
-            </h2>
-          </div>
+      <section className="wz-wrap" style={{ paddingBlock: "clamp(2rem, 4vw, 3.5rem)" }}>
+        <BeforeAfter
+          before={images.before.url}
+          after={images.after.url}
+          label="Slide to compare the finished blow-dry with how it started"
+        />
+      </section>
+
+      <section className="wz-wrap wz-pad-md">
+        <div className="wz-index-head">
+          <h2>Browse by what you want done.</h2>
+          <p className="wz-prose">{items.length} photographs. Tap one to see it full size.</p>
         </div>
 
         {filterList.length > 1 && (
-          <div className="filter-bar" role="tablist" aria-label="Filter gallery">
-            {filterList.map((c) => (
+          <div className="wz-filters" role="group" aria-label="Filter work by category">
+            {filterList.map((chip) => (
               <button
-                key={c.id}
-                role="tab"
-                aria-selected={active === c.id}
-                className={`chip ${active === c.id ? "is-active" : ""}`}
-                onClick={() => setFilter(c.id)}
+                key={chip.id}
+                type="button"
+                className="wz-filter"
+                aria-pressed={active === chip.id}
+                onClick={() => setFilter(chip.id)}
               >
-                {c.name}
+                {chip.name}
               </button>
             ))}
           </div>
         )}
 
-        <div className="masonry">
-          {shown.map((g, i) => (
-            <button
-              key={g.key}
-              className={`masonry-item img-frame ${g.tall ? "tall" : ""}`}
-              onClick={() => setOpen(i)}
-              aria-label={`Open ${g.title}`}
-            >
-              <img src={g.image} alt={g.alt} loading="lazy" />
-              <span>{g.title}</span>
-            </button>
+        <div className="wz-gallery-grid">
+          {shown.map((item, index) => (
+            <figure className="wz-gallery-item" key={item.key}>
+              <button
+                type="button"
+                onClick={() => setOpen(index)}
+                aria-label={`Open ${item.title} full size`}
+                style={{
+                  display: "block",
+                  border: 0,
+                  padding: 0,
+                  background: "none",
+                  width: "100%",
+                }}
+              >
+                <img src={item.image} alt={item.alt} loading="lazy" />
+              </button>
+              <figcaption className="wz-gallery-cap">
+                <span>{item.title}</span>
+              </figcaption>
+            </figure>
           ))}
         </div>
+
+        {shown.length === 0 && <p className="wz-prose">No photographs in this category yet.</p>}
       </section>
 
       {reviews.length > 0 && (
-        <section className="stories">
-          <div className="section-wrap">
-            <span className="overline">04 / Client stories</span>
-            <div className="stories-grid">
-              {reviews.slice(0, 3).map((review) => (
-                <blockquote key={review.id}>
-                  <p>“{review.body}”</p>
-                  <footer>
-                    {review.name}
-                    {review.service ? ` · ${review.service}` : ""}
-                  </footer>
-                </blockquote>
-              ))}
-            </div>
+        <section className="wz-wrap wz-pad-md">
+          <div className="wz-beliefs" style={{ borderTop: 0 }}>
+            {reviews.slice(0, 3).map((review) => (
+              <blockquote key={review.id} className="wz-belief">
+                <p
+                  style={{
+                    fontFamily: "var(--wz-serif)",
+                    fontSize: "1.15rem",
+                    color: "var(--wz-ink)",
+                  }}
+                >
+                  “{review.body}”
+                </p>
+                <p className="wz-meta">
+                  {review.name}
+                  {review.service ? `, ${review.service}` : ""}
+                </p>
+              </blockquote>
+            ))}
           </div>
         </section>
       )}
 
-      <BookingBand />
+      <ClosingCta
+        title={
+          <>
+            Bring a photograph.
+            <br />
+            We will tell you if it will work.
+          </>
+        }
+        copy="Hair type, length and the condition it is in decide what is possible in one appointment. Send us a picture before you book and we will say honestly whether it will take one visit or two."
+      />
 
       {open !== null && shown[open] && (
         <div
-          className="lightbox"
+          className="wz-lightbox"
           role="dialog"
           aria-modal="true"
           aria-label={shown[open].title}
           onClick={() => setOpen(null)}
         >
-          <button className="lb-btn lb-close" aria-label="Close" onClick={() => setOpen(null)}>
-            <X />
+          <button
+            type="button"
+            className="wz-lb-close"
+            aria-label="Close"
+            onClick={() => setOpen(null)}
+          >
+            <X size={20} />
           </button>
           <button
-            className="lb-btn lb-prev"
-            aria-label="Previous"
-            onClick={(e) => {
-              e.stopPropagation();
+            type="button"
+            className="wz-lb-nav wz-lb-prev"
+            aria-label="Previous photograph"
+            onClick={(event) => {
+              event.stopPropagation();
               setOpen((open - 1 + shown.length) % shown.length);
             }}
           >
-            <ChevronLeft />
+            <ChevronLeft size={22} />
           </button>
-          <figure onClick={(e) => e.stopPropagation()}>
+          <figure onClick={(event) => event.stopPropagation()}>
             <img src={shown[open].image} alt={shown[open].alt} />
-            <figcaption>{shown[open].title}</figcaption>
+            <figcaption>
+              {shown[open].title}
+              <span className="wz-meta">
+                {" "}
+                · {open + 1} of {shown.length}
+              </span>
+            </figcaption>
           </figure>
           <button
-            className="lb-btn lb-next"
-            aria-label="Next"
-            onClick={(e) => {
-              e.stopPropagation();
+            type="button"
+            className="wz-lb-nav wz-lb-next"
+            aria-label="Next photograph"
+            onClick={(event) => {
+              event.stopPropagation();
               setOpen((open + 1) % shown.length);
             }}
           >
-            <ChevronRight />
+            <ChevronRight size={22} />
           </button>
         </div>
       )}

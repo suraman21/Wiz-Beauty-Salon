@@ -1,16 +1,31 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { ArrowLeft, ArrowRight, Check, Copy, ExternalLink, Mail, Phone, Search, ShieldCheck } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  Copy,
+  ExternalLink,
+  Mail,
+  Phone,
+  Search,
+  ShieldCheck,
+} from "lucide-react";
 import { SiteLayout } from "@/components/site/SiteChrome";
+import heroPortrait from "@/assets/hero-portrait.jpg";
 import { Button } from "@/components/ui/button";
 import { ApiError } from "@/lib/api";
 import { recoverBookings, type RecoverBooking } from "@/lib/booking-api";
 
-export const Route = createFileRoute("/booking/recover")({
+export const Route = createFileRoute("/booking_/recover")({
   head: () => ({
     meta: [
       { title: "Manage Booking | WIZ Beauty Salon" },
-      { name: "description", content: "Find your WIZ Beauty Salon bookings with your phone number or email and manage them." },
+      {
+        name: "description",
+        content:
+          "Find your WIZ Beauty Salon bookings with your phone number or email and manage them.",
+      },
       { property: "og:title", content: "Manage Booking | WIZ Beauty Salon" },
       { property: "og:type", content: "website" },
     ],
@@ -26,7 +41,11 @@ function ManageBookingPage() {
   const [copied, setCopied] = useState<string | null>(null);
 
   const isEmail = identifier.trim().includes("@");
-  const hint = isEmail ? "Email address detected" : identifier.trim() ? "Phone number detected" : "";
+  const hint = isEmail
+    ? "Email address detected"
+    : identifier.trim()
+      ? "Phone number detected"
+      : "";
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,7 +57,10 @@ function ManageBookingPage() {
       const res = await recoverBookings(identifier.trim());
       setResults(res.bookings ?? []);
     } catch (err) {
-      const msg = err instanceof ApiError ? err.message : "We could not look up your bookings. Please check your connection and try again.";
+      const msg =
+        err instanceof ApiError
+          ? err.message
+          : "We could not look up your bookings. Please check your connection and try again.";
       setError(msg);
     } finally {
       setBusy(false);
@@ -58,7 +80,12 @@ function ManageBookingPage() {
   const fmtDate = (iso: string) => {
     try {
       const d = new Date(`${iso}T00:00:00`);
-      return d.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+      return d.toLocaleDateString("en-GB", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      });
     } catch {
       return iso;
     }
@@ -70,7 +97,7 @@ function ManageBookingPage() {
         <aside className="booking-visual">
           <div className="booking-visual-frame">
             <img
-              src="/assets/hero-portrait.jpg"
+              src={heroPortrait}
               alt="WIZ Beauty Salon"
               style={{ objectFit: "cover", width: "100%", height: "100%" }}
             />
@@ -81,7 +108,9 @@ function ManageBookingPage() {
               Manage
               <br /> <em>your visit.</em>
             </p>
-            <span className="booking-visual-note">Find with phone or email · No password needed</span>
+            <span className="booking-visual-note">
+              Find with phone or email · No password needed
+            </span>
           </div>
         </aside>
 
@@ -94,15 +123,18 @@ function ManageBookingPage() {
           </h1>
 
           <p className="step-intro">
-            Find your booking through your phone number or email. Enter the same contact you used when booking —
-            we’ll show your upcoming appointments and give you fresh manage links, valid for 24 hours.
+            Find your booking through your phone number or email. Enter the same contact you used
+            when booking — we’ll show your upcoming appointments and give you fresh manage links,
+            valid for 24 hours.
           </p>
 
           <form onSubmit={submit} className="wiz-form" style={{ marginTop: "1.35rem" }}>
             <label className="full">
               Phone number or email
               <div style={{ display: "flex", gap: "0.5rem", alignItems: "stretch" }}>
-                <div style={{ position: "relative", flex: 1, display: "flex", alignItems: "center" }}>
+                <div
+                  style={{ position: "relative", flex: 1, display: "flex", alignItems: "center" }}
+                >
                   <span
                     style={{
                       position: "absolute",
@@ -134,16 +166,42 @@ function ManageBookingPage() {
                   className="btn btn-ink h-auto rounded-none"
                   disabled={busy || !identifier.trim()}
                 >
-                  {busy ? "Searching…" : <><Search size={16} /> Find</>}
+                  {busy ? (
+                    "Searching…"
+                  ) : (
+                    <>
+                      <Search size={16} /> Find
+                    </>
+                  )}
                 </Button>
               </div>
             </label>
 
             {/* honeypot - hidden from users, bots fill it */}
-            <input type="text" name="website" tabIndex={-1} autoComplete="off" style={{ display: "none" }} aria-hidden="true" />
+            <input
+              type="text"
+              name="website"
+              tabIndex={-1}
+              autoComplete="off"
+              style={{ display: "none" }}
+              aria-hidden="true"
+            />
 
-            <div className="full" style={{ display: "flex", justifyContent: "space-between", gap: "0.75rem", alignItems: "center", marginTop: "-0.4rem", flexWrap: "wrap" }}>
-              <span className="field-hint" style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem" }}>
+            <div
+              className="full"
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                gap: "0.75rem",
+                alignItems: "center",
+                marginTop: "-0.4rem",
+                flexWrap: "wrap",
+              }}
+            >
+              <span
+                className="field-hint"
+                style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem" }}
+              >
                 {hint ? (
                   <>
                     {isEmail ? <Mail size={12} /> : <Phone size={12} />} {hint}
@@ -158,7 +216,17 @@ function ManageBookingPage() {
             </div>
 
             {error !== "" && (
-              <p className="step-note full" role="alert" style={{ color: "#a33", background: "#fff1f1", padding: "0.65rem 0.85rem", borderRadius: "8px", border: "1px solid #fee" }}>
+              <p
+                className="step-note full"
+                role="alert"
+                style={{
+                  color: "#a33",
+                  background: "#fff1f1",
+                  padding: "0.65rem 0.85rem",
+                  borderRadius: "8px",
+                  border: "1px solid #fee",
+                }}
+              >
                 {error}
               </p>
             )}
@@ -167,15 +235,27 @@ function ManageBookingPage() {
           {results !== null && (
             <div style={{ marginTop: "1.6rem" }} role="status" aria-live="polite">
               {results.length === 0 ? (
-                <div className="card" style={{ padding: "1.25rem", border: "1px solid var(--border)", borderRadius: "12px" }}>
-                  <p style={{ fontWeight: 700, marginBottom: "0.4rem", fontSize: "15px" }}>No upcoming bookings found</p>
+                <div
+                  className="card"
+                  style={{
+                    padding: "1.25rem",
+                    border: "1px solid var(--border)",
+                    borderRadius: "12px",
+                  }}
+                >
+                  <p style={{ fontWeight: 700, marginBottom: "0.4rem", fontSize: "15px" }}>
+                    No upcoming bookings found
+                  </p>
                   <p className="field-hint" style={{ lineHeight: "1.6", fontSize: "13px" }}>
                     We checked upcoming requested and confirmed bookings for{" "}
-                    <strong style={{ color: "var(--ink)" }}>{identifier}</strong>. Check you typed it the same way as when booking
-                    (09… vs +251… or email spelling). If you still don’t see it, it may be past, cancelled, or booked under a different contact.
+                    <strong style={{ color: "var(--ink)" }}>{identifier}</strong>. Check you typed
+                    it the same way as when booking (09… vs +251… or email spelling). If you still
+                    don’t see it, it may be past, cancelled, or booked under a different contact.
                     Call the salon with your reference and we’ll help.
                   </p>
-                  <div style={{ marginTop: "1rem", display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
+                  <div
+                    style={{ marginTop: "1rem", display: "flex", gap: "0.75rem", flexWrap: "wrap" }}
+                  >
                     <button
                       type="button"
                       className="btn btn-outline h-auto rounded-none"
@@ -200,21 +280,78 @@ function ManageBookingPage() {
                     {results.length > 1 ? "s" : ""} — tap <em>Manage</em> to reschedule or cancel
                   </p>
 
-                  <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem", marginTop: "0.85rem" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "0.85rem",
+                      marginTop: "0.85rem",
+                    }}
+                  >
                     {results.map((b) => (
                       <div
                         key={b.reference}
                         className="card"
-                        style={{ padding: "1.15rem 1.15rem", display: "flex", flexDirection: "column", gap: "0.75rem", borderRadius: "12px", border: "1px solid var(--border)", background: "white", boxShadow: "0 4px 16px oklch(0.19 0.012 330 / 0.06)" }}
+                        style={{
+                          padding: "1.15rem 1.15rem",
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "0.75rem",
+                          borderRadius: "12px",
+                          border: "1px solid var(--border)",
+                          background: "white",
+                          boxShadow: "0 4px 16px oklch(0.19 0.012 330 / 0.06)",
+                        }}
                       >
-                        <div style={{ display: "flex", justifyContent: "space-between", gap: "0.85rem", alignItems: "flex-start" }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            gap: "0.85rem",
+                            alignItems: "flex-start",
+                          }}
+                        >
                           <div style={{ minWidth: 0 }}>
-                            <p style={{ fontSize: "11px", letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--muted-foreground)", marginBottom: "0.25rem", fontWeight: 600 }}>
-                              {b.reference} · <span style={{ textTransform: "none", letterSpacing: 0 }}>{b.status}</span>
+                            <p
+                              style={{
+                                fontSize: "11px",
+                                letterSpacing: "0.07em",
+                                textTransform: "uppercase",
+                                color: "var(--muted-foreground)",
+                                marginBottom: "0.25rem",
+                                fontWeight: 600,
+                              }}
+                            >
+                              {b.reference} ·{" "}
+                              <span style={{ textTransform: "none", letterSpacing: 0 }}>
+                                {b.status}
+                              </span>
                             </p>
-                            <p style={{ fontWeight: 700, fontSize: "15.5px", color: "var(--ink)", lineHeight: "1.3" }}>{b.service_name}</p>
-                            <p style={{ fontSize: "13px", color: "var(--muted-foreground)", marginTop: "0.3rem", display: "flex", gap: "0.4rem", alignItems: "center", flexWrap: "wrap" }}>
-                              <span>{fmtDate(b.booking_date)}</span> <span aria-hidden>·</span> <span>{b.start_time}–{b.end_time}</span>
+                            <p
+                              style={{
+                                fontWeight: 700,
+                                fontSize: "15.5px",
+                                color: "var(--ink)",
+                                lineHeight: "1.3",
+                              }}
+                            >
+                              {b.service_name}
+                            </p>
+                            <p
+                              style={{
+                                fontSize: "13px",
+                                color: "var(--muted-foreground)",
+                                marginTop: "0.3rem",
+                                display: "flex",
+                                gap: "0.4rem",
+                                alignItems: "center",
+                                flexWrap: "wrap",
+                              }}
+                            >
+                              <span>{fmtDate(b.booking_date)}</span> <span aria-hidden>·</span>{" "}
+                              <span>
+                                {b.start_time}–{b.end_time}
+                              </span>
                             </p>
                           </div>
                           <span
@@ -225,7 +362,13 @@ function ManageBookingPage() {
                                   ? "badge badge--amber"
                                   : "badge badge--grey"
                             }
-                            style={{ flex: "none", borderRadius: "999px", padding: "0.25rem 0.65rem", fontSize: "11px", fontWeight: 700 }}
+                            style={{
+                              flex: "none",
+                              borderRadius: "999px",
+                              padding: "0.25rem 0.65rem",
+                              fontSize: "11px",
+                              fontWeight: 700,
+                            }}
                           >
                             {b.status}
                           </span>
@@ -233,7 +376,15 @@ function ManageBookingPage() {
 
                         {b.manage_url ? (
                           <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-                            <a href={b.manage_url} className="btn btn-ink" style={{ flex: "1 1 160px", textAlign: "center", justifyContent: "center" }}>
+                            <a
+                              href={b.manage_url}
+                              className="btn btn-ink"
+                              style={{
+                                flex: "1 1 160px",
+                                textAlign: "center",
+                                justifyContent: "center",
+                              }}
+                            >
                               <ExternalLink size={14} /> Manage booking
                             </a>
                             <Button
@@ -248,7 +399,9 @@ function ManageBookingPage() {
                             </Button>
                           </div>
                         ) : (
-                          <p className="field-hint">Manage link unavailable — please call the salon.</p>
+                          <p className="field-hint">
+                            Manage link unavailable — please call the salon.
+                          </p>
                         )}
                       </div>
                     ))}
@@ -258,7 +411,10 @@ function ManageBookingPage() {
                     <ShieldCheck size={18} />
                     <div>
                       <strong>Links are signed & valid 24 hours</strong>
-                      <span>Don’t share them — anyone with the link can reschedule or cancel. After 24h, find your booking again here.</span>
+                      <span>
+                        Don’t share them — anyone with the link can reschedule or cancel. After 24h,
+                        find your booking again here.
+                      </span>
                     </div>
                   </div>
                 </>
@@ -266,7 +422,15 @@ function ManageBookingPage() {
             </div>
           )}
 
-          <div style={{ marginTop: "1.85rem", display: "flex", gap: "1rem", flexWrap: "wrap", alignItems: "center" }}>
+          <div
+            style={{
+              marginTop: "1.85rem",
+              display: "flex",
+              gap: "1rem",
+              flexWrap: "wrap",
+              alignItems: "center",
+            }}
+          >
             <Link to="/booking" className="btn btn-outline h-auto rounded-none">
               <ArrowLeft size={16} /> Book an appointment
             </Link>
@@ -280,7 +444,9 @@ function ManageBookingPage() {
               <ShieldCheck size={14} /> Privacy
             </h4>
             <p style={{ fontSize: "13px", lineHeight: "1.6", color: "var(--muted-foreground)" }}>
-              Only upcoming, not-yet-finished bookings are shown. We don’t show past or cancelled history. If you don’t see yours, check the number/email or ask the salon to confirm with your reference.
+              Only upcoming, not-yet-finished bookings are shown. We don’t show past or cancelled
+              history. If you don’t see yours, check the number/email or ask the salon to confirm
+              with your reference.
             </p>
           </div>
         </div>

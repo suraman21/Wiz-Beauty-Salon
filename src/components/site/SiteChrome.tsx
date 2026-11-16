@@ -6,8 +6,20 @@ import { nav } from "@/data/wiz";
 import { useSalonInfo } from "@/lib/site-content";
 import { hasDetails, whatsappHref } from "@/lib/salon-api";
 
+/**
+ * Public chrome shared by every marketing page.
+ *
+ * Design notes live in DESIGN-PLAN.md. Two rules worth repeating here because
+ * they are easy to undo by accident:
+ *   1. No all-caps tracked label above a heading. Labels are sentence case and
+ *      say something true ("12 options", "From ETB 450").
+ *   2. No italic or colour switch inside a headline to fake emphasis. Scale and
+ *      position carry emphasis instead.
+ */
+
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
+
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
 
@@ -15,47 +27,54 @@ export function SiteHeader() {
       document.body.style.overflow = "";
     };
   }, [open]);
+
   return (
-    <header className="site-header">
-      <Link
-        to="/"
-        aria-label="WIZ Beauty Salon home"
-        className="brand-mark"
-        onClick={() => setOpen(false)}
-      >
-        <img className="brand-logo" src={logo} alt="WIZ Beauty Salon" width={56} height={56} />
-      </Link>
-      <nav className="desktop-nav" aria-label="Main navigation">
-        {nav.map((item) => (
-          <Link
-            key={item.to}
-            to={item.to}
-            activeOptions={{ exact: true }}
-            activeProps={{ className: "is-active" }}
-          >
-            {item.label}
+    <header className="wz-header">
+      <div className="wz-wrap wz-header-inner">
+        <Link to="/" aria-label="WIZ Beauty Salon, home" className="wz-brand">
+          <img className="wz-brand-logo" src={logo} alt="" width={38} height={38} />
+          <span>
+            <span className="wz-brand-word">WIZ</span>
+            <span className="wz-brand-eth" lang="am">
+              ዊዝ ቢዩቲ ሳሎን
+            </span>
+          </span>
+        </Link>
+
+        <nav className="wz-nav" aria-label="Main">
+          {nav.map((item) => (
+            <Link
+              key={item.to}
+              to={item.to}
+              activeOptions={{ exact: true }}
+              activeProps={{ className: "is-active" }}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+
+        <div className="wz-header-actions">
+          <Link to="/booking/recover" className="wz-manage">
+            Manage a booking
           </Link>
-        ))}
-      </nav>
-      <div className="header-actions">
-        <Link to="/booking/recover" className="nav-manage">
-          Manage booking
-        </Link>
-        <Link to="/booking" className="btn btn-ink nav-book">
-          Book Now <ArrowRight size={15} />
-        </Link>
-        <button
-          type="button"
-          className="menu-button"
-          aria-label={open ? "Close menu" : "Open menu"}
-          aria-expanded={open}
-          onClick={() => setOpen(!open)}
-        >
-          {open ? <X /> : <Menu />}
-        </button>
+          <Link to="/booking" className="wz-btn" onClick={() => setOpen(false)}>
+            Book an appointment
+          </Link>
+          <button
+            type="button"
+            className="wz-menu-btn"
+            aria-label={open ? "Close menu" : "Open menu"}
+            aria-expanded={open}
+            onClick={() => setOpen(!open)}
+          >
+            {open ? <X size={19} /> : <Menu size={19} />}
+          </button>
+        </div>
       </div>
+
       {open && (
-        <nav className="mobile-nav" aria-label="Mobile navigation">
+        <nav className="wz-drawer" aria-label="Mobile">
           {nav.map((item) => (
             <Link
               key={item.to}
@@ -65,14 +84,13 @@ export function SiteHeader() {
               activeProps={{ className: "is-active" }}
             >
               {item.label}
-              <ArrowRight size={16} />
             </Link>
           ))}
-          <Link to="/booking/recover" onClick={() => setOpen(false)} className="mobile-manage-link">
-            Manage booking <ArrowRight size={16} />
+          <Link to="/booking/recover" onClick={() => setOpen(false)}>
+            Manage a booking
           </Link>
-          <Link to="/booking" onClick={() => setOpen(false)} className="btn btn-ink mobile-book">
-            Book an appointment <ArrowRight size={16} />
+          <Link to="/booking" onClick={() => setOpen(false)} className="wz-btn">
+            Book an appointment
           </Link>
         </nav>
       )}
@@ -82,33 +100,37 @@ export function SiteHeader() {
 
 export function SiteFooter() {
   return (
-    <footer className="site-footer">
-      <div className="section-wrap">
-        <div className="footer-top">
+    <footer className="wz-footer">
+      <div className="wz-wrap">
+        <div className="wz-footer-top">
           <div>
-            <span className="overline">WIZ Beauty Salon</span>
-            <p>
-              Beauty, <em>your way.</em>
+            <span className="wz-brand-word" style={{ color: "var(--wz-chalk)" }}>
+              WIZ
+            </span>
+            <p className="wz-footer-line">Beauty, your way.</p>
+            <p className="wz-footer-eth" lang="am">
+              ውበት፣ በእርስዎ መንገድ።
             </p>
           </div>
-          <Link to="/booking" className="btn btn-blush">
-            Book an appointment <ArrowRight size={16} />
-          </Link>
+          <div className="wz-footer-cols">
+            <div className="wz-footer-col">
+              <h3>Pages</h3>
+              {nav.map((item) => (
+                <Link key={item.to} to={item.to}>
+                  {item.label}
+                </Link>
+              ))}
+              <Link to="/booking">Booking</Link>
+              <Link to="/booking/recover">Manage a booking</Link>
+            </div>
+            <FooterContact />
+          </div>
         </div>
-        <div className="footer-bottom">
-          <nav aria-label="Footer navigation">
-            {nav.map((item) => (
-              <Link key={item.to} to={item.to}>
-                {item.label}
-              </Link>
-            ))}
-            <Link to="/booking">Booking</Link>
-            <Link to="/booking/recover">Manage booking</Link>
-          </nav>
-          <FooterContact />
-        </div>
-        <div className="footer-last">
-          <span>© WIZ Beauty Salon</span>
+        <div className="wz-footer-bottom">
+          <span>© {new Date().getFullYear()} WIZ Beauty Salon, Addis Ababa</span>
+          <span lang="am" className="wz-eth">
+            አዲስ አበባ
+          </span>
         </div>
       </div>
     </footer>
@@ -116,15 +138,21 @@ export function SiteFooter() {
 }
 
 /**
- * The footer prints what the salon published in Settings — and nothing it has
- * not. An empty line of half-filled links looks broken, so it is left out.
+ * Prints what the salon actually published in Settings, and nothing it has not.
+ * An empty column of half-filled links reads as broken, so it is left out.
  */
 function FooterContact() {
   const salon = useSalonInfo();
   const details = salon?.contact;
 
   if (details === undefined || !hasDetails(details)) {
-    return null;
+    return (
+      <div className="wz-footer-col">
+        <h3>Visit</h3>
+        <span>Addis Ababa</span>
+        <Link to="/contact">Contact and directions</Link>
+      </div>
+    );
   }
 
   const socials = [
@@ -137,29 +165,26 @@ function FooterContact() {
   ].filter((item): item is { label: string; href: string } => item !== null);
 
   return (
-    <div className="footer-contact">
+    <div className="wz-footer-col">
+      <h3>Visit</h3>
+      {details.address !== "" && <span>{details.address}</span>}
       {details.phone !== "" && (
         <a href={`tel:${details.phone.replace(/[^\d+]/g, "")}`}>{details.phone}</a>
       )}
       {details.whatsapp !== "" && <a href={whatsappHref(details.whatsapp)}>WhatsApp</a>}
-      {details.address !== "" && <span>{details.address}</span>}
       {details.email !== "" && <a href={`mailto:${details.email}`}>{details.email}</a>}
-      {socials.length > 0 && (
-        <span>
-          {socials.map((item) => (
-            <a key={item.label} href={item.href}>
-              {item.label}
-            </a>
-          ))}
-        </span>
-      )}
+      {socials.map((item) => (
+        <a key={item.label} href={item.href}>
+          {item.label}
+        </a>
+      ))}
     </div>
   );
 }
 
 export function SiteLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="home-page">
+    <div className="wz-site">
       <SiteHeader />
       <main>{children}</main>
       <SiteFooter />
@@ -167,109 +192,162 @@ export function SiteLayout({ children }: { children: ReactNode }) {
   );
 }
 
-export function PageHero({
-  overline,
+/** The home hero: type on plum at the left, one photograph full-bleed at the right. */
+export function SiteHero({
   title,
-  copy,
+  amharic,
+  lede,
   image,
   alt,
-  tone = "plum",
 }: {
-  overline: string;
   title: ReactNode;
-  copy: string;
+  amharic: string;
+  lede: string;
   image: string;
   alt: string;
-  tone?: "plum" | "mist";
 }) {
   return (
-    <section className={`page-hero page-hero-${tone}`}>
-      <div className="section-wrap page-hero-inner">
-        <div className="page-hero-copy reveal-up">
-          <span className="overline">{overline}</span>
-          <h1>{title}</h1>
-          <p>{copy}</p>
+    <section className="wz-hero">
+      <div className="wz-hero-copy">
+        <h1 className="wz-hero-title wz-rise">{title}</h1>
+        <p className="wz-hero-eth wz-rise-2" lang="am">
+          {amharic}
+        </p>
+        <p className="wz-hero-lede wz-rise-2">{lede}</p>
+        <div className="wz-hero-actions wz-rise-3">
+          <Link to="/booking" className="wz-btn wz-btn-onDark">
+            Book an appointment <ArrowRight size={16} aria-hidden="true" />
+          </Link>
+          <Link to="/services" className="wz-link wz-link-light">
+            See the full catalogue
+          </Link>
         </div>
-        <figure className="page-hero-image img-frame reveal">
-          <img src={image} alt={alt} fetchPriority="high" />
-        </figure>
+      </div>
+      <div className="wz-hero-media">
+        <img src={image} alt={alt} fetchPriority="high" width={1536} height={1024} />
       </div>
     </section>
   );
 }
 
-export function EditorialLink({
-  to,
+/**
+ * Interior page head. Deliberately a different composition from the home hero:
+ * type left, standfirst right, then a full-bleed photograph underneath.
+ */
+export function PageHead({
+  title,
+  amharic,
+  intro,
   children,
-  light = false,
 }: {
-  to: "/" | "/services" | "/about" | "/gallery" | "/booking" | "/contact";
-  children: ReactNode;
-  light?: boolean;
+  title: ReactNode;
+  amharic: string;
+  intro: string;
+  children?: ReactNode;
 }) {
   return (
-    <Link to={to} className={`editorial-link ${light ? "editorial-link-light" : ""}`}>
-      {children}
-      <ArrowRight size={18} strokeWidth={1.5} aria-hidden="true" />
-    </Link>
+    <div className="wz-wrap wz-page-head">
+      <div className="wz-page-head-top">
+        <div>
+          <p className="wz-eth-mark" lang="am">
+            {amharic}
+          </p>
+          <h1 className="wz-rise">{title}</h1>
+        </div>
+        <div>
+          <p className="wz-lede">{intro}</p>
+          {children}
+        </div>
+      </div>
+    </div>
   );
 }
 
-export function BookingBand({
+/** A full-bleed photograph. Never tinted, never overlaid — the image does the work. */
+export function ImageBand({ image, alt }: { image: string; alt: string }) {
+  return (
+    <figure className="wz-band">
+      <img src={image} alt={alt} loading="lazy" />
+    </figure>
+  );
+}
+
+export function ClosingCta({
   title = (
     <>
-      Ready for your
+      Tell us what you have in mind.
       <br />
-      <em>WIZ moment?</em>
+      We will find the time.
     </>
   ),
-  copy = "Something beautiful starts with a little time for yourself.",
+  copy = "Most appointments are booked a week ahead. If you are not sure what to ask for, book a consultation and we will talk it through first.",
 }: {
   title?: ReactNode;
   copy?: string;
 }) {
   return (
-    <section className="booking-section">
-      <div className="section-wrap booking-inner">
-        <span className="overline">Your moment awaits</span>
-        <h2>{title}</h2>
-        <p>{copy}</p>
-        <Link to="/booking" className="btn btn-ink btn-lg">
-          Book an appointment <ArrowRight size={18} />
-        </Link>
+    <section className="wz-cta">
+      <div className="wz-wrap wz-cta-inner">
+        <div>
+          <h2>{title}</h2>
+          <Link to="/booking" className="wz-btn">
+            Book an appointment <ArrowRight size={16} aria-hidden="true" />
+          </Link>
+        </div>
+        <div>
+          <p className="wz-prose">{copy}</p>
+          <p className="wz-meta wz-mt-sm">
+            Booking from a phone works best — the whole flow is one thumb.
+          </p>
+        </div>
       </div>
     </section>
   );
 }
 
+/**
+ * Before / after slider. Both photographs genuinely differ, so the control is
+ * honest. The "before" frame is clipped with clip-path rather than resized, so
+ * the two images stay in exact register at any container width.
+ */
 export function BeforeAfter({
   before,
   after,
-  label = "Before and after comparison",
+  beforeLabel = "Before",
+  afterLabel = "After",
+  label = "Before and after",
 }: {
   before: string;
   after: string;
+  beforeLabel?: string;
+  afterLabel?: string;
   label?: string;
 }) {
-  const [v, setV] = useState(50);
+  const [value, setValue] = useState(52);
+
   return (
-    <div className="comparison" aria-label={label}>
-      <img src={after} alt="After" loading="lazy" />
-      <div className="comparison-before" style={{ width: `${v}%` }}>
-        <img src={before} alt="Before" loading="lazy" />
-      </div>
-      <span className="comparison-label comparison-label-before">BEFORE</span>
-      <span className="comparison-label comparison-label-after">AFTER</span>
-      <div className="comparison-handle" style={{ left: `${v}%` }} aria-hidden="true">
-        <span>‹ &nbsp; ›</span>
-      </div>
+    <div className="wz-compare">
+      <img src={after} alt={afterLabel} loading="lazy" />
+      <img
+        src={before}
+        alt={beforeLabel}
+        loading="lazy"
+        style={{ clipPath: `inset(0 ${100 - value}% 0 0)` }}
+      />
+      <span className="wz-compare-tag" style={{ left: "0.85rem" }}>
+        {beforeLabel}
+      </span>
+      <span className="wz-compare-tag" style={{ right: "0.85rem" }}>
+        {afterLabel}
+      </span>
+      <div className="wz-compare-handle" style={{ left: `${value}%` }} aria-hidden="true" />
       <input
         type="range"
         min="0"
         max="100"
-        value={v}
-        onChange={(e) => setV(Number(e.target.value))}
-        aria-label="Reveal the before and after"
+        value={value}
+        onChange={(event) => setValue(Number(event.target.value))}
+        aria-label={label}
       />
     </div>
   );

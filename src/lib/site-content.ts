@@ -30,6 +30,9 @@ export const bundledImages: SiteImageSet = {
   skin: { url: bundled.skin, alt: "Skincare portrait" },
   before: { url: bundled.before, alt: "Before a transformation" },
   after: { url: bundled.after, alt: "After a transformation" },
+  braid: { url: bundled.braid, alt: "Cornrow braid pattern finished at WIZ Beauty Salon" },
+  braiding: { url: bundled.braiding, alt: "A braider sectioning and plaiting hair" },
+  kids: { url: bundled.kids, alt: "A child having her hair braided with beads" },
 };
 
 export type ImagePayload = { images?: Record<string, { url?: string; alt?: string }> };

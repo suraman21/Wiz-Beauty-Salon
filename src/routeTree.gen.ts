@@ -15,7 +15,7 @@ import { Route as BookingRouteImport } from './routes/booking'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as GalleryRouteImport } from './routes/gallery'
 import { Route as ServicesRouteImport } from './routes/services'
-import { Route as BookingRecoverRouteImport } from './routes/booking.recover'
+import { Route as BookingRecoverRouteImport } from './routes/booking_.recover'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -48,15 +48,15 @@ const ServicesRoute = ServicesRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const BookingRecoverRoute = BookingRecoverRouteImport.update({
-  id: '/recover',
-  path: '/recover',
-  getParentRoute: () => BookingRoute,
+  id: '/booking_/recover',
+  path: '/booking/recover',
+  getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/booking': typeof BookingRouteWithChildren
+  '/booking': typeof BookingRoute
   '/contact': typeof ContactRoute
   '/gallery': typeof GalleryRoute
   '/services': typeof ServicesRoute
@@ -65,7 +65,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/booking': typeof BookingRouteWithChildren
+  '/booking': typeof BookingRoute
   '/contact': typeof ContactRoute
   '/gallery': typeof GalleryRoute
   '/services': typeof ServicesRoute
@@ -75,11 +75,11 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/booking': typeof BookingRouteWithChildren
+  '/booking': typeof BookingRoute
   '/contact': typeof ContactRoute
   '/gallery': typeof GalleryRoute
   '/services': typeof ServicesRoute
-  '/booking/recover': typeof BookingRecoverRoute
+  '/booking_/recover': typeof BookingRecoverRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -108,16 +108,17 @@ export interface FileRouteTypes {
     | '/contact'
     | '/gallery'
     | '/services'
-    | '/booking/recover'
+    | '/booking_/recover'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
-  BookingRoute: typeof BookingRouteWithChildren
+  BookingRoute: typeof BookingRoute
   ContactRoute: typeof ContactRoute
   GalleryRoute: typeof GalleryRoute
   ServicesRoute: typeof ServicesRoute
+  BookingRecoverRoute: typeof BookingRecoverRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -164,34 +165,24 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ServicesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/booking/recover': {
-      id: '/booking/recover'
-      path: '/recover'
+    '/booking_/recover': {
+      id: '/booking_/recover'
+      path: '/booking/recover'
       fullPath: '/booking/recover'
       preLoaderRoute: typeof BookingRecoverRouteImport
-      parentRoute: typeof BookingRoute
+      parentRoute: typeof rootRouteImport
     }
   }
 }
 
-interface BookingRouteChildren {
-  BookingRecoverRoute: typeof BookingRecoverRoute
-}
-
-const BookingRouteChildren: BookingRouteChildren = {
-  BookingRecoverRoute: BookingRecoverRoute,
-}
-
-const BookingRouteWithChildren =
-  BookingRoute._addFileChildren(BookingRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
-  BookingRoute: BookingRouteWithChildren,
+  BookingRoute: BookingRoute,
   ContactRoute: ContactRoute,
   GalleryRoute: GalleryRoute,
   ServicesRoute: ServicesRoute,
+  BookingRecoverRoute: BookingRecoverRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
