@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { ArrowRight, CalendarDays, ChevronDown, Play } from "lucide-react";
 import { BeforeAfter, BookingBand, EditorialLink, SiteLayout } from "@/components/site/SiteChrome";
 import { useSiteImages } from "@/lib/site-content";
@@ -60,7 +60,11 @@ function Home() {
 
   return (
     <SiteLayout>
-      <section className="home-hero home-hero-wiz" aria-labelledby="hero-title">
+      <section
+        className="home-hero home-hero-wiz"
+        aria-labelledby="hero-title"
+        style={{ "--hero-art": `url(${heroPurple})` } as CSSProperties}
+      >
         <img
           className="home-hero-image"
           src={heroPurple}
