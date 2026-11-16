@@ -60,14 +60,21 @@ function Home() {
   return (
     <SiteLayout>
       <section className="home-hero" aria-labelledby="hero-title">
-        <img
-          className="home-hero-image"
-          src={images.hero.url}
-          alt={images.hero.alt}
-          width={1536}
-          height={1024}
-          fetchPriority="high"
-        />
+        <picture className="home-hero-media">
+          {/* The hero photograph is shot twice: wide for desktop, and a portrait
+              crop for phones, where a slice of the wide one would cut her face. */}
+          {images.hero.portrait ? (
+            <source media="(max-width: 47.5rem)" srcSet={images.hero.portrait} />
+          ) : null}
+          <img
+            className="home-hero-image"
+            src={images.hero.url}
+            alt={images.hero.alt}
+            width={2400}
+            height={1350}
+            fetchPriority="high"
+          />
+        </picture>
         <div className="home-hero-shade" />
         <div className="hero-content reveal-up">
           <p className="overline hero-overline">A new expression of beauty</p>

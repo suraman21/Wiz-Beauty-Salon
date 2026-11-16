@@ -11,17 +11,26 @@
  */
 
 import { useSyncExternalStore } from "react";
-import { images as bundled } from "@/data/wiz";
+import { heroPortrait, images as bundled } from "@/data/wiz";
 import { apiGet } from "@/lib/api";
 import { fetchSalon, type SalonInfo } from "@/lib/salon-api";
 
-export type SiteImage = { url: string; alt: string };
+/**
+ * A picture the site can show. `portrait` is the optional art-directed crop for
+ * narrow viewports; only the hero has one, and a panel-published photo carries
+ * no crop because the panel only ever uploads a single file.
+ */
+export type SiteImage = { url: string; alt: string; portrait?: string };
 
 export type SiteImageSet = Record<keyof typeof bundled, SiteImage>;
 
 /** What the design shipped with, used until — or instead of — the API answer. */
 export const bundledImages: SiteImageSet = {
-  hero: { url: bundled.hero, alt: "Editorial beauty portrait" },
+  hero: {
+    url: bundled.hero,
+    alt: "Model in a white off-shoulder gown and crystal tiara, under plum velvet drapery",
+    portrait: heroPortrait,
+  },
   portrait: { url: bundled.portrait, alt: "Editorial beauty portrait" },
   space: { url: bundled.space, alt: "Salon-inspired interior" },
   nails: { url: bundled.nails, alt: "Manicure detail" },
@@ -46,6 +55,8 @@ export function mergeImages(payload: ImagePayload | null): SiteImageSet {
         url: published.url,
         alt: published.alt && published.alt !== "" ? published.alt : bundledImages[slot].alt,
       };
+      // The panel uploads one file; its portrait crop would be the old bundled
+      // photograph, so it is dropped rather than mismatched.
     }
   }
 

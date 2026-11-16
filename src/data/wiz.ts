@@ -6,11 +6,30 @@ import makeup from "@/assets/makeup-editorial.jpg";
 import skin from "@/assets/skin-editorial.jpg";
 import portrait from "@/assets/hero-portrait.jpg";
 import space from "@/assets/salon-space.jpg";
-import hero from "@/assets/home-hero.jpg";
+import homeHero from "@/assets/home-hero.jpg";
+import heroWiz from "@/assets/hero-wiz-lilac.jpg";
+import heroWizPortrait from "@/assets/hero-wiz-lilac-portrait.jpg";
 import before from "@/assets/transformation-before.jpg";
 import after from "@/assets/transformation-after.jpg";
 
-export const images = { hair, nails, makeup, skin, portrait, space, hero, before, after };
+export const images = {
+  hair,
+  nails,
+  makeup,
+  skin,
+  portrait,
+  space,
+  hero: heroWiz,
+  before,
+  after,
+};
+
+/**
+ * The hero's portrait crop. Kept out of `images` so it is not a slot the panel
+ * has to publish: it is the mobile half of the same photograph, not a fourth
+ * picture the salon chooses.
+ */
+export const heroPortrait = heroWizPortrait;
 
 export const nav = [
   { label: "Home", to: "/" },
@@ -167,7 +186,7 @@ export const galleryWork: {
   {
     id: "g7",
     category: "makeup",
-    image: hero,
+    image: homeHero,
     alt: "Beauty portrait",
     title: "Lilac mood",
   },

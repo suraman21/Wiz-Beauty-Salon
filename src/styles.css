@@ -2737,6 +2737,10 @@ body {
   color: var(--color-on-dark);
 }
 
+.home-hero-media {
+  display: contents;
+}
+
 .home-hero-image {
   position: absolute;
   inset: 0;
@@ -3621,6 +3625,11 @@ body {
   }
 }
 
+  .home-hero-image {
+    /* Narrower than the photograph, so bias the crop towards her rather than
+       towards the empty middle. */
+    object-position: 78% center;
+  }
 @media (max-width: 760px) {
   :root {
     --site-gutter: 1.375rem;
@@ -3669,25 +3678,30 @@ body {
     min-height: min(42rem, calc(100svh - var(--site-header-height)));
     padding-top: 5rem;
     padding-bottom: calc(var(--hero-rail) + 2.25rem);
+    /* The portrait crop places her below the copy, so the column starts at the
+       top and never runs across her face. */
+    justify-content: flex-start;
   }
 
   .home-hero-image {
-    object-position: 70% center;
+    /* The portrait file is composed centred for phones. */
+    object-position: 50% 42%;
   }
 
   .home-hero-shade {
     background:
       linear-gradient(
-        0deg,
-        color-mix(in oklab, var(--plum-dark) 92%, transparent) 0%,
-        color-mix(in oklab, var(--plum-dark) 72%, transparent) 44%,
-        color-mix(in oklab, var(--plum-dark) 18%, transparent) 70%,
-        transparent 84%
+        180deg,
+        color-mix(in oklab, var(--plum-dark) 93%, transparent) 0%,
+        color-mix(in oklab, var(--plum-dark) 86%, transparent) 22%,
+        color-mix(in oklab, var(--plum-dark) 52%, transparent) 36%,
+        color-mix(in oklab, var(--plum-dark) 12%, transparent) 45%,
+        transparent 52%
       ),
       linear-gradient(
         90deg,
-        color-mix(in oklab, var(--plum-dark) 55%, transparent) 0%,
-        transparent 80%
+        color-mix(in oklab, var(--plum-dark) 45%, transparent) 0%,
+        transparent 70%
       );
   }
 
@@ -3723,8 +3737,10 @@ body {
     font-size: 0.62rem;
   }
 
+  /* The portrait hero fills the frame with the photograph, so the cue has no
+     quiet space to sit in on a phone. */
   .hero-scroll {
-    bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+    display: none;
   }
 
   .hero-image-note {
