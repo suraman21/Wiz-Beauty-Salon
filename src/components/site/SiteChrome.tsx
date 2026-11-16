@@ -238,6 +238,54 @@ export function PageHero({
   );
 }
 
+/**
+ * The services page opens on its own composition: the copy on the left, the
+ * portrait on the right inside a neon ring, petals in the air. Dark plum,
+ * like the home page's dark rooms — the ring is the light.
+ */
+export function ServicesHero({ image, alt }: { image: string; alt: string }) {
+  const reveal = useReveal<HTMLElement>();
+
+  return (
+    <section
+      ref={reveal.ref}
+      className={`svc-hero${reveal.revealed ? " is-revealed" : ""}`}
+      aria-labelledby="svc-hero-title"
+    >
+      <noscript>
+        <style>{`.svc-hero-eyebrow,.svc-hero-line,.svc-hero-lede,.svc-hero-cta,.svc-hero-figure,.feeling-rule{opacity:1!important;animation:none!important;transform:none!important}.svc-hero-ring,.svc-hero-petal{opacity:1!important}`}</style>
+      </noscript>
+      <span className="svc-hero-ring" aria-hidden="true" />
+      <span className="svc-hero-petal svc-hero-petal-a" aria-hidden="true" />
+      <span className="svc-hero-petal svc-hero-petal-b" aria-hidden="true" />
+      <span className="svc-hero-petal svc-hero-petal-c" aria-hidden="true" />
+      <div className="section-wrap svc-hero-inner">
+        <div className="svc-hero-copy">
+          <p className="svc-hero-eyebrow">
+            <span className="feeling-rule" aria-hidden="true" />
+            <span className="svc-hero-eyebrow-text">Our services</span>
+            <span className="feeling-rule feeling-rule-end" aria-hidden="true" />
+          </p>
+          <h1 id="svc-hero-title" className="svc-hero-title">
+            <span className="feeling-line svc-hero-line">Made for</span>
+            <span className="feeling-line feeling-line-em svc-hero-line">every</span>
+            <span className="feeling-line feeling-line-em svc-hero-line">moment.</span>
+          </h1>
+          <p className="svc-hero-lede">
+            From everyday beauty to special occasions, we offer premium services tailored for you.
+          </p>
+          <a className="btn btn-blush svc-hero-cta" href="#service-list">
+            Explore Services <ArrowRight size={16} />
+          </a>
+        </div>
+        <figure className="svc-hero-figure">
+          <img src={image} alt={alt} fetchPriority="high" />
+        </figure>
+      </div>
+    </section>
+  );
+}
+
 export function EditorialLink({
   to,
   children,

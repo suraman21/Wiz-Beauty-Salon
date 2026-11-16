@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ArrowRight, Heart } from "lucide-react";
-import { BookingBand, PageHero, SiteLayout } from "@/components/site/SiteChrome";
+import { BookingBand, ServicesHero, SiteLayout } from "@/components/site/SiteChrome";
 import { useSiteImages } from "@/lib/site-content";
 import { fetchCatalogue } from "@/lib/booking-api";
 import { buildServices, localServices, type SalonService } from "@/lib/service-pages";
@@ -49,21 +49,9 @@ function Services() {
 
   return (
     <SiteLayout>
-      <PageHero
-        overline="Services"
-        title={
-          <>
-            Made for
-            <br />
-            <em>every moment.</em>
-          </>
-        }
-        copy="Everything the salon offers. Pick the one you want, choose a time, and we take it from there."
-        image={images.makeup.url}
-        alt={images.makeup.alt}
-      />
+      <ServicesHero image={images.makeup.url} alt={images.makeup.alt} />
 
-      <section className="svc-hub section-wrap">
+      <section id="service-list" className="svc-hub section-wrap">
         <div className="svc-hub-head">
           <div>
             <span className="overline">What we offer</span>

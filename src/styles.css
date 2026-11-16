@@ -7952,3 +7952,262 @@ body {
     transform: none !important;
   }
 }
+
+/* ------------------------------------------------------------ services hero
+   The services page opens on its own composition: the copy on the left, the
+   portrait on the right inside a neon ring, petals in the air. Dark plum,
+   like the home page's dark rooms — the ring is the light. */
+
+.svc-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+  padding: clamp(8rem, 18vh, 12rem) 0 clamp(4.5rem, 11vh, 7.5rem);
+  color: var(--paper);
+  background:
+    radial-gradient(75% 85% at 76% 42%, rgba(126, 20, 112, 0.6), transparent 62%),
+    radial-gradient(60% 70% at 20% 90%, rgba(240, 90, 192, 0.14), transparent 65%),
+    linear-gradient(180deg, #240521 0%, #1e0520 55%, #190319 100%);
+}
+
+.svc-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+}
+
+/* the neon ring the portrait sits inside */
+.svc-hero-ring {
+  position: absolute;
+  z-index: 0;
+  top: 50%;
+  left: 72%;
+  width: min(58rem, 105vw);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 2px solid rgba(255, 140, 224, 0.8);
+  box-shadow:
+    0 0 34px rgba(240, 90, 192, 0.55),
+    0 0 96px rgba(240, 90, 192, 0.32),
+    inset 0 0 64px rgba(240, 90, 192, 0.22);
+  pointer-events: none;
+  opacity: 0;
+}
+
+.svc-hero-petal {
+  position: absolute;
+  z-index: 1;
+  width: 16px;
+  height: 24px;
+  background: linear-gradient(135deg, #ffc4ec, #f05ac0);
+  border-radius: 72% 6% 72% 6%;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.svc-hero-petal-a {
+  top: 16%;
+  right: 5%;
+  transform: rotate(24deg);
+}
+
+.svc-hero-petal-b {
+  top: 44%;
+  right: 2.5%;
+  transform: rotate(-20deg) scale(0.75);
+}
+
+.svc-hero-petal-c {
+  bottom: 14%;
+  left: 36%;
+  transform: rotate(42deg) scale(0.65);
+}
+
+.svc-hero-inner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 0.85fr 1.15fr;
+  align-items: center;
+  gap: clamp(2rem, 5vw, 5rem);
+}
+
+.svc-hero-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.7rem, 1.4vw, 1.1rem);
+  margin: 0 0 clamp(1.4rem, 3.5vh, 2.1rem);
+  font-size: clamp(0.6rem, 0.78vw, 0.74rem);
+  font-weight: 600;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: #f0d8ec;
+  opacity: 0;
+}
+
+.svc-hero-eyebrow-text {
+  white-space: nowrap;
+}
+
+.svc-hero-title {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  font-family: "Bodoni Moda", "Playfair Display", var(--font-display);
+  font-size: clamp(3rem, 6.5vw, 6rem);
+  font-weight: 400;
+  line-height: 0.98;
+  letter-spacing: -0.012em;
+  text-wrap: pretty;
+}
+
+.svc-hero-lede {
+  margin: clamp(1.4rem, 3.5vh, 2.1rem) 0 0;
+  max-width: 26rem;
+  font-size: clamp(0.95rem, 1.1vw, 1.05rem);
+  line-height: 1.7;
+  color: rgba(240, 216, 236, 0.78);
+  opacity: 0;
+}
+
+.svc-hero-cta {
+  margin-top: clamp(1.8rem, 4.5vh, 2.8rem);
+  border-radius: 999px;
+  box-shadow: 0 16px 34px rgba(8, 1, 10, 0.45);
+  transition:
+    background-color 0.35s var(--ease-quiet),
+    color 0.35s var(--ease-quiet),
+    border-color 0.35s,
+    transform 0.35s var(--ease-quiet),
+    box-shadow 0.35s var(--ease-quiet);
+  opacity: 0;
+}
+
+.svc-hero-cta:hover {
+  background: var(--pink-2);
+  box-shadow: 0 20px 42px rgba(8, 1, 10, 0.55);
+}
+
+.svc-hero-figure {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 30rem);
+  margin: 0 auto;
+  aspect-ratio: 4 / 5;
+  opacity: 0;
+}
+
+.svc-hero-figure img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 12%;
+  -webkit-mask-image: radial-gradient(ellipse 105% 98% at 50% 42%, black 58%, transparent 99%);
+  mask-image: radial-gradient(ellipse 105% 98% at 50% 42%, black 58%, transparent 99%);
+}
+
+/* the anchor the hero button scrolls to clears the fixed bar */
+#service-list {
+  scroll-margin-top: 96px;
+}
+
+/* Entrance — rules draw, the headline zooms, then the portrait lands. */
+.svc-hero.is-revealed .svc-hero-eyebrow {
+  animation: wiz-rise 0.85s var(--ease-quiet) both;
+}
+
+.svc-hero.is-revealed .feeling-rule {
+  animation: feeling-rule 0.95s var(--ease-quiet) both 0.1s;
+}
+
+.svc-hero.is-revealed .svc-hero-line:nth-child(1) {
+  animation: wiz-zoom 1.05s var(--ease-quiet) both 0.08s;
+}
+
+.svc-hero.is-revealed .svc-hero-line:nth-child(2) {
+  animation: wiz-zoom 1.05s var(--ease-quiet) both 0.22s;
+}
+
+.svc-hero.is-revealed .svc-hero-line:nth-child(3) {
+  animation: wiz-zoom 1.05s var(--ease-quiet) both 0.36s;
+}
+
+.svc-hero.is-revealed .svc-hero-lede {
+  animation: wiz-rise 0.9s var(--ease-quiet) both 0.45s;
+}
+
+.svc-hero.is-revealed .svc-hero-cta {
+  animation: feeling-glow 0.9s var(--ease-quiet) both 0.65s;
+}
+
+.svc-hero.is-revealed .svc-hero-figure {
+  animation: wiz-zoom 1.1s var(--ease-quiet) both 0.3s;
+}
+
+.svc-hero.is-revealed .svc-hero-ring {
+  animation: feeling-glow 2.2s var(--ease-quiet) both 0.2s;
+}
+
+.svc-hero.is-revealed .svc-hero-petal {
+  animation: feeling-glow 1.6s var(--ease-quiet) both 0.7s;
+}
+
+@media (max-width: 900px) {
+  .svc-hero-inner {
+    grid-template-columns: 1fr;
+    gap: 3rem;
+  }
+  .svc-hero-title {
+    font-size: clamp(3rem, 11vw, 4.6rem);
+  }
+  .svc-hero-ring {
+    left: 50%;
+    width: min(34rem, 130vw);
+  }
+  .svc-hero-figure {
+    max-width: 30rem;
+    margin-inline: auto;
+  }
+}
+
+@media (max-width: 600px) {
+  .svc-hero {
+    padding: 6.5rem 0 4rem;
+  }
+  .svc-hero-title {
+    font-size: clamp(2.7rem, 14vw, 3.6rem);
+  }
+  .svc-hero-eyebrow {
+    letter-spacing: 0.28em;
+  }
+  .svc-hero-petal-c {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .svc-hero .svc-hero-eyebrow,
+  .svc-hero .svc-hero-line,
+  .svc-hero .svc-hero-lede,
+  .svc-hero .svc-hero-cta,
+  .svc-hero .svc-hero-figure,
+  .svc-hero .feeling-rule {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  /* the ring and petals are placed with transform: keep them where they are */
+  .svc-hero .svc-hero-ring,
+  .svc-hero .svc-hero-petal {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+}
