@@ -44,17 +44,34 @@ announced over the phone could be written down as the wrong day.
 - **Positive:** dates on the site, the panel, the customer's manage page, the
   emails and the PDFs now match how the salon already talks.
 - **Negative:** two implementations of the same arithmetic exist (TS and PHP).
-  They are pinned to each other by identical test vectors —
-  `src/lib/ethiopian-calendar.test.ts` and `admin/tests/Unit/EthiopianDateTest.php`
-  — so a change on one side breaks the other side's suite.
-- **Boundary:** both engines are correct through Gregorian 2099. Gregorian 2100
-  is not a leap year while the Ethiopian year spanning it is, so a one-day
-  drift starts there; the month-length rule must then switch to the true
-  Ethiopian rule (`year % 4 === 3`). FKSS documents the same boundary.
+  They are pinned to each other by one shared vector file —
+  `shared/ethiopian-calendar-vectors.json`, read by both
+  `src/lib/ethiopian-calendar.test.ts` and
+  `admin/tests/Unit/EthiopianDateTest.php` — so a change on one side breaks the
+  other side's suite on the same line. The file sits outside both trees on
+  purpose: a vector that only one language can see would protect nothing.
+- **No boundary, no horizon.** FKSS derives Meskerem 1 from the *Gregorian*
+  leap rule ("11 September, or the 12th when the next February is a leap day"),
+  which assumes the two calendars stay in step. They do until Gregorian 2100 —
+  the first century year that is not a leap year — meets Ethiopian 2092, a full
+  365-day year that opens on 12 September 2099 and closes on 11 September 2100.
+  This port does not inherit that. Both engines count days *inside* the
+  Ethiopian calendar (a year is 365 days, or 366 when it leaves a remainder of
+  3 in the four-year cycle, where Pagume 6 lives) from a single anchor: 1
+  Meskerem 2015 EC = 11 September 2022. Both directions are Julian-day
+  arithmetic, so round trips are exact and Pagume 6 appears once every four
+  years forever. The suites prove the port agrees with the Gregorian-derived
+  rule for every year 1900–2091 — every date this salon can reach — and that
+  it is the FKSS rule, not this one, that drifts after that. `Meskerem 1 2096
+  EC` is pinned at 13 September 2103 in the shared vectors precisely so the
+  drift can never be reintroduced silently.
 
 ## Evidence
 
-- `src/lib/ethiopian-calendar.ts`, `src/lib/ethiopian-calendar.test.ts` (25 tests)
-- `admin/src/Support/EthiopianDate.php`, `admin/tests/Unit/EthiopianDateTest.php` (14 tests)
+- `src/lib/ethiopian-calendar.ts`, `src/lib/ethiopian-calendar.test.ts` (34 tests)
+- `admin/src/Support/EthiopianDate.php`, `admin/tests/Unit/EthiopianDateTest.php` (21 tests)
+- `shared/ethiopian-calendar-vectors.json` — 15 conversions, one round-trip
+  range, 13 clock times, 9 format expectations, 4 invalid inputs: the contract
+  both suites assert.
 - `admin/src/Support/helpers.php` — `ethiopian_date()`, `ethiopian_clock()`,
   `full_date()`, and the rest of the funnels every panel date goes through.

@@ -18,6 +18,175 @@ final class EthiopianDateTest extends TestCase
 {
     private const ISO = 'Y-m-d';
 
+    /**
+     * @return array<string, mixed>
+     */
+    private static function vectors(): array
+    {
+        $path = __DIR__ . '/../../../shared/ethiopian-calendar-vectors.json';
+        $json = file_get_contents($path);
+        self::assertIsString($json, 'the shared vector file must exist');
+
+        /** @var array<string, mixed> $vectors */
+        $vectors = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
+
+        return $vectors;
+    }
+
+    /**
+     * Every conversion both engines are held to. The same file feeds
+     * src/lib/ethiopian-calendar.test.ts, so the panel and the site cannot
+     * drift apart without one suite going red.
+     */
+    public function testSharedConversionVectors(): void
+    {
+        /** @var list<array{gregorian: string, ethiopian: array{year: int, month: int, day: int}, why: string}> $cases */
+        $cases = self::vectors()['conversions'];
+
+        self::assertNotEmpty($cases);
+
+        foreach ($cases as $case) {
+            self::assertSame(
+                $case['ethiopian'],
+                EthiopianDate::toEthiopian($case['gregorian']),
+                'Gregorian → Ethiopian: ' . $case['why'],
+            );
+
+            self::assertSame(
+                $case['gregorian'],
+                EthiopianDate::toGregorian(
+                    $case['ethiopian']['year'],
+                    $case['ethiopian']['month'],
+                    $case['ethiopian']['day'],
+                )->format(self::ISO),
+                'Ethiopian → Gregorian: ' . $case['why'],
+            );
+        }
+    }
+
+    public function testSharedRoundTripRange(): void
+    {
+        /** @var array{gregorianFrom: string, gregorianTo: string, ethiopianYearFrom: int, ethiopianYearTo: int} $range */
+        $range = self::vectors()['roundTrip'];
+
+        $zone = new \DateTimeZone(EthiopianDate::TIMEZONE);
+        $day = new \DateTimeImmutable($range['gregorianFrom'], $zone);
+        $end = new \DateTimeImmutable($range['gregorianTo'], $zone);
+        $seen = [];
+
+        while ($day <= $end) {
+            $ethiopian = EthiopianDate::toEthiopian($day);
+            self::assertNotNull($ethiopian, $day->format(self::ISO));
+            self::assertTrue(
+                EthiopianDate::isValid($ethiopian['year'], $ethiopian['month'], $ethiopian['day']),
+                'valid Ethiopian date for ' . $day->format(self::ISO),
+            );
+
+            $back = EthiopianDate::toGregorian($ethiopian['year'], $ethiopian['month'], $ethiopian['day']);
+
+            self::assertSame($day->format(self::ISO), $back->format(self::ISO));
+
+            // No Ethiopian day may be reachable from two Gregorian days.
+            $key = EthiopianDate::iso($ethiopian['year'], $ethiopian['month'], $ethiopian['day']);
+            self::assertArrayNotHasKey($key, $seen);
+
+            $seen[$key] = true;
+            $day = $day->modify('+1 day');
+        }
+
+        self::assertGreaterThanOrEqual(
+            $range['ethiopianYearFrom'],
+            min(array_map(static fn (string $iso): int => (int) substr($iso, 0, 4), array_keys($seen))),
+        );
+        self::assertLessThanOrEqual(
+            $range['ethiopianYearTo'],
+            max(array_map(static fn (string $iso): int => (int) substr($iso, 0, 4), array_keys($seen))),
+        );
+    }
+
+    public function testSharedClockVectors(): void
+    {
+        /** @var list<array{time: string, hour: int, minute: int, period: string, label: string, full: string}> $cases */
+        $cases = self::vectors()['clock'];
+
+        self::assertNotEmpty($cases);
+
+        foreach ($cases as $case) {
+            $clock = EthiopianDate::clock($case['time']);
+
+            self::assertNotNull($clock, 'clock: ' . $case['time']);
+            self::assertSame($case['hour'], $clock['hour'], 'hour: ' . $case['time']);
+            self::assertSame($case['minute'], $clock['minute'], 'minute: ' . $case['time']);
+            self::assertSame($case['period'], $clock['period'], 'period: ' . $case['time']);
+            self::assertSame(
+                $case['label'] . ' (' . $case['time'] . ')',
+                EthiopianDate::formatClock($case['time']),
+                'short clock: ' . $case['time'],
+            );
+            self::assertSame(
+                $case['full'] . ' (' . $case['time'] . ')',
+                EthiopianDate::formatClock($case['time'], true),
+                'full clock: ' . $case['time'],
+            );
+        }
+    }
+
+    public function testSharedFormatVectors(): void
+    {
+        /** @var list<array{gregorian: string, style: string, expected: string}> $cases */
+        $cases = self::vectors()['formats'];
+
+        self::assertNotEmpty($cases);
+
+        foreach ($cases as $case) {
+            // There is no "gregorian" style in this class; the panel prints the
+            // Gregorian alt-text through wire() instead. Same expectation.
+            $actual = $case['style'] === 'gregorian'
+                ? EthiopianDate::wire($case['gregorian'])['gregorian']
+                : EthiopianDate::format($case['gregorian'], $case['style']);
+
+            self::assertSame(
+                $case['expected'],
+                $actual,
+                'format "' . $case['style'] . '" for ' . $case['gregorian'],
+            );
+        }
+    }
+
+    public function testSharedInvalidVectors(): void
+    {
+        /** @var list<string> $values */
+        $values = self::vectors()['invalid'];
+
+        self::assertNotEmpty($values);
+
+        foreach ($values as $value) {
+            self::assertNull(EthiopianDate::toEthiopian($value), 'should not read: ' . $value);
+        }
+    }
+
+    public function testTheTwoHundredYearBoundaryNoLongerDrifts(): void
+    {
+        // Meskerem 1 2092 EC opens on 12 September 2099 and the year is a full
+        // 365 days, so 11 September 2100 is Pagume 5 of 2092 — the day the
+        // Gregorian-derived rule lost.
+        self::assertSame('2099-09-12', EthiopianDate::newYear(2092)->format(self::ISO));
+        self::assertSame('2100-09-11', EthiopianDate::newYear(2093)->modify('-1 day')->format(self::ISO));
+        self::assertSame('2100-09-12', EthiopianDate::newYear(2093)->format(self::ISO));
+        self::assertSame(['year' => 2092, 'month' => 13, 'day' => 5], EthiopianDate::toEthiopian('2100-09-11'));
+        self::assertSame(['year' => 2093, 'month' => 1, 'day' => 1], EthiopianDate::toEthiopian('2100-09-12'));
+    }
+
+    public function testPagumeSixExistsOnceEveryFourYearsAndOnlyThen(): void
+    {
+        for ($year = 2000; $year <= 2200; $year++) {
+            $length = (int) EthiopianDate::newYear($year + 1)->diff(EthiopianDate::newYear($year))->days;
+
+            self::assertSame($year % 4 === 3 ? 366 : 365, $length, 'length of ' . $year . ' EC');
+            self::assertSame($year % 4 === 3 ? 6 : 5, EthiopianDate::daysInMonth(13, $year), 'Pagume ' . $year);
+        }
+    }
+
     public function testMeskeremOneIsElevenSeptember(): void
     {
         self::assertSame(['year' => 2018, 'month' => 1, 'day' => 1], EthiopianDate::toEthiopian('2025-09-11'));

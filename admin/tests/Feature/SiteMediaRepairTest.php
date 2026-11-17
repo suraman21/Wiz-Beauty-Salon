@@ -59,6 +59,12 @@ final class SiteMediaRepairTest extends TestCase
 
     protected function tearDown(): void
     {
+        // setUp() skips the test when no database is configured; nothing was
+        // created in that case, so there is nothing to undo.
+        if (!isset($this->db)) {
+            return;
+        }
+
         $this->restore('hero', $this->before['hero'] ?? null);
         $this->restore('skin', $this->before['skin'] ?? null);
 

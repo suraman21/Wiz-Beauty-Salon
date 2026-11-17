@@ -1,6 +1,9 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   currentEthiopianYear,
+  ethiopianNewYear,
   daysInEthiopianMonth,
   formatEthiopian,
   formatEthiopianClock,
@@ -13,6 +16,40 @@ import {
   toEthiopianIso,
   toGregorian,
 } from "@/lib/ethiopian-calendar";
+
+/**
+ * The vectors both engines are held to. They live in shared/ rather than in
+ * either tree so the TypeScript and PHP suites cannot drift apart: a change on
+ * one side fails the other side's run on the same line.
+ */
+type Vectors = {
+  roundTrip: {
+    gregorianFrom: string;
+    gregorianTo: string;
+    ethiopianYearFrom: number;
+    ethiopianYearTo: number;
+  };
+  conversions: {
+    gregorian: string;
+    ethiopian: { year: number; month: number; day: number };
+    why: string;
+  }[];
+  clock: {
+    time: string;
+    hour: number;
+    minute: number;
+    period: string;
+    label: string;
+    full: string;
+  }[];
+  formats: { gregorian: string; style: string; expected: string }[];
+  invalid: string[];
+};
+
+// process.cwd() is the repository root, which is where vitest runs.
+const vectors = JSON.parse(
+  readFileSync(resolve(process.cwd(), "shared/ethiopian-calendar-vectors.json"), "utf8"),
+) as Vectors;
 
 const iso = (date: Date) =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
@@ -228,5 +265,162 @@ describe("the Ethiopian clock", () => {
     // An afternoon opening cannot be mistaken for a morning one.
     expect(formatEthiopianClockRange("14:00", "22:00")).toBe("8:00 ከሰዓት – 4:00 ማታ (14:00 – 22:00)");
     expect(formatEthiopianClockRange("nope", "20:00")).toBe("nope – 20:00");
+  });
+});
+
+/**
+ * Everything below is driven by shared/ethiopian-calendar-vectors.json, which
+ * the PHP suite reads too.
+ */
+describe("shared vectors: conversion", () => {
+  it("matches every published Gregorian → Ethiopian pair", () => {
+    for (const vector of vectors.conversions) {
+      expect({ ...toEthiopian(vector.gregorian), why: vector.why }).toEqual({
+        ...vector.ethiopian,
+        why: vector.why,
+      });
+      expect(iso(toGregorian(vector.ethiopian))).toBe(vector.gregorian);
+    }
+  });
+
+  it("keeps the 2100 boundary honest in both directions", () => {
+    // 2092 opens on 12 September 2099 and is 365 days long, so 11 September
+    // 2100 is Pagume 5 of 2092 — the day the Gregorian-derived rule lost.
+    expect(iso(ethiopianNewYear(2092))).toBe("2099-09-12");
+    expect(iso(ethiopianNewYear(2093))).toBe("2100-09-12");
+    expect(toEthiopian("2100-09-11")).toEqual({ year: 2092, month: 13, day: 5 });
+    expect(iso(toGregorian({ year: 2092, month: 13, day: 5 }))).toBe("2100-09-11");
+  });
+});
+
+describe("shared vectors: the clock", () => {
+  it("reads every published time", () => {
+    for (const vector of vectors.clock) {
+      expect({ ...toEthiopianClock(vector.time), why: vector.time }).toEqual({
+        hour: vector.hour,
+        minute: vector.minute,
+        period: vector.period,
+        label: vector.label,
+        full: vector.full,
+        why: vector.time,
+      });
+    }
+  });
+});
+
+describe("shared vectors: formatting", () => {
+  it("prints every published style", () => {
+    for (const vector of vectors.formats) {
+      const style = vector.style as "gregorian";
+
+      if (style === "gregorian") {
+        expect(formatGregorian(vector.gregorian)).toBe(vector.expected);
+      } else {
+        expect(formatEthiopian(vector.gregorian, style)).toBe(vector.expected);
+      }
+    }
+  });
+
+  it("refuses every published non-date", () => {
+    for (const value of vectors.invalid) {
+      expect(toEthiopian(value)).toBeNull();
+    }
+  });
+});
+
+/**
+ * The rule this port replaced, kept here as the yardstick.
+ *
+ * FKSS infers Meskerem 1 from the *Gregorian* leap year, which is correct
+ * until Gregorian 2100. Every date the salon can reach must be identical
+ * under both rules — if this test ever fails, the port changed behaviour and
+ * that has to be deliberate.
+ */
+const legacyNewYear = (ethiopianYear: number): Date => {
+  const gregorianYear = ethiopianYear + 7;
+  const nextIsGregorianLeap = (() => {
+    const y = gregorianYear + 1;
+    return (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
+  })();
+
+  return new Date(gregorianYear, 8, nextIsGregorianLeap ? 12 : 11);
+};
+
+describe("the 2100 fix does not move a date the salon can reach", () => {
+  it("agrees with the Gregorian-derived rule for every year 1900–2091", () => {
+    for (let year = 1900; year <= 2091; year += 1) {
+      expect({
+        year,
+        current: iso(ethiopianNewYear(year)),
+        legacy: iso(legacyNewYear(year)),
+      }).toEqual({ year, current: iso(legacyNewYear(year)), legacy: iso(legacyNewYear(year)) });
+    }
+  });
+
+  it("differs exactly where the old rule drifted — 2092", () => {
+    expect(iso(ethiopianNewYear(2092))).toBe("2099-09-12");
+    expect(iso(legacyNewYear(2092))).toBe("2099-09-11");
+  });
+});
+
+describe("shared vectors: the round-trip range", () => {
+  it("maps every day in both directions inside the published range", () => {
+    const from = new Date(`${vectors.roundTrip.gregorianFrom}T00:00:00`);
+    const to = new Date(`${vectors.roundTrip.gregorianTo}T00:00:00`);
+    const seen = new Set<string>();
+    let lowest = Number.POSITIVE_INFINITY;
+    let highest = 0;
+
+    for (let time = from.getTime(); time <= to.getTime(); time += 86_400_000) {
+      const day = new Date(time);
+      const ethiopian = toEthiopian(day);
+
+      expect(ethiopian).not.toBeNull();
+      if (ethiopian === null) return;
+
+      expect(isValidEthiopianDate(ethiopian)).toBe(true);
+
+      // No Ethiopian day may be reachable from two Gregorian days.
+      const key = toEthiopianIso(ethiopian);
+      expect(seen.has(key)).toBe(false);
+      seen.add(key);
+
+      lowest = Math.min(lowest, ethiopian.year);
+      highest = Math.max(highest, ethiopian.year);
+
+      expect(iso(toGregorian(ethiopian))).toBe(iso(day));
+    }
+
+    expect(lowest).toBeGreaterThanOrEqual(vectors.roundTrip.ethiopianYearFrom);
+    expect(highest).toBeLessThanOrEqual(vectors.roundTrip.ethiopianYearTo);
+  });
+});
+
+describe("day by day, 2020–2110", () => {
+  it("round-trips every single day, and every Ethiopian day maps back to one", () => {
+    const gregorianSeen = new Set<string>();
+    const ethiopianSeen = new Set<string>();
+
+    for (let time = Date.UTC(2020, 0, 1); time <= Date.UTC(2110, 11, 31); time += 86_400_000) {
+      const utc = new Date(time);
+      const gregorian = new Date(utc.getUTCFullYear(), utc.getUTCMonth(), utc.getUTCDate());
+      const ethiopian = toEthiopian(gregorian);
+
+      expect(ethiopian).not.toBeNull();
+      if (ethiopian === null) return;
+
+      // Valid month/day, and Pagume 6 only in a remainder-3 year.
+      expect(isValidEthiopianDate(ethiopian)).toBe(true);
+      if (ethiopian.month === 13 && ethiopian.day === 6) {
+        expect(ethiopian.year % 4).toBe(3);
+      }
+
+      expect(iso(toGregorian(ethiopian))).toBe(iso(gregorian));
+      gregorianSeen.add(iso(gregorian));
+      ethiopianSeen.add(toEthiopianIso(ethiopian));
+    }
+
+    // No day lost and none doubled.
+    expect(gregorianSeen.size).toBe(ethiopianSeen.size);
   });
 });

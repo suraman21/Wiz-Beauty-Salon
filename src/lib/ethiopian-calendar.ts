@@ -16,11 +16,24 @@
  *   3. TIMES ARE SHOWN BOTH WAYS, Ethiopian clock first: "3:00 ሰዓት (09:00)".
  *      Ethiopian 12 o'clock is 6:00 — the day starts six hours earlier.
  *
- * ACCURACY: correct for every date this salon will trade, today through 2099.
- * Gregorian 2100 is not a leap year but the Ethiopian year spanning it is, so
- * a one-day drift begins there. When that comes, the leap inference for the
- * month length must use the true Ethiopian rule (`year % 4 === 3`) everywhere.
- * FKSS documents the same boundary; it is not a bug to fix now.
+ * ACCURACY: exact by construction, with no horizon.
+ *
+ * FKSS derives Meskerem 1 from the *Gregorian* leap rule — "11 September, or
+ * the 12th when February following is a leap day". That quietly assumes the
+ * Gregorian year and the Ethiopian year stay in step, which they do until
+ * Gregorian 2100, the first century year that is not a leap year. Ethiopian
+ * 2092 is a full 365-day year that opens on 12 September 2099 and closes on
+ * 11 September 2100, so from 2100 onward FKSS is a day out, and it never
+ * recovers — by 2400 its Meskerem 1 lands on 15 September.
+ *
+ * This port counts days inside the Ethiopian calendar instead: a year is 365
+ * days, or 366 when the year leaves a remainder of 3 in the four-year cycle
+ * (that is where Pagume 6 lives), anchored on 1 Meskerem 2015 EC = 11
+ * September 2022. Both directions are Julian-day arithmetic against that one
+ * anchor, so round trips are exact, Pagume 6 appears exactly once every four
+ * years, and Meskerem 1 is right forever. The tests prove this agrees with the
+ * FKSS Gregorian-derived rule for every year 1900–2091 — every date this salon
+ * can reach — and that it is the FKSS rule, not this one, that drifts after.
  * ============================================================
  */
 
@@ -87,17 +100,66 @@ export type DayPeriod = "ጠዋት" | "ከሰዓት" | "ማታ" | "ሌሊት";
 
 // ─────────────────────────── conversion ───────────────────────────
 
-function isGregorianLeap(year: number): boolean {
-  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+/**
+ * 1 Meskerem 2015 EC = 11 September 2022 — an Ethiopian public holiday, and
+ * the only date this module asserts. Everything else is counted from it.
+ */
+const ETHIOPIAN_ANCHOR = { year: 2015, month: 1, day: 1 };
+const GREGORIAN_ANCHOR = { year: 2022, month: 9, day: 11 };
+
+/** Julian Day Number of a proleptic Gregorian date. */
+function gregorianToJdn(year: number, month: number, day: number): number {
+  const a = Math.floor((14 - month) / 12);
+  const y = year + 4800 - a;
+  const m = month + 12 * a - 3;
+
+  return (
+    day +
+    Math.floor((153 * m + 2) / 5) +
+    365 * y +
+    Math.floor(y / 4) -
+    Math.floor(y / 100) +
+    Math.floor(y / 400) -
+    32045
+  );
 }
 
-/** Meskerem 1 is 11 September, or the 12th when the next Gregorian year leaps. */
-function meskerem1Day(gregorianYear: number): number {
-  return isGregorianLeap(gregorianYear + 1) ? 12 : 11;
+function jdnToGregorian(jdn: number): { year: number; month: number; day: number } {
+  const a = jdn + 32044;
+  const b = Math.floor((4 * a + 3) / 146097);
+  const c = a - Math.floor((146097 * b) / 4);
+  const d = Math.floor((4 * c + 3) / 1461);
+  const e = c - Math.floor((1461 * d) / 4);
+  const m = Math.floor((5 * e + 2) / 153);
+
+  return {
+    year: 100 * b + d - 4800 + Math.floor(m / 10),
+    month: m + 3 - 12 * Math.floor(m / 10),
+    day: e - Math.floor((153 * m + 2) / 5) + 1,
+  };
 }
 
-function meskerem1(gregorianYear: number): Date {
-  return new Date(gregorianYear, 8, meskerem1Day(gregorianYear));
+/**
+ * Days elapsed in the Ethiopian calendar since 1 Meskerem 1 EC.
+ *
+ * Twelve months of thirty days, then Pagume: the year gains a day when it is
+ * the fourth in the cycle, which is why the leap test is on the year before.
+ */
+function ethiopianDayNumber(date: EthiopianDate): number {
+  return 365 * (date.year - 1) + Math.floor(date.year / 4) + 30 * (date.month - 1) + (date.day - 1);
+}
+
+const ETHIOPIAN_EPOCH =
+  gregorianToJdn(GREGORIAN_ANCHOR.year, GREGORIAN_ANCHOR.month, GREGORIAN_ANCHOR.day) -
+  ethiopianDayNumber(ETHIOPIAN_ANCHOR);
+
+/** Meskerem 1 of an Ethiopian year, as a local-midnight Date. */
+export function ethiopianNewYear(ethiopianYear: number): Date {
+  const gregorian = jdnToGregorian(
+    ETHIOPIAN_EPOCH + ethiopianDayNumber({ year: ethiopianYear, month: 1, day: 1 }),
+  );
+
+  return new Date(gregorian.year, gregorian.month - 1, gregorian.day);
 }
 
 /** Local midnight — the whole module works in calendar days, never instants. */
@@ -109,50 +171,31 @@ function atMidnight(input: Date | string): Date | null {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 }
 
-export function isGregorianLeapYear(year: number): boolean {
-  return isGregorianLeap(year);
-}
-
 /** `null` when the input is not a readable date, so callers must decide. */
 export function toEthiopian(input: Date | string): EthiopianDate | null {
   const date = atMidnight(input);
 
   if (date === null) return null;
 
-  const gregorianYear = date.getFullYear();
-  let start = meskerem1(gregorianYear);
-  let year: number;
+  const elapsed =
+    gregorianToJdn(date.getFullYear(), date.getMonth() + 1, date.getDate()) - ETHIOPIAN_EPOCH;
 
-  if (date < start) {
-    start = meskerem1(gregorianYear - 1);
-    year = gregorianYear - 8;
-  } else {
-    year = gregorianYear - 7;
-  }
+  // A close estimate, then at most a step either way — no assumption about
+  // which Gregorian year holds Meskerem 1, so nothing breaks at 2100.
+  let year = Math.floor(elapsed / 365.25) + 1;
 
-  // Rounded, not floored: a DST shift is 60 minutes, never half a day.
-  const daysSince = Math.round((date.getTime() - start.getTime()) / 86_400_000);
-  let month = Math.floor(daysSince / 30) + 1;
-  let day = (daysSince % 30) + 1;
+  while (ethiopianDayNumber({ year, month: 1, day: 1 }) > elapsed) year -= 1;
+  while (ethiopianDayNumber({ year: year + 1, month: 1, day: 1 }) <= elapsed) year += 1;
 
-  if (month > 13) {
-    month = 13;
-    day = daysSince - 360 + 1;
-  }
+  const dayOfYear = elapsed - ethiopianDayNumber({ year, month: 1, day: 1 });
 
-  if (month < 1) month = 1;
-  if (day < 1) day = 1;
-
-  return { year, month, day };
+  return { year, month: Math.floor(dayOfYear / 30) + 1, day: (dayOfYear % 30) + 1 };
 }
 
 export function toGregorian(date: EthiopianDate): Date {
-  const start = meskerem1(date.year + 7);
-  const result = new Date(start);
+  const gregorian = jdnToGregorian(ETHIOPIAN_EPOCH + ethiopianDayNumber(date));
 
-  result.setDate(result.getDate() + (date.month - 1) * 30 + (date.day - 1));
-
-  return result;
+  return new Date(gregorian.year, gregorian.month - 1, gregorian.day);
 }
 
 /** Pagume has 5 days, or 6 when the Ethiopian year leaves a remainder of 3. */

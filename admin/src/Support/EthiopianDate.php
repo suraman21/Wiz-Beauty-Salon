@@ -23,10 +23,22 @@ use DateTimeZone;
  *   2. WHAT A PERSON READS IS ETHIOPIAN. Derived at render time, here.
  *   3. TIMES ARE SHOWN BOTH WAYS: "3:00 ሰዓት (09:00)".
  *
- * ACCURACY: correct through Gregorian 2099. Gregorian 2100 is not a leap year
- * while the Ethiopian year spanning it is, so a one-day drift starts there;
- * at that point the leap inference for the month length must switch to the
- * true Ethiopian rule (`year % 4 === 3`). FKSS documents the same boundary.
+ * ACCURACY: exact by construction, with no horizon.
+ *
+ * FKSS derives Meskerem 1 from the *Gregorian* leap rule — "11 September, or
+ * the 12th when the following February is a leap day" — which assumes the two
+ * calendars stay in step. They do until Gregorian 2100, the first century year
+ * that is not a leap year. Ethiopian 2092 is a full 365-day year opening on
+ * 12 September 2099 and closing on 11 September 2100, so from then on the
+ * Gregorian-derived answer is a day behind, permanently.
+ *
+ * This class counts days inside the Ethiopian calendar instead: a year is 365
+ * days, or 366 when it leaves a remainder of 3 in the four-year cycle (where
+ * Pagume 6 lives), anchored on 1 Meskerem 2015 EC = 11 September 2022. Both
+ * directions are Julian-day arithmetic from that single anchor, so round trips
+ * are exact and Meskerem 1 is right forever. The shared vectors in
+ * shared/ethiopian-calendar-vectors.json hold this class and its TypeScript
+ * twin to the same answers.
  * ============================================================
  */
 final class EthiopianDate
@@ -86,23 +98,108 @@ final class EthiopianDate
         return $dt->setTime(0, 0);
     }
 
+    /**
+     * 1 Meskerem 2015 EC = 11 September 2022 — an Ethiopian public holiday, and
+     * the only date this class takes on trust. Everything else is counted.
+     */
+    private const ANCHOR_ETHIOPIAN = [2015, 1, 1];
+
+    private const ANCHOR_GREGORIAN = [2022, 9, 11];
+
     public static function isGregorianLeap(int $year): bool
     {
         return ($year % 4 === 0 && $year % 100 !== 0) || $year % 400 === 0;
     }
 
-    /** Meskerem 1 is 11 September, or the 12th when the next Gregorian year leaps. */
-    public static function meskerem1Day(int $gregorianYear): int
+    /** Julian Day Number of a proleptic Gregorian date. */
+    private static function gregorianToJdn(int $year, int $month, int $day): int
     {
-        return self::isGregorianLeap($gregorianYear + 1) ? 12 : 11;
+        $a = intdiv(14 - $month, 12);
+        $y = $year + 4800 - $a;
+        $m = $month + 12 * $a - 3;
+
+        return $day
+            + intdiv(153 * $m + 2, 5)
+            + 365 * $y
+            + intdiv($y, 4)
+            - intdiv($y, 100)
+            + intdiv($y, 400)
+            - 32045;
     }
 
-    public static function meskerem1(int $gregorianYear): DateTimeImmutable
+    /** @return array{year: int, month: int, day: int} */
+    private static function jdnToGregorian(int $jdn): array
     {
+        $a = $jdn + 32044;
+        $b = intdiv(4 * $a + 3, 146097);
+        $c = $a - intdiv(146097 * $b, 4);
+        $d = intdiv(4 * $c + 3, 1461);
+        $e = $c - intdiv(1461 * $d, 4);
+        $m = intdiv(5 * $e + 2, 153);
+
+        return [
+            'year' => 100 * $b + $d - 4800 + intdiv($m, 10),
+            'month' => $m + 3 - 12 * intdiv($m, 10),
+            'day' => $e - intdiv(153 * $m + 2, 5) + 1,
+        ];
+    }
+
+    /**
+     * Days elapsed in the Ethiopian calendar since 1 Meskerem 1 EC: twelve 30-day
+     * months, plus Pagume, plus the leap day a remainder-3 year carries.
+     */
+    private static function ethiopianDayNumber(int $year, int $month, int $day): int
+    {
+        return 365 * ($year - 1) + intdiv($year, 4) + 30 * ($month - 1) + ($day - 1);
+    }
+
+    private static function epoch(): int
+    {
+        static $epoch = null;
+
+        if ($epoch === null) {
+            [$gy, $gm, $gd] = self::ANCHOR_GREGORIAN;
+            [$ey, $em, $ed] = self::ANCHOR_ETHIOPIAN;
+
+            $epoch = self::gregorianToJdn($gy, $gm, $gd) - self::ethiopianDayNumber($ey, $em, $ed);
+        }
+
+        return $epoch;
+    }
+
+    /** Meskerem 1 of an Ethiopian year, as local midnight in Addis Ababa. */
+    public static function newYear(int $ethiopianYear): DateTimeImmutable
+    {
+        $gregorian = self::jdnToGregorian(self::epoch() + self::ethiopianDayNumber($ethiopianYear, 1, 1));
+
         return new DateTimeImmutable(
-            sprintf('%04d-09-%02d', $gregorianYear, self::meskerem1Day($gregorianYear)),
+            sprintf('%04d-%02d-%02d', $gregorian['year'], $gregorian['month'], $gregorian['day']),
             self::zone(),
         );
+    }
+
+    /**
+     * Meskerem 1 of the Ethiopian year that opens during a Gregorian year.
+     * Kept for callers that start from a Gregorian year; delegates to newYear()
+     * so the two can never disagree.
+     */
+    public static function meskerem1(int $gregorianYear): DateTimeImmutable
+    {
+        foreach ([$gregorianYear - 8, $gregorianYear - 7, $gregorianYear - 6] as $candidate) {
+            $newYear = self::newYear($candidate);
+
+            if ((int) $newYear->format('Y') === $gregorianYear) {
+                return $newYear;
+            }
+        }
+
+        return self::newYear($gregorianYear - 7);
+    }
+
+    /** The day of September on which Meskerem 1 falls. */
+    public static function meskerem1Day(int $gregorianYear): int
+    {
+        return (int) self::meskerem1($gregorianYear)->format('j');
     }
 
     /**
@@ -117,40 +214,40 @@ final class EthiopianDate
             return null;
         }
 
-        $gregorianYear = (int) $dt->format('Y');
-        $meskerem = self::meskerem1($gregorianYear);
+        $elapsed = self::gregorianToJdn(
+            (int) $dt->format('Y'),
+            (int) $dt->format('n'),
+            (int) $dt->format('j'),
+        ) - self::epoch();
 
-        if ($dt < $meskerem) {
-            $meskerem = self::meskerem1($gregorianYear - 1);
-            $year = $gregorianYear - 8;
-        } else {
-            $year = $gregorianYear - 7;
+        // A close estimate, then at most a step either way — no assumption about
+        // which Gregorian year holds Meskerem 1, so nothing breaks at 2100.
+        $year = intdiv($elapsed * 4, 1461) + 1;
+
+        while (self::ethiopianDayNumber($year, 1, 1) > $elapsed) {
+            $year--;
         }
 
-        $daysSince = (int) $meskerem->diff($dt)->days;
-        $month = intdiv($daysSince, 30) + 1;
-        $day = ($daysSince % 30) + 1;
-
-        if ($month > 13) {
-            $month = 13;
-            $day = $daysSince - 360 + 1;
+        while (self::ethiopianDayNumber($year + 1, 1, 1) <= $elapsed) {
+            $year++;
         }
 
-        if ($month < 1) {
-            $month = 1;
-        }
+        $dayOfYear = $elapsed - self::ethiopianDayNumber($year, 1, 1);
 
-        if ($day < 1) {
-            $day = 1;
-        }
-
-        return ['year' => $year, 'month' => $month, 'day' => $day];
+        return [
+            'year' => $year,
+            'month' => intdiv($dayOfYear, 30) + 1,
+            'day' => ($dayOfYear % 30) + 1,
+        ];
     }
 
     public static function toGregorian(int $year, int $month, int $day): DateTimeImmutable
     {
-        return self::meskerem1($year + 7)->modify(
-            sprintf('+%d days', ($month - 1) * 30 + ($day - 1)),
+        $gregorian = self::jdnToGregorian(self::epoch() + self::ethiopianDayNumber($year, $month, $day));
+
+        return new DateTimeImmutable(
+            sprintf('%04d-%02d-%02d', $gregorian['year'], $gregorian['month'], $gregorian['day']),
+            self::zone(),
         );
     }
 

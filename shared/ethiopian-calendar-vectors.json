@@ -1,0 +1,315 @@
+{
+  "$comment": [
+    "Shared test vectors for the Ethiopian calendar and clock.",
+    "",
+    "Both engines read this one file: src/lib/ethiopian-calendar.test.ts (TypeScript)",
+    "and admin/tests/Unit/EthiopianDateTest.php (PHP). If either implementation",
+    "drifts, one of the two suites fails on the same vector — which is the point of",
+    "keeping the file outside both trees. Add vectors here, never in one language only.",
+    "",
+    "The 2091/2092/2093 entries pin the behaviour across Gregorian 2100, which is not",
+    "a leap year while Ethiopian 2092 is a full 365-day year starting on 12 September."
+  ],
+  "conversions": [
+    {
+      "gregorian": "2025-09-11",
+      "ethiopian": {
+        "year": 2018,
+        "month": 1,
+        "day": 1
+      },
+      "why": "Meskerem 1"
+    },
+    {
+      "gregorian": "2025-09-10",
+      "ethiopian": {
+        "year": 2017,
+        "month": 13,
+        "day": 5
+      },
+      "why": "last day of a common year"
+    },
+    {
+      "gregorian": "2007-09-12",
+      "ethiopian": {
+        "year": 2000,
+        "month": 1,
+        "day": 1
+      },
+      "why": "the Ethiopian millennium"
+    },
+    {
+      "gregorian": "2023-09-12",
+      "ethiopian": {
+        "year": 2016,
+        "month": 1,
+        "day": 1
+      },
+      "why": "Meskerem 1 after a leap year"
+    },
+    {
+      "gregorian": "2023-09-06",
+      "ethiopian": {
+        "year": 2015,
+        "month": 13,
+        "day": 1
+      },
+      "why": "first day of Pagume"
+    },
+    {
+      "gregorian": "2023-09-11",
+      "ethiopian": {
+        "year": 2015,
+        "month": 13,
+        "day": 6
+      },
+      "why": "Pagume 6 in a leap year"
+    },
+    {
+      "gregorian": "2026-11-17",
+      "ethiopian": {
+        "year": 2019,
+        "month": 3,
+        "day": 8
+      },
+      "why": "an ordinary day"
+    },
+    {
+      "gregorian": "2026-01-01",
+      "ethiopian": {
+        "year": 2018,
+        "month": 4,
+        "day": 23
+      },
+      "why": "before Meskerem of the same Gregorian year"
+    },
+    {
+      "gregorian": "2026-10-22",
+      "ethiopian": {
+        "year": 2019,
+        "month": 2,
+        "day": 12
+      },
+      "why": "the notification fixture"
+    },
+    {
+      "gregorian": "2026-12-25",
+      "ethiopian": {
+        "year": 2019,
+        "month": 4,
+        "day": 16
+      },
+      "why": "a closure"
+    },
+    {
+      "gregorian": "2099-09-11",
+      "ethiopian": {
+        "year": 2091,
+        "month": 13,
+        "day": 6
+      },
+      "why": "Pagume 6 of 2091 — the last leap year before 2100"
+    },
+    {
+      "gregorian": "2099-09-12",
+      "ethiopian": {
+        "year": 2092,
+        "month": 1,
+        "day": 1
+      },
+      "why": "2092 opens on 12 September"
+    },
+    {
+      "gregorian": "2100-09-11",
+      "ethiopian": {
+        "year": 2092,
+        "month": 13,
+        "day": 5
+      },
+      "why": "2092 is 365 days long, so Pagume has five"
+    },
+    {
+      "gregorian": "2100-09-12",
+      "ethiopian": {
+        "year": 2093,
+        "month": 1,
+        "day": 1
+      },
+      "why": "2093 opens on 11 September again"
+    },
+    {
+      "gregorian": "2103-09-13",
+      "ethiopian": {
+        "year": 2096,
+        "month": 1,
+        "day": 1
+      },
+      "why": "Meskerem 1 2096 EC opens on 13 September 2103 — one day of FKSS drift, by design"
+    }
+  ],
+  "roundTrip": {
+    "gregorianFrom": "2020-01-01",
+    "gregorianTo": "2031-01-01",
+    "ethiopianYearFrom": 1990,
+    "ethiopianYearTo": 2030
+  },
+  "clock": [
+    {
+      "time": "00:00",
+      "hour": 6,
+      "minute": 0,
+      "period": "ሌሊት",
+      "label": "6:00 ሰዓት",
+      "full": "6:00 ሰዓት ሌሊት"
+    },
+    {
+      "time": "00:30",
+      "hour": 6,
+      "minute": 30,
+      "period": "ሌሊት",
+      "label": "6:30 ሰዓት",
+      "full": "6:30 ሰዓት ሌሊት"
+    },
+    {
+      "time": "05:59",
+      "hour": 11,
+      "minute": 59,
+      "period": "ሌሊት",
+      "label": "11:59 ሰዓት",
+      "full": "11:59 ሰዓት ሌሊት"
+    },
+    {
+      "time": "06:00",
+      "hour": 12,
+      "minute": 0,
+      "period": "ጠዋት",
+      "label": "12:00 ሰዓት",
+      "full": "12:00 ሰዓት ጠዋት"
+    },
+    {
+      "time": "07:00",
+      "hour": 1,
+      "minute": 0,
+      "period": "ጠዋት",
+      "label": "1:00 ሰዓት",
+      "full": "1:00 ሰዓት ጠዋት"
+    },
+    {
+      "time": "09:00",
+      "hour": 3,
+      "minute": 0,
+      "period": "ጠዋት",
+      "label": "3:00 ሰዓት",
+      "full": "3:00 ሰዓት ጠዋት"
+    },
+    {
+      "time": "11:59",
+      "hour": 5,
+      "minute": 59,
+      "period": "ጠዋት",
+      "label": "5:59 ሰዓት",
+      "full": "5:59 ሰዓት ጠዋት"
+    },
+    {
+      "time": "12:00",
+      "hour": 6,
+      "minute": 0,
+      "period": "ከሰዓት",
+      "label": "6:00 ሰዓት",
+      "full": "6:00 ሰዓት ከሰዓት"
+    },
+    {
+      "time": "13:00",
+      "hour": 7,
+      "minute": 0,
+      "period": "ከሰዓት",
+      "label": "7:00 ሰዓት",
+      "full": "7:00 ሰዓት ከሰዓት"
+    },
+    {
+      "time": "17:59",
+      "hour": 11,
+      "minute": 59,
+      "period": "ከሰዓት",
+      "label": "11:59 ሰዓት",
+      "full": "11:59 ሰዓት ከሰዓት"
+    },
+    {
+      "time": "18:00",
+      "hour": 12,
+      "minute": 0,
+      "period": "ማታ",
+      "label": "12:00 ሰዓት",
+      "full": "12:00 ሰዓት ማታ"
+    },
+    {
+      "time": "20:00",
+      "hour": 2,
+      "minute": 0,
+      "period": "ማታ",
+      "label": "2:00 ሰዓት",
+      "full": "2:00 ሰዓት ማታ"
+    },
+    {
+      "time": "23:59",
+      "hour": 5,
+      "minute": 59,
+      "period": "ማታ",
+      "label": "5:59 ሰዓት",
+      "full": "5:59 ሰዓት ማታ"
+    }
+  ],
+  "formats": [
+    {
+      "gregorian": "2026-11-17",
+      "style": "short",
+      "expected": "08/03/2019"
+    },
+    {
+      "gregorian": "2026-11-17",
+      "style": "medium",
+      "expected": "Hid 8, 2019"
+    },
+    {
+      "gregorian": "2026-11-17",
+      "style": "long",
+      "expected": "Hidar 8, 2019 EC"
+    },
+    {
+      "gregorian": "2026-11-17",
+      "style": "amharic",
+      "expected": "ህዳር 8, 2019 ዓ.ም"
+    },
+    {
+      "gregorian": "2026-11-17",
+      "style": "full",
+      "expected": "ማክሰኞ ህዳር 8, 2019 ዓ.ም"
+    },
+    {
+      "gregorian": "2026-11-17",
+      "style": "month-year",
+      "expected": "Hidar 2019"
+    },
+    {
+      "gregorian": "2023-09-11",
+      "style": "full",
+      "expected": "ሰኞ ጳጉሜ 6, 2015 ዓ.ም"
+    },
+    {
+      "gregorian": "2099-09-12",
+      "style": "long",
+      "expected": "Meskerem 1, 2092 EC"
+    },
+    {
+      "gregorian": "2026-11-17",
+      "style": "gregorian",
+      "expected": "17 Nov 2026"
+    }
+  ],
+  "invalid": [
+    "",
+    "not-a-date",
+    "2026-13-45",
+    "0000-00-00"
+  ]
+}

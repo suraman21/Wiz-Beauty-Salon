@@ -66,10 +66,14 @@ final class BookingNotifierTest extends TestCase
 
     protected function tearDown(): void
     {
-        if (isset($this->db)) {
-            $this->db->execute('DELETE FROM email_template_active');
-            $this->db->execute('DELETE FROM email_template_revisions');
+        // setUp() skips the test when no database is configured; nothing was
+        // created in that case, so there is nothing to undo.
+        if (!isset($this->db)) {
+            return;
         }
+
+        $this->db->execute('DELETE FROM email_template_active');
+        $this->db->execute('DELETE FROM email_template_revisions');
 
         foreach (glob($this->dir . '/*') ?: [] as $file) {
             @unlink($file);
