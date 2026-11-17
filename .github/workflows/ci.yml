@@ -139,6 +139,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Full history, always. A shallow clone gives gitleaks a commit range
+          # it cannot resolve ("ambiguous argument"), and it then scans zero
+          # bytes — the one failure mode that can look like a pass.
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
@@ -151,10 +156,29 @@ jobs:
         # any advisory, so the trailing `|| true` is deliberate.
         run: npm ci --no-audit --no-fund && npm audit || true
 
-      - name: Secret scan
-        uses: gitleaks/gitleaks-action@v2
+      - name: Install gitleaks
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_VERSION: 8.24.3
+        run: |
+          curl -sSL -o gitleaks.tar.gz \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          tar xzf gitleaks.tar.gz gitleaks
+          sudo install -m 0755 gitleaks /usr/local/bin/gitleaks
+          gitleaks version
+
+      # Run the scanner directly instead of through the marketplace action: the
+      # action derives a `before..after` range from the push event, which is
+      # exactly what cannot be resolved when anything about the push is unusual.
+      # Scanning every ref, every time, removes the range from the equation and
+      # costs a few seconds on a repository this size.
+      - name: Secret scan (full history, all refs)
+        run: |
+          gitleaks detect \
+            --redact \
+            --verbose \
+            --config .gitleaks.toml \
+            --exit-code 1 \
+            --log-opts "--all"
 
   # ---------------------------------------------------------------------
   # Deploy: build artifacts and publish the `deploy` branch
