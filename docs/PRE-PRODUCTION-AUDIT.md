@@ -1,7 +1,7 @@
 # Pre-production audit — WIZ Beauty Salon
 
 **Date:** 17 November 2026
-**Commit under test:** `66d2fbf` plus the working-tree changes described below
+**Commit under test:** `acd9e1d` (CI run 44117675853 — site, admin and security all green; deploy branch published as `32b4d90`)
 **Environment:** PHP 8.4.27, MariaDB 11.8.6, Node 20.20.2, Chromium (headless shell 159), Chromium viewports 1280×900 and 390×844
 **Verdict:** ship-blocking defects found in this pass have been fixed and re-verified. Section 7 lists what is **not** covered and what is still missing before go-live.
 
