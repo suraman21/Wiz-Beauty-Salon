@@ -19,6 +19,9 @@ final class SettingsRepository
         'booking.slot_minutes' => '30',
         'booking.lead_minutes' => '120',
         'booking.max_advance_days' => '60',
+        // Read by ChangePolicy; kept here too so the site still promises the
+        // right window on an install whose seed migration has not run.
+        'booking.change_window_hours' => '24',
     ];
 
     /** @var array<string, string> */

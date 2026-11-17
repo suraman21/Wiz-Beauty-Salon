@@ -71,6 +71,7 @@ use Wiz\Services\BookingService;
 use Wiz\Services\BookingNotifier;
 use Wiz\Services\EmailTemplateService;
 use Wiz\Services\Uploader;
+use Wiz\Support\ChangePolicy;
 use Wiz\Support\MailSettings;
 use Wiz\Support\MediaUsage;
 use Wiz\Support\SalonDetails;
@@ -204,6 +205,11 @@ $app->singleton(SalonDetails::class, static fn (App $a): SalonDetails => new Sal
     $a->get(SettingsRepository::class),
 ));
 
+$app->singleton(ChangePolicy::class, static fn (App $a): ChangePolicy => new ChangePolicy(
+    $a->get(SettingsRepository::class),
+    (string) ($a->config('app.timezone') ?? 'Africa/Addis_Ababa'),
+));
+
 $app->singleton(MailSettings::class, static fn (App $a): MailSettings => new MailSettings(
     $a->get(SettingsRepository::class),
     is_array($a->config('mail')) ? $a->config('mail') : [],
@@ -320,6 +326,7 @@ $app->singleton(BookingController::class, static fn (App $a): BookingController 
     $a->get(BookingService::class),
     $a->get(Session::class),
     $a->get(Auth::class),
+    $a->get(ChangePolicy::class),
 ));
 
 $app->singleton(ScheduleController::class, static fn (App $a): ScheduleController => new ScheduleController(
@@ -349,6 +356,7 @@ $app->singleton(PublicBookingController::class, static fn (App $a): PublicBookin
     $a->get(AvailabilityService::class),
     $a->get(SignedLink::class),
     $a->get(Session::class),
+    $a->get(ChangePolicy::class),
 ));
 
 $app->singleton(MessageController::class, static fn (App $a): MessageController => new MessageController(
@@ -364,6 +372,7 @@ $app->singleton(ContentApiController::class, static fn (App $a): ContentApiContr
     $a->get(SalonDetails::class),
     $a->get(BusinessHoursRepository::class),
     $a->get(ClosureRepository::class),
+    $a->get(ChangePolicy::class),
     (string) ($a->config('app.upload_url') ?? '/uploads'),
 ));
 
@@ -416,6 +425,7 @@ $app->singleton(SettingsController::class, static fn (App $a): SettingsControlle
     $a->get(Session::class),
     $a->get(SettingsRepository::class),
     $a->get(AvailabilityService::class),
+    $a->get(ChangePolicy::class),
 ));
 
 $app->singleton(EmailTemplateController::class, static fn (App $a): EmailTemplateController => new EmailTemplateController(

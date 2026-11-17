@@ -29,10 +29,22 @@ $actionLabel = static function (BookingStatus $target): string {
     };
 };
 
+/**
+ * The buttons at the foot of a booking.
+ *
+ * Confirming is the ordinary forward step, so it is the solid primary button.
+ * Cancelling and declining take a time away from a customer who is expecting
+ * it; as a ghost button they sat beside Confirm looking equally reversible,
+ * which is how a booking gets cancelled by a mis-click. They are the only two
+ * actions here that a customer feels, so they carry the danger fill and the
+ * confirm prompt.
+ */
 $actionStyle = static function (BookingStatus $target): string {
     return match ($target) {
         BookingStatus::Confirmed => 'btn btn--primary',
         BookingStatus::Completed => 'btn btn--primary',
+        BookingStatus::Cancelled => 'btn btn--danger-solid',
+        BookingStatus::Declined => 'btn btn--danger-solid',
         default => 'btn btn--ghost',
     };
 };

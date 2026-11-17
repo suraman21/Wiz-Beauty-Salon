@@ -180,6 +180,50 @@ $isMissing = static fn (string $what): bool => in_array($what, $missing, true);
                 </p>
             </div>
 
+            <div class="rule-divider">
+                <span>Changing or cancelling</span>
+            </div>
+
+            <div class="field">
+                <label for="change_window_hours">
+                    Customers may change or cancel up to
+                    <span class="field__hint">hours before the appointment</span>
+                </label>
+
+                <div class="preset-row" role="group" aria-label="Common windows">
+                    <?php foreach ([0, 12, 24, 48, 72] as $preset): ?>
+                        <?php $isOn = (int) $rules['change_window_hours'] === $preset; ?>
+                        <button type="button"
+                                class="preset-chip<?= $isOn ? ' is-active' : '' ?>"
+                                data-window="<?= $preset ?>"
+                                aria-pressed="<?= $isOn ? 'true' : 'false' ?>">
+                            <?= $preset === 0 ? 'No cut-off' : $preset . ' h' ?>
+                        </button>
+                    <?php endforeach; ?>
+                </div>
+
+                <div class="window-input">
+                    <input type="number" id="change_window_hours" name="change_window_hours"
+                           min="0" max="<?= (int) $rules['change_window_max'] ?>" step="1"
+                           value="<?= (int) $rules['change_window_hours'] ?>" required>
+                    <span class="window-input__unit">hours before the appointment</span>
+                </div>
+
+                <p class="field__hint">
+                    This is printed on the website's booking page, on the customer's manage link, and
+                    in the sentence they read when they book: <em>“<?= e((string) $rules['change_window_summary']) ?>”</em>
+                    Inside the window the manage page stops offering cancel and reschedule and asks the
+                    customer to call instead — a change the server would refuse is never shown as a button.
+                    <strong>0</strong> means no cut-off at all.
+                </p>
+
+                <p class="field__hint">
+                    Think about what the window protects: a 48-hour window is a way to keep a long
+                    booking — a bride's morning, a full head of braids — from being given away the
+                    night before. A short one is friendlier to customers who plan late.
+                </p>
+            </div>
+
             <p class="card__note card__note--left">
                 A customer who picks more than one service gets booked for the combined length, so a
                 larger gap makes longer appointments easier to place.
@@ -190,6 +234,31 @@ $isMissing = static fn (string $what): bool => in_array($what, $missing, true);
                 <a class="btn btn--ghost" href="/admin/schedule">See the calendar</a>
             </div>
         </form>
+
+        <script>
+        (function () {
+            var input = document.getElementById('change_window_hours');
+            var chips = document.querySelectorAll('.preset-chip');
+
+            function paint() {
+                chips.forEach(function (chip) {
+                    var on = String(chip.getAttribute('data-window')) === String(input.value);
+                    chip.classList.toggle('is-active', on);
+                    chip.setAttribute('aria-pressed', on ? 'true' : 'false');
+                });
+            }
+
+            chips.forEach(function (chip) {
+                chip.addEventListener('click', function () {
+                    input.value = chip.getAttribute('data-window');
+                    paint();
+                });
+            });
+
+            if (input) input.addEventListener('input', paint);
+            paint();
+        })();
+        </script>
 
         <form method="post" action="/admin/settings/salon" class="card">
             <?= csrf_field() ?>

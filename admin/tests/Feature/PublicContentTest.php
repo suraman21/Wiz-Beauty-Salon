@@ -25,6 +25,7 @@ use Wiz\Repositories\ServiceRepository;
 use Wiz\Repositories\SettingsRepository;
 use Wiz\Services\AvailabilityService;
 use Wiz\Services\BookingService;
+use Wiz\Support\ChangePolicy;
 use Wiz\Support\MediaUsage;
 use Wiz\Support\SalonDetails;
 use Wiz\Support\SignedLink;
@@ -172,6 +173,7 @@ final class PublicContentTest extends TestCase
             $this->salon,
             new BusinessHoursRepository($this->db),
             new ClosureRepository($this->db),
+            new ChangePolicy(new SettingsRepository($this->db)),
         );
 
         $response = $controller->salon(new Request('GET', '/api/v1/salon'));
@@ -207,6 +209,7 @@ final class PublicContentTest extends TestCase
                 $this->salon,
                 new BusinessHoursRepository($this->db),
                 new ClosureRepository($this->db),
+                new ChangePolicy(new SettingsRepository($this->db)),
             ))->salon(new Request('GET', '/api/v1/salon'))->body(),
             true,
             512,
@@ -301,6 +304,7 @@ final class PublicContentTest extends TestCase
             $this->salon,
             new BusinessHoursRepository($this->db),
             new ClosureRepository($this->db),
+            new ChangePolicy(new SettingsRepository($this->db)),
         );
     }
 

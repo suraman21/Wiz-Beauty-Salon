@@ -13,6 +13,7 @@ use Wiz\Domain\Enums\BookingStatus;
 use Wiz\Repositories\BookingRepository;
 use Wiz\Services\AvailabilityService;
 use Wiz\Services\BookingService;
+use Wiz\Support\ChangePolicy;
 use Wiz\Support\SignedLink;
 
 /**
@@ -31,6 +32,7 @@ final class PublicBookingController
         private readonly AvailabilityService $availability,
         private readonly SignedLink $links,
         private readonly Session $session,
+        private readonly ChangePolicy $policy,
     ) {
     }
 
@@ -45,7 +47,12 @@ final class PublicBookingController
         $days = [];
         $status = BookingStatus::tryFrom((string) $booking['status']);
 
-        if ($status !== null && in_array($status, [BookingStatus::Requested, BookingStatus::Confirmed], true)) {
+        // The window is decided here, once: the page, the buttons and the POST
+        // handlers all read the same answer, so a form cannot be offered that
+        // the server would then refuse.
+        $window = $this->policy->state($booking);
+
+        if ($window['allowed']) {
             $days = $this->availability->calendar(date('Y-m-d'), 14, $duration);
         }
 
@@ -54,6 +61,8 @@ final class PublicBookingController
             'booking' => $booking,
             'token' => (string) ($params['token'] ?? ''),
             'days' => $days,
+            'window' => $window,
+            'policy' => $this->policy,
             'error' => $this->session->flash('error'),
             'success' => $this->session->flash('success'),
         ], 'layouts/public');
@@ -66,6 +75,19 @@ final class PublicBookingController
     {
         $token = (string) ($params['token'] ?? '');
         $booking = $this->booking($token);
+        $window = $this->policy->state($booking);
+
+        // Inside the cut-off the appointment is the salon's to move, not the
+        // customer's: say so plainly instead of quietly doing nothing.
+        if (!$window['allowed'] && $window['can_manage']) {
+            $this->session->flash(
+                'error',
+                'This appointment is inside ' . $this->policy->windowPhrase()
+                    . '. ' . $window['reason'],
+            );
+
+            throw new RedirectException('/booking/manage/' . $token);
+        }
 
         $result = $this->bookingsService->transition(
             (int) $booking['id'],
@@ -92,6 +114,18 @@ final class PublicBookingController
     {
         $token = (string) ($params['token'] ?? '');
         $booking = $this->booking($token);
+        $window = $this->policy->state($booking);
+
+        if (!$window['allowed'] && $window['can_manage']) {
+            $this->session->flash(
+                'error',
+                'This appointment is inside ' . $this->policy->windowPhrase()
+                    . '. ' . $window['reason'],
+            );
+
+            throw new RedirectException('/booking/manage/' . $token);
+        }
+
         $date = $request->string('date');
         $time = $request->string('time');
 

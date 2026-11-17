@@ -2152,3 +2152,179 @@ summary:focus-visible {
     .svc-admin-detail-hero__title { font-size: 14px; }
     .svc-admin-detail-hero__desc { font-size: 11px; }
 }
+
+/* --------------------------------------------------------------------------
+   The change window: presets and the number they set
+   --------------------------------------------------------------------------
+   A salon thinks in "a day", "two days", "no cut-off" — not in a number input.
+   The chips set the same field the form submits, so the value is one value, and
+   the active chip always shows what is actually saved. */
+.rule-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 22px 0 14px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+.rule-divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--line, #e7e2dc);
+}
+.preset-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 12px; }
+.preset-chip {
+    min-height: 40px;
+    padding: 8px 16px;
+    border-radius: 999px;
+    border: 1px solid var(--line, #d7d0c8);
+    background: #fff;
+    color: var(--ink, #211d1a);
+    font: 600 13px/1 var(--font, inherit);
+    cursor: pointer;
+    transition: background .15s, border-color .15s, color .15s, transform .15s;
+}
+.preset-chip:hover { border-color: var(--brand, #a63b6e); transform: translateY(-1px); }
+.preset-chip.is-active {
+    background: var(--ink, #211d1a);
+    border-color: var(--ink, #211d1a);
+    color: #fff;
+}
+.window-input { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.window-input input { max-width: 130px; }
+.window-input__unit { font-size: 13px; color: var(--muted); }
+
+/* ==========================================================================
+   Public pages (the customer's manage link, and anything else served outside
+   the panel)
+
+   These pages used to inherit the login screen's shell: a centred flex box
+   sized for a 400px card. That is why the manage page had no navigation and
+   overflowed sideways on a phone — a centred flex container will not shrink
+   its children below their content width, so one long date row pushed the
+   whole page wide. `pub-body` turns the shell into a normal document: header,
+   full-width main column, footer.
+   ========================================================================== */
+.pub-body {
+    display: block;
+    min-height: 100vh;
+    padding: 0;
+    background: #faf8f5;
+    -webkit-text-size-adjust: 100%;
+}
+.pub-body .auth-shell {
+    display: block;
+    width: 100%;
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 22px 18px 40px;
+}
+.pub-body .auth-brand { display: none; }
+.pub-body .auth-foot { display: none; }
+
+/* --- header --------------------------------------------------------------- */
+.pub-head {
+    position: sticky; top: 0; z-index: 40;
+    background: rgba(250,248,245,.94);
+    -webkit-backdrop-filter: saturate(140%) blur(10px);
+    backdrop-filter: saturate(140%) blur(10px);
+    border-bottom: 1px solid #e7e2dc;
+}
+.pub-head__bar {
+    display: flex; align-items: center; gap: 14px; justify-content: space-between;
+    max-width: 1080px; margin: 0 auto; padding: 10px 18px;
+}
+.pub-brand { display: inline-flex; align-items: baseline; gap: 8px; text-decoration: none; color: #211d1a; flex: none; }
+.pub-brand__mark { font: 700 17px/1 var(--font, inherit); letter-spacing: .24em; }
+.pub-brand__sub { font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: #8a827a; }
+
+.pub-nav { display: flex; align-items: center; gap: 2px; flex-wrap: wrap; }
+.pub-nav__link {
+    padding: 9px 11px; border-radius: 9px; font-size: 13px; font-weight: 550;
+    color: #3a342f; text-decoration: none; white-space: nowrap;
+    transition: background .15s, color .15s;
+}
+.pub-nav__link:hover { background: #f1ece6; color: #211d1a; }
+.pub-nav__link--soft { color: #8a827a; }
+
+.pub-head__actions { display: flex; align-items: center; gap: 8px; flex: none; }
+.pub-head__book {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-height: 40px; padding: 9px 16px; border-radius: 999px;
+    background: #211d1a; border: 1px solid #211d1a; color: #fff;
+    font-size: 13px; font-weight: 650; text-decoration: none; white-space: nowrap;
+}
+.pub-head__book:hover { background: #3a342f; border-color: #3a342f; color: #fff; }
+
+/* The phone menu: a <details> element, so it opens with no JavaScript at all. */
+.pub-menu { display: none; position: relative; }
+.pub-menu__button {
+    display: inline-flex; align-items: center; gap: 8px;
+    min-height: 40px; padding: 9px 14px; border-radius: 999px;
+    border: 1px solid #d7d0c8; background: #fff; color: #211d1a;
+    font-size: 13px; font-weight: 650; cursor: pointer; list-style: none;
+}
+.pub-menu__button::-webkit-details-marker { display: none; }
+.pub-menu[open] .pub-menu__button { background: #211d1a; border-color: #211d1a; color: #fff; }
+.pub-menu__bars { display: inline-flex; flex-direction: column; gap: 3px; }
+.pub-menu__bars i { display: block; width: 14px; height: 2px; background: currentColor; border-radius: 2px; }
+.pub-menu__panel {
+    position: absolute; right: 0; top: calc(100% + 8px); min-width: 226px;
+    display: grid; gap: 2px; padding: 8px;
+    background: #fff; border: 1px solid #e7e2dc; border-radius: 14px;
+    box-shadow: 0 12px 34px rgba(29,26,24,.16);
+}
+.pub-menu__link {
+    display: block; padding: 12px 12px; border-radius: 10px;
+    font-size: 14px; font-weight: 550; color: #211d1a; text-decoration: none;
+}
+.pub-menu__link:hover { background: #f4efe9; }
+.pub-menu__link--cta { margin-top: 4px; background: #211d1a; color: #fff; text-align: center; font-weight: 650; }
+.pub-menu__link--cta:hover { background: #3a342f; }
+
+/* --- footer --------------------------------------------------------------- */
+.pub-foot { border-top: 1px solid #e7e2dc; background: #fff; }
+.pub-foot__inner {
+    max-width: 1080px; margin: 0 auto; padding: 18px;
+    display: flex; flex-wrap: wrap; gap: 10px 20px;
+    align-items: center; justify-content: space-between;
+}
+.pub-foot__note { font-size: 11.5px; line-height: 1.5; color: #9a938c; max-width: 46ch; margin: 0; }
+.pub-foot__nav { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.pub-foot__nav a { font-size: 12.5px; color: #4a443f; text-decoration: none; }
+.pub-foot__nav a:hover { color: #a63b6e; text-decoration: underline; text-underline-offset: 3px; }
+
+@media (max-width: 899px) {
+    .pub-nav { display: none; }
+    .pub-menu { display: block; }
+    /* Two selectors: the page's own .btn--primary would otherwise win on
+       source order and keep the CTA on a phone, where the menu already has
+       one and the header has no room for both. */
+    .pub-body .pub-head__book { display: none; }
+}
+@media (max-width: 520px) {
+    .pub-head__bar { padding: 9px 14px; }
+    .pub-body .auth-shell { padding: 16px 12px 32px; }
+    .pub-foot__inner { flex-direction: column; align-items: flex-start; padding: 16px 14px; }
+    .pub-foot__note { max-width: none; }
+}
+
+/* --- the panel's own "destroy" action ------------------------------------
+   Cancel/decline used to be a ghost button, which read as a secondary action
+   next to Save. A red filled button communicates what it does before it is
+   read. Kept separate from .btn--danger (dark red text) so the two uses do not
+   fight each other. */
+.btn--danger-solid {
+    background: #9b2f2f; border: 1px solid #7f2525; color: #fff;
+    font-weight: 700; letter-spacing: .015em;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    min-height: 42px; box-shadow: 0 2px 0 #7f2525, 0 6px 14px rgba(155,47,47,.2);
+    transition: background .15s, box-shadow .15s, transform .12s;
+}
+.btn--danger-solid:hover { background: #7f2525; border-color: #6b1f1f; color: #fff; }
+.btn--danger-solid:active { transform: translateY(1px); box-shadow: 0 1px 0 #7f2525; }
+.btn--danger-solid:focus-visible { outline: 3px solid #9b2f2f; outline-offset: 2px; }

@@ -34,6 +34,27 @@ if (!function_exists('url')) {
     }
 }
 
+if (!function_exists('site_url')) {
+    /**
+     * A page on the public website, from inside the panel.
+     *
+     * The panel and the website normally share a domain, so a relative link is
+     * enough; but the manage page is also reachable wherever the app is served
+     * (a subdomain, a staging box, this sandbox), and a "Contact" link that
+     * points at the API host is a dead end. SITE_URL says where the site lives
+     * when it is not the same place as the app.
+     */
+    function site_url(string $path = '/'): string
+    {
+        // Empty SITE_URL means "the website is served from this same host",
+        // which is how the salon is deployed — a relative link is then both
+        // correct and portable.
+        $base = rtrim((string) \Wiz\Core\Env::get('SITE_URL', ''), '/');
+
+        return $base . '/' . ltrim($path, '/');
+    }
+}
+
 if (!function_exists('asset')) {
     function asset(string $path): string
     {

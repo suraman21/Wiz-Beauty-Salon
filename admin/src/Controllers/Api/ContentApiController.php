@@ -10,6 +10,7 @@ use Wiz\Repositories\ClosureRepository;
 use Wiz\Repositories\GalleryRepository;
 use Wiz\Repositories\ReviewRepository;
 use Wiz\Repositories\SiteImageRepository;
+use Wiz\Support\ChangePolicy;
 use Wiz\Support\SalonDetails;
 
 /**
@@ -29,6 +30,7 @@ final class ContentApiController
         private readonly SalonDetails $details,
         private readonly BusinessHoursRepository $hours,
         private readonly ClosureRepository $closures,
+        private readonly ChangePolicy $policy,
         private readonly string $uploadUrl = '/uploads',
     ) {
     }
@@ -181,6 +183,16 @@ final class ContentApiController
             'contact' => $this->details->all(),
             'hours' => $hours,
             'closures' => $closures,
+            // The customer's side of the booking rules. The website prints this
+            // sentence verbatim, so what the salon sets in the panel is exactly
+            // what the customer is promised — no second copy to fall out of step.
+            'policy' => [
+                'change_window_hours' => $this->policy->hours(),
+                'has_cut_off' => $this->policy->hasCutOff(),
+                'hours_label' => $this->policy->hoursLabel(),
+                'summary' => $this->policy->summary(),
+                'chip' => $this->policy->chip(),
+            ],
         ])->withHeader('Cache-Control', 'public, max-age=60');
     }
 }

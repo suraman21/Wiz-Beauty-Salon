@@ -15,6 +15,7 @@ use Wiz\Repositories\ActivityLogRepository;
 use Wiz\Repositories\RateLimitRepository;
 use Wiz\Services\AvailabilityService;
 use Wiz\Repositories\SettingsRepository;
+use Wiz\Support\ChangePolicy;
 use Wiz\Support\MailSettings;
 use Wiz\Support\SalonDetails;
 
@@ -42,6 +43,7 @@ final class SettingsController
         private readonly Session $session,
         private readonly SettingsRepository $settings,
         private readonly AvailabilityService $availability,
+        private readonly ChangePolicy $policy,
     ) {
     }
 
@@ -76,6 +78,12 @@ final class SettingsController
                 'slot_minutes' => $this->availability->gridMinutes(),
                 'lead_minutes' => $this->availability->leadMinutes(),
                 'max_advance_days' => $this->availability->maxAdvanceDays(),
+                // The customer-facing half of the booking rules: how late a
+                // change or a cancellation is still theirs to make.
+                'change_window_hours' => $this->policy->hours(),
+                'change_window_max' => ChangePolicy::MAX_HOURS,
+                'change_window_summary' => $this->policy->summary(),
+                'change_window_chip' => $this->policy->chip(),
             ],
         ]);
     }
@@ -275,26 +283,49 @@ final class SettingsController
         // A gap that does not divide the opening day evenly still works — the
         // calculator simply stops at the last time that fits — but staff should
         // know what they are choosing, so an odd number is allowed deliberately.
+        // How late a customer can still move or cancel. A preset or any whole
+        // number of hours; 0 means "no cut-off", which is a real choice for a
+        // salon that never turns a change away.
+        $change = filter_var($request->string('change_window_hours', '24'), FILTER_VALIDATE_INT, [
+            'options' => ['min_range' => 0, 'max_range' => ChangePolicy::MAX_HOURS],
+        ]);
+
+        if ($change === false) {
+            $this->fail(
+                'The change window must be a whole number of hours, 0 to '
+                    . ChangePolicy::MAX_HOURS . ' (0 means no cut-off).',
+            );
+        }
+
         $this->settings->put('booking.slot_minutes', (string) $slot);
         $this->settings->put('booking.lead_minutes', (string) $lead);
         $this->settings->put('booking.max_advance_days', (string) $window);
+        $this->settings->put(ChangePolicy::SETTING, (string) $change);
 
         $this->activity->record(
             (int) $this->auth->id(),
             'settings.booking_rules_updated',
             'settings',
             null,
-            ['slot_minutes' => $slot, 'lead_minutes' => $lead, 'max_advance_days' => $window],
+            [
+                'slot_minutes' => $slot,
+                'lead_minutes' => $lead,
+                'max_advance_days' => $window,
+                'change_window_hours' => $change,
+            ],
             $request->ip(),
         );
 
         $this->session->flash(
             'success',
             sprintf(
-                'Booking rules saved: a time every %d minutes, %d minutes notice, %d days ahead.',
+                'Booking rules saved: a time every %d minutes, %d minutes notice, %d days ahead, %s.',
                 $slot,
                 $lead,
                 $window,
+                $change === 0
+                    ? 'changes allowed any time before the appointment'
+                    : 'changes close ' . $change . ' hours before',
             ),
         );
 
