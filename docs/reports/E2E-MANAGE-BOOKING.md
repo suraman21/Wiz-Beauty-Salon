@@ -1,3 +1,7 @@
+> **Historical document.** This was written during the build, on the date below, and is kept
+> because it records what was found and why it was changed. It is **not** a description of
+> current behaviour — for that, read `docs/BOOKING-RULES.md` and `docs/ARCHITECTURE.md`.
+
 # Manage Booking — E2E Verification Report
 Date: 2026-10-23  Africa/Addis_Ababa
 Commit: 7664a21  fix(manage): phone+email lookup, distinct manage page, routing fix

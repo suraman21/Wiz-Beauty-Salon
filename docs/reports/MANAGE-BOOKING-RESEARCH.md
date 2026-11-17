@@ -1,3 +1,7 @@
+> **Historical document.** This was written during the build, on the date below, and is kept
+> because it records what was found and why it was changed. It is **not** a description of
+> current behaviour — for that, read `docs/BOOKING-RULES.md` and `docs/ARCHITECTURE.md`.
+
 # Research Report — Manage Booking Link & Recovery
 ## WIZ Beauty Salon — Professional Standard Audit
 
