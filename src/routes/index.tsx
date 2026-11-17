@@ -4,7 +4,7 @@ import { ArrowRight, CalendarDays, ChevronDown, Play } from "lucide-react";
 import { BeforeAfter, BookingBand, EditorialLink, SiteLayout } from "@/components/site/SiteChrome";
 import { useSiteImages } from "@/lib/site-content";
 import { useReveal } from "@/lib/use-reveal";
-import heroPurple from "@/assets/hero-wiz-purple.jpg";
+import { heroArt } from "@/lib/hero-art";
 import { fetchCatalogue } from "@/lib/booking-api";
 import { buildServices, localServices, servicesForHome } from "@/lib/service-pages";
 import { fetchGallery, homeMoodPhotos, type GalleryPhoto } from "@/lib/content-api";
@@ -74,14 +74,14 @@ function Home() {
       <section
         className="home-hero home-hero-wiz"
         aria-labelledby="hero-title"
-        style={{ "--hero-art": `url(${heroPurple})` } as CSSProperties}
+        style={{ "--hero-art": `url(${heroArt.url})` } as CSSProperties}
       >
         <img
           className="home-hero-image"
-          src={heroPurple}
-          alt="Model in a white off-shoulder gown and crystal tiara, in a softly lit purple salon"
-          width={1672}
-          height={941}
+          src={heroArt.url}
+          alt={heroArt.alt}
+          width={heroArt.width}
+          height={heroArt.height}
           fetchPriority="high"
         />
         <div className="home-hero-shade" />

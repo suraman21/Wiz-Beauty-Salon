@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { Clock, Mail, MapPin, MessageCircle, Phone, Instagram, Music2 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { EditorialLink, SiteLayout } from "@/components/site/SiteChrome";
+import { EditorialLink, HeroBand, SiteLayout } from "@/components/site/SiteChrome";
 import { contact } from "@/data/wiz";
 import { ApiError } from "@/lib/api";
 import { sendMessage } from "@/lib/contact-api";
@@ -124,6 +124,9 @@ function Contact() {
   return (
     <SiteLayout>
       <section className="contact-hero">
+        <div className="section-wrap">
+          <HeroBand tone="mist" />
+        </div>
         <div className="section-wrap contact-grid">
           <div className="reveal-up">
             <span className="overline">Contact</span>

@@ -14,6 +14,7 @@ use Wiz\Repositories\BookingRepository;
 use Wiz\Repositories\BookingSlotRepository;
 use Wiz\Repositories\BusinessHoursRepository;
 use Wiz\Repositories\ClosureRepository;
+use Wiz\Repositories\CategoryRepository;
 use Wiz\Repositories\ServiceRepository;
 use Wiz\Repositories\UserRepository;
 use Wiz\Repositories\SettingsRepository;
@@ -36,6 +37,10 @@ final class BookingFlowTest extends TestCase
     private BookingRepository $repository;
 
     private ServiceRepository $services;
+
+    private CategoryRepository $categories;
+
+    private AvailabilityService $availability;
 
     private int $serviceId;
 
@@ -94,6 +99,7 @@ final class BookingFlowTest extends TestCase
             );
 
         $this->services = new ServiceRepository($this->db);
+        $this->categories = new CategoryRepository($this->db);
         $this->repository = new BookingRepository($this->db);
 
         $calculator = new SlotCalculator();
@@ -105,6 +111,8 @@ final class BookingFlowTest extends TestCase
             $calculator,
         );
 
+        $this->availability = $availability;
+
         $this->bookings = new BookingService(
             $this->db,
             $this->repository,
@@ -114,6 +122,8 @@ final class BookingFlowTest extends TestCase
             $calculator,
             new ActivityLogRepository($this->db),
             new Logger(sys_get_temp_dir() . '/wiz-test-logs'),
+            null,
+            $this->categories,
         );
 
         $this->serviceId = $this->services->create([
@@ -305,5 +315,165 @@ final class BookingFlowTest extends TestCase
 
         self::assertSame(120000, (int) $booking['price_cents']);
         self::assertSame('Silk press', $booking['service_name']);
+    }
+
+    // -----------------------------------------------------------------
+    // Several services, one visit
+    // -----------------------------------------------------------------
+
+    /** @return array{0: int, 1: int, 2: int} */
+    private function threeCategories(): array
+    {
+        $ids = [];
+
+        foreach (['Manicure', 'Pedicure', 'Make Up'] as $index => $name) {
+            $ids[] = $this->categories->create(
+                $name,
+                'multi-' . $index . '-' . bin2hex(random_bytes(3)),
+                null,
+                true,
+            );
+        }
+
+        /** @var array{0: int, 1: int, 2: int} $pair */
+        return $ids;
+    }
+
+    public function testBooksSeveralServicesAsOneAppointment(): void
+    {
+        [$hair, $nails, $makeUp] = $this->threeCategories();
+
+        $result = $this->bookings->create([
+            'customer_name' => 'Selam Bekele',
+            'customer_phone' => '0911223355',
+            'customer_email' => 'selam@example.com',
+            'category_ids' => $hair . ',' . $nails . ',' . $makeUp,
+            'date' => $this->date,
+            'time' => '10:00',
+            'notes' => null,
+        ], $this->userId, '127.0.0.1');
+
+        self::assertTrue($result['ok'], (string) ($result['error'] ?? ''));
+
+        $booking = $this->repository->find((int) $result['id']);
+        self::assertNotNull($booking);
+
+        // Three services at the salon's gap each: a 90-minute run at the
+        // default 30, whatever the panel is set to.
+        $expected = 3 * $this->availability->gridMinutes();
+
+        self::assertSame($expected, (int) $booking['duration_minutes']);
+        self::assertSame('Manicure + Pedicure + Make Up', $booking['service_name']);
+        self::assertSame([$hair, $nails, $makeUp], json_decode((string) $booking['service_ids'], true));
+        self::assertNull($booking['service_id']);
+        // 10:00 + 90 minutes
+        self::assertSame('11:30:00', $booking['end_time']);
+    }
+
+    public function testTheWholeRunHasToFitInOneSlot(): void
+    {
+        [$a, $b, $c] = $this->threeCategories();
+
+        $result = $this->bookings->create([
+            'customer_name' => 'Selam Bekele',
+            'customer_phone' => '0911223355',
+            'category_ids' => [$a, $b, $c],
+            'date' => $this->date,
+            'time' => '10:00',
+        ], $this->userId, '127.0.0.1');
+
+        self::assertTrue($result['ok'], (string) ($result['error'] ?? ''));
+
+        // The last time the 90-minute run fits is 17:30 (close 19:00).
+        $late = $this->bookings->create([
+            'customer_name' => 'Selam Bekele',
+            'customer_phone' => '0911223355',
+            'category_ids' => [$a, $b, $c],
+            'date' => $this->date,
+            'time' => '17:30',
+        ], $this->userId, '127.0.0.1');
+
+        self::assertTrue($late['ok'], (string) ($late['error'] ?? ''));
+
+        $tooLate = $this->bookings->create([
+            'customer_name' => 'Selam Bekele',
+            'customer_phone' => '0911223355',
+            'category_ids' => [$a, $b, $c],
+            'date' => $this->date,
+            'time' => '18:00',
+        ], $this->userId, '127.0.0.1');
+
+        self::assertFalse($tooLate['ok']);
+    }
+
+    public function testRefusesASecondServiceThatIsNoLongerOffered(): void
+    {
+        [$a] = $this->threeCategories();
+
+        $result = $this->bookings->create([
+            'customer_name' => 'Selam Bekele',
+            'customer_phone' => '0911223355',
+            'category_ids' => [$a, 999999],
+            'date' => $this->date,
+            'time' => '10:00',
+        ], $this->userId, '127.0.0.1');
+
+        self::assertFalse($result['ok']);
+        self::assertSame('One of the selected services is not available any more.', $result['error']);
+    }
+
+    public function testOneChosenServiceIsTheSameAsTheOldSingleBooking(): void
+    {
+        [$only] = $this->threeCategories();
+
+        $result = $this->bookings->create([
+            'customer_name' => 'Selam Bekele',
+            'customer_phone' => '0911223355',
+            'category_ids' => [$only],
+            'date' => $this->date,
+            'time' => '10:00',
+        ], $this->userId, '127.0.0.1');
+
+        self::assertTrue($result['ok'], (string) ($result['error'] ?? ''));
+
+        $booking = $this->repository->find((int) $result['id']);
+        self::assertNotNull($booking);
+        self::assertSame($this->availability->gridMinutes(), (int) $booking['duration_minutes']);
+        self::assertNull($booking['service_ids']);
+    }
+
+    // -----------------------------------------------------------------
+    // The gap is a setting, not a constant
+    // -----------------------------------------------------------------
+
+    public function testTheGapBetweenTimesComesFromSettings(): void
+    {
+        $settings = new SettingsRepository($this->db);
+
+        try {
+            $settings->put('booking.slot_minutes', '45');
+
+            // A fresh service so the cached setting is read again.
+            $availability = new AvailabilityService(
+                new BusinessHoursRepository($this->db),
+                new ClosureRepository($this->db),
+                new BookingSlotRepository($this->db),
+                new SettingsRepository($this->db),
+                new SlotCalculator(),
+            );
+
+            self::assertSame(45, $availability->gridMinutes());
+
+            $slots = $availability->slotsForDate($this->date, 45);
+            self::assertContains('09:00', $slots);
+            self::assertContains('09:45', $slots);
+            self::assertNotContains('09:30', $slots);
+            // Times are counted from opening, not backwards from closing: the
+            // 45-minute grid from 09:00 reaches 18:00, and a 45-minute booking
+            // at 18:00 still ends before 19:00. The next step, 18:45, does not.
+            self::assertSame('18:00', $slots[count($slots) - 1]);
+        } finally {
+            $settings->put('booking.slot_minutes', '30');
+        }
     }
 }

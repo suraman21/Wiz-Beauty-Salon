@@ -1053,9 +1053,69 @@ tokens it uses. */
 }
 
 /* Page hero */
-.page-hero {
-  padding-block: 70px 90px;
+/* The shared hero band: the home page's photograph, cut narrow.
+   It is the same picture on every inner page, but only the top of the frame
+   and only a strip tall — recognisably the same room, never the same page. */
+.hero-band {
+  position: relative;
+  width: 100%;
+  height: clamp(170px, 27vw, 340px);
+  overflow: hidden;
+  border-radius: 18px;
+  isolation: isolate;
+  /* A hairline of orchid, so the strip looks framed rather than cropped. */
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklab, var(--orchid) 34%, transparent),
+    0 18px 44px -28px color-mix(in oklab, var(--plum-dark) 70%, transparent);
 }
+
+.hero-band img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* The tiara sits in the top 12% of the frame and the face just under it:
+     pinning the crop to the top keeps both in every band height, and the
+     cover fit only ever removes height, so the model's face is never cut
+     down the middle. */
+  object-fit: cover;
+  object-position: 50% 0%;
+}
+
+.hero-band-veil {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, color-mix(in oklab, var(--plum-dark) 58%, transparent) 0%, transparent 44%),
+    linear-gradient(180deg, transparent 62%, color-mix(in oklab, var(--plum-dark) 34%, transparent) 100%);
+}
+
+.hero-band-mist .hero-band-veil {
+  background:
+    linear-gradient(90deg, color-mix(in oklab, var(--mist) 55%, transparent) 0%, transparent 48%),
+    linear-gradient(180deg, transparent 58%, color-mix(in oklab, var(--mist) 40%, transparent) 100%);
+}
+
+@media (max-width: 720px) {
+  .hero-band {
+    height: clamp(118px, 34vw, 190px);
+    border-radius: 14px;
+  }
+}
+
+.page-hero {
+  padding-block: 34px 90px;
+}
+
+.page-hero-inner {
+  margin-top: 54px;
+}
+
+.svc-hero .hero-band,
+.contact-hero .hero-band {
+  margin-top: 18px;
+}
+
 .page-hero-plum {
   background: var(--plum-dark);
   color: var(--color-on-dark);
@@ -6739,6 +6799,37 @@ body {
   color: var(--muted-foreground);
 }
 
+/* What is in the basket, and how long it will take. Stays under the grid so a
+   second pick never hides behind the fold on a phone. */
+.booking-pick-hint {
+  margin: 0.85rem 0 0;
+  font-size: 0.86rem;
+  line-height: 1.6;
+  color: var(--muted-foreground);
+}
+
+.booking-pick-hint strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.booking-pick-hint .editorial-link {
+  margin-left: 0.35rem;
+  font-size: 0.82rem;
+}
+
+/* A chosen card keeps the orchid wash and gains a checked corner, so the
+   difference between "picked" and "not yet" survives a colour-blind eye. */
+.booking-service.is-selected {
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--orchid) 55%, transparent);
+}
+
+.booking-service.is-selected .booking-service-index {
+  color: var(--ink);
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+}
+
 @media (max-width: 560px) {
   .booking-service-grid {
     grid-template-columns: 1fr;
@@ -9542,4 +9633,18 @@ body {
 }
 .calendar-note__gc {
   opacity: 0.7;
+}
+
+/* ---------------------------------------------------------------------
+   Hero band spacing
+   The band carries the photograph now, so the hero copy below it starts
+   closer to the top of the page. Declared last on purpose: these win over
+   the original hero padding shorthands.
+   --------------------------------------------------------------------- */
+.svc-hero {
+  padding-top: clamp(5.5rem, 11vh, 8rem);
+}
+
+.contact-hero {
+  padding-block: 62px 92px;
 }

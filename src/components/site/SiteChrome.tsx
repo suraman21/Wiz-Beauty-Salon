@@ -6,6 +6,7 @@ import { nav } from "@/data/wiz";
 import { useSalonInfo } from "@/lib/site-content";
 import { useReveal } from "@/lib/use-reveal";
 import { hasDetails, whatsappHref } from "@/lib/salon-api";
+import { heroArt } from "@/lib/hero-art";
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
@@ -207,6 +208,36 @@ export function SiteLayout({ children }: { children: ReactNode }) {
   );
 }
 
+/**
+ * The home page's photograph, cut to a narrow strip.
+ *
+ * Every inner page opens with this: the same picture the home page uses, but
+ * only the top of the frame and only as tall as a band — enough to recognise
+ * the place, quiet enough that the page's own heading still leads.
+ *
+ * The crop is deliberate. Covering a 5:1 strip with a 16:9 photograph removes
+ * height, never width, and the frame is pinned to the top edge: the tiara, the
+ * face and the flowers all sit in the first third, so nothing that matters is
+ * cut. `aria-hidden` because it repeats a picture described in full on the
+ * home page.
+ */
+export function HeroBand({ tone = "plum" }: { tone?: "plum" | "mist" }) {
+  return (
+    <div className={`hero-band hero-band-${tone}`} aria-hidden="true">
+      <img
+        src={heroArt.url}
+        alt=""
+        width={heroArt.width}
+        height={heroArt.height}
+        loading="eager"
+        decoding="async"
+        fetchPriority="high"
+      />
+      <span className="hero-band-veil" />
+    </div>
+  );
+}
+
 export function PageHero({
   overline,
   title,
@@ -224,6 +255,9 @@ export function PageHero({
 }) {
   return (
     <section className={`page-hero page-hero-${tone}`}>
+      <div className="section-wrap">
+        <HeroBand tone={tone} />
+      </div>
       <div className="section-wrap page-hero-inner">
         <div className="page-hero-copy reveal-up">
           <span className="overline">{overline}</span>
@@ -255,6 +289,9 @@ export function ServicesHero({ image, alt }: { image: string; alt: string }) {
       <noscript>
         <style>{`.svc-hero-eyebrow,.svc-hero-line,.svc-hero-lede,.svc-hero-cta,.svc-hero-figure,.feeling-rule{opacity:1!important;animation:none!important;transform:none!important}.svc-hero-ring,.svc-hero-petal{opacity:1!important}`}</style>
       </noscript>
+      <div className="section-wrap">
+        <HeroBand tone="plum" />
+      </div>
       <span className="svc-hero-ring" aria-hidden="true" />
       <span className="svc-hero-petal svc-hero-petal-a" aria-hidden="true" />
       <span className="svc-hero-petal svc-hero-petal-b" aria-hidden="true" />

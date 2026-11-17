@@ -35,6 +35,52 @@ final class Kernel
 
     public function handle(Request $request): Response
     {
+        return $this->harden($this->route($request), $request);
+    }
+
+    /**
+     * Headers the browser needs and the application never set.
+     *
+     * Without these, a panel page can be framed by another site and clicked
+     * through by the person logged in (clickjacking), a JSON answer can be
+     * sniffed as HTML, and the full URL leaks to third parties in the
+     * referrer. None of it changes what the pages do, so they are added here,
+     * once, for every response rather than repeated in each controller.
+     *
+     * The Content-Security-Policy is deliberately narrow: only the JSON API
+     * gets one, because the panel's HTML loads inline styles and scripts by
+     * design and a policy strict enough to matter would break it. That remains
+     * a known gap, listed in the audit.
+     */
+    private function harden(Response $response, Request $request): Response
+    {
+        $headers = [
+            'X-Content-Type-Options' => 'nosniff',
+            'X-Frame-Options' => 'SAMEORIGIN',
+            'Referrer-Policy' => 'strict-origin-when-cross-origin',
+            'Permissions-Policy' => 'camera=(), microphone=(), geolocation=(), payment=()',
+            'Cross-Origin-Opener-Policy' => 'same-origin',
+        ];
+
+        if (str_starts_with($request->path(), '/api/')) {
+            $headers['Content-Security-Policy'] = "default-src 'none'; frame-ancestors 'none'";
+        }
+
+        if (($request->server('HTTPS') ?? '') !== '' && ($request->server('HTTPS') ?? '') !== 'off') {
+            $headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains';
+        }
+
+        foreach ($headers as $name => $value) {
+            if (!isset($response->headers()[$name])) {
+                $response = $response->withHeader($name, $value);
+            }
+        }
+
+        return $response;
+    }
+
+    private function route(Request $request): Response
+    {
         try {
             return $this->dispatch($request);
         } catch (RedirectException $e) {

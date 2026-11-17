@@ -35,6 +35,25 @@ import {
 } from "@/lib/booking-api";
 import { localServices } from "@/lib/service-pages";
 
+/** As many services as one visit can reasonably hold. */
+const MAX_SERVICES = 6;
+
+/** 01, 02 … for unchosen cards; 1, 2 … shows the order picked. */
+const pickedMark = (position: number): string => String(position + 1);
+
+/**
+ * "about an hour" reads better than "45 minutes" when the salon may run over.
+ * Anything under an hour is exact, because there the number is the point.
+ */
+function describeMinutes(minutes: number): string {
+  if (minutes < 60) return `${minutes} minutes`;
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  const hourText = hours === 1 ? "an hour" : `${hours} hours`;
+
+  return rest === 0 ? hourText : `${hourText} ${rest} minutes`;
+}
+
 export const Route = createFileRoute("/booking")({
   validateSearch: (s) => z.object({ service: z.string().optional() }).parse(s),
   head: () => ({
@@ -117,7 +136,11 @@ function Booking() {
 
   const [services, setServices] = useState<ApiService[] | null>(null);
   const [loadError, setLoadError] = useState("");
-  const [selectedId, setSelectedId] = useState<number | null>(null);
+  // One appointment can carry several services: hair and nails on the same
+  // Friday afternoon is one visit, not two. The ids stay in the order the
+  // customer picked them, because that is the order they will be done in.
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [run, setRun] = useState<{ name: string; minutes: number } | null>(null);
 
   const [calendar, setCalendar] = useState<CalendarDay[]>([]);
   const [calendarBusy, setCalendarBusy] = useState(false);
@@ -133,10 +156,13 @@ function Booking() {
   const [confirmed, setConfirmed] = useState<Confirmed | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const service = useMemo(
-    () => services?.find((s) => s.id === selectedId) ?? null,
-    [services, selectedId],
+  const chosen = useMemo(
+    () => (services ?? []).filter((s) => selectedIds.includes(s.id)),
+    [services, selectedIds],
   );
+
+  // What the salon will call this visit — "Make Up + Manicure".
+  const serviceName = useMemo(() => chosen.map((s) => s.name).join(" + "), [chosen]);
 
   // Until the panel answers, the bundled list keeps the page usable.
   const fallback = (): ApiService[] =>
@@ -178,15 +204,24 @@ function Booking() {
       services.find((s) => String(s.id) === search.service) ??
       services.find((s) => s.name.trim().toLowerCase() === wanted);
 
-    if (match) setSelectedId(match.id);
+    if (match) setSelectedIds([match.id]);
   }, [services, search.service]);
 
-  const loadCalendar = useCallback((categoryId: number, signal?: AbortSignal) => {
+  const loadCalendar = useCallback((categoryIds: number[], signal?: AbortSignal) => {
     setCalendarBusy(true);
     setCalendarError("");
 
-    return fetchCalendar({ categoryId }, isoToday(), CALENDAR_DAYS, signal)
-      .then((days) => setCalendar(days))
+    return fetchCalendar({ categoryIds }, isoToday(), CALENDAR_DAYS, signal)
+      .then((result) => {
+        setCalendar(result.days);
+        // The API answers with the whole run, so the page never has to guess
+        // how long several services take together.
+        setRun(
+          result.service !== null && result.service.name !== ""
+            ? { name: result.service.name, minutes: result.service.duration_minutes }
+            : null,
+        );
+      })
       .catch((error: unknown) => {
         if (error instanceof DOMException && error.name === "AbortError") return;
         setCalendar([]);
@@ -198,29 +233,43 @@ function Booking() {
   }, []);
 
   useEffect(() => {
-    if (selectedId === null) return undefined;
+    if (selectedIds.length === 0) return undefined;
 
     const controller = new AbortController();
-    void loadCalendar(selectedId, controller.signal);
+    void loadCalendar(selectedIds, controller.signal);
 
     return () => controller.abort();
-  }, [selectedId, loadCalendar]);
+  }, [selectedIds, loadCalendar]);
 
   const selectedDay = calendar.find((d) => d.date === date) ?? null;
   const validDetails = bookingDetailsSchema.safeParse(details).success;
 
   const canContinue =
-    (step === 0 && selectedId !== null) ||
+    (step === 0 && selectedIds.length > 0) ||
     (step === 1 && date !== "") ||
     (step === 2 && time !== "") ||
     (step === 3 && validDetails) ||
     step === 4;
 
-  const chooseService = (id: number) => {
-    setSelectedId(id);
-    setCalendar([]);
-    setDate("");
-    setTime("");
+  /**
+   * Add or remove one service. Choosing a second one widens the run, so any
+   * date or time already picked has to go — the calendar is re-fetched for the
+   * new length and the times that no longer fit disappear.
+   */
+  const toggleService = (id: number) => {
+    setSelectedIds((previous) => {
+      const next = previous.includes(id)
+        ? previous.filter((chosenId) => chosenId !== id)
+        : [...previous, id].slice(0, MAX_SERVICES);
+
+      if (next.length !== previous.length || previous.includes(id)) {
+        setCalendar([]);
+        setDate("");
+        setTime("");
+      }
+
+      return next;
+    });
   };
 
   const chooseDate = (day: CalendarDay) => {
@@ -230,7 +279,7 @@ function Booking() {
   };
 
   const submit = () => {
-    if (selectedId === null || date === "" || time === "") return;
+    if (selectedIds.length === 0 || date === "" || time === "") return;
     setSubmitting(true);
     setSubmitError("");
 
@@ -238,7 +287,7 @@ function Booking() {
       name: details.name,
       phone: details.phone,
       email: details.email,
-      category_id: selectedId,
+      category_ids: selectedIds,
       date,
       time,
       notes: details.notes,
@@ -246,7 +295,7 @@ function Booking() {
       .then((result) => {
         setConfirmed({
           reference: result.reference,
-          serviceName: service?.name ?? "Appointment",
+          serviceName: serviceName === "" ? "Appointment" : serviceName,
           date,
           time,
           details,
@@ -267,7 +316,8 @@ function Booking() {
   const restart = () => {
     setConfirmed(null);
     setStep(0);
-    setSelectedId(null);
+    setSelectedIds([]);
+    setRun(null);
     setDate("");
     setTime("");
     setDetails(emptyDetails);
@@ -386,8 +436,9 @@ function Booking() {
                 {services !== null && services.length > 0 && (
                   <>
                     <p className="step-intro">
-                      Pick the service you are coming in for. How long it takes and what it costs is
-                      settled with you at the salon.
+                      Pick the service you are coming in for — or more than one if you are having
+                      them together. We book them in one go, back to back, so you only come once.
+                      How long it takes and what it costs is settled with you at the salon.
                     </p>
 
                     <div className="booking-manage-card">
@@ -401,28 +452,66 @@ function Booking() {
                       </Link>
                     </div>
 
-                    <div className="booking-service-grid" role="radiogroup" aria-label="Service">
-                      {services.map((s, index) => (
-                        <button
-                          key={s.id}
-                          type="button"
-                          role="radio"
-                          aria-checked={selectedId === s.id}
-                          className={`booking-service${selectedId === s.id ? " is-selected" : ""}`}
-                          onClick={() => chooseService(s.id)}
-                        >
-                          <span className="booking-service-index">
-                            {String(index + 1).padStart(2, "0")}
-                          </span>
-                          <span className="booking-service-name">{s.name}</span>
-                          {s.amharic !== "" && (
-                            <span lang="am" className="booking-service-am">
-                              {s.amharic}
+                    <div
+                      className="booking-service-grid"
+                      role="group"
+                      aria-label="Services — choose as many as you need"
+                    >
+                      {services.map((s, index) => {
+                        const picked = selectedIds.includes(s.id);
+                        const position = selectedIds.indexOf(s.id);
+
+                        return (
+                          <button
+                            key={s.id}
+                            type="button"
+                            aria-pressed={picked}
+                            className={`booking-service${picked ? " is-selected" : ""}`}
+                            onClick={() => toggleService(s.id)}
+                          >
+                            <span className="booking-service-index" aria-hidden="true">
+                              {picked ? pickedMark(position) : String(index + 1).padStart(2, "0")}
                             </span>
-                          )}
-                        </button>
-                      ))}
+                            <span className="booking-service-name">{s.name}</span>
+                            {s.amharic !== "" && (
+                              <span lang="am" className="booking-service-am">
+                                {s.amharic}
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
                     </div>
+
+                    <p className="booking-pick-hint" role="status">
+                      {selectedIds.length === 0 ? (
+                        <>Tap a service to start. You can add more than one.</>
+                      ) : (
+                        <>
+                          <strong>
+                            {selectedIds.length === 1
+                              ? serviceName
+                              : `${selectedIds.length} services — ${serviceName}`}
+                          </strong>
+                          {run !== null && run.minutes > 0 && (
+                            <> · about {describeMinutes(run.minutes)}</>
+                          )}
+                          {"  "}
+                          <button
+                            type="button"
+                            className="editorial-link"
+                            onClick={() => {
+                              setSelectedIds([]);
+                              setCalendar([]);
+                              setDate("");
+                              setTime("");
+                            }}
+                          >
+                            Clear
+                          </button>
+                        </>
+                      )}
+                    </p>
                   </>
                 )}
               </>
@@ -438,7 +527,7 @@ function Booking() {
                       type="button"
                       className="editorial-link"
                       onClick={() => {
-                        if (selectedId !== null) void loadCalendar(selectedId);
+                        if (selectedIds.length > 0) void loadCalendar(selectedIds);
                       }}
                     >
                       Try again
@@ -448,7 +537,10 @@ function Booking() {
                 {!calendarBusy && calendarError === "" && calendar.length > 0 && (
                   <>
                     <p className="step-service-hint">
-                      For <strong>{service?.name ?? "your appointment"}</strong>
+                      For <strong>{run?.name ?? serviceName ?? "your appointment"}</strong>
+                      {run !== null && run.minutes > 0 && (
+                        <> · about {describeMinutes(run.minutes)}</>
+                      )}
                     </p>
                     <div className="date-grid" role="radiogroup" aria-label="Choose a date">
                       {calendar.map((day) => {
@@ -593,7 +685,7 @@ function Booking() {
 
             {step === 4 && (
               <Summary
-                serviceName={service?.name ?? "Appointment"}
+                serviceName={serviceName === "" ? "Appointment" : serviceName}
                 date={date}
                 time={time}
                 details={details}

@@ -45,15 +45,72 @@ describe("booking API client", () => {
     );
     vi.stubGlobal("fetch", fetchMock);
 
-    const days = await fetchCalendar({ categoryId: 4 }, "2026-10-22", 7);
+    const result = await fetchCalendar({ categoryId: 4 }, "2026-10-22", 7);
 
-    expect(days[0]?.slots).toEqual(["09:00"]);
+    expect(result.days[0]?.slots).toEqual(["09:00"]);
 
     const url = String(fetchMock.mock.calls[0]?.[0]);
     expect(url).toContain("/api/v1/calendar?");
     expect(url).toContain("category_id=4");
     expect(url).toContain("from=2026-10-22");
     expect(url).toContain("days=7");
+  });
+
+  it("asks for several services in one run, and reads back how long it is", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      jsonResponse({
+        service: { id: 4, name: "Manicure + Pedicure", duration_minutes: 60 },
+        days: [{ date: "2026-10-22", open: true, reason: null, slots: ["09:00"] }],
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await fetchCalendar({ categoryIds: [4, 9] }, "2026-10-22", 7);
+
+    expect(result.days[0]?.slots).toEqual(["09:00"]);
+    expect(result.service?.duration_minutes).toBe(60);
+
+    const url = String(fetchMock.mock.calls[0]?.[0]);
+    expect(url).toContain("category_ids=4%2C9");
+    expect(url).not.toContain("category_id=4");
+  });
+
+  it("keeps one service on the old single-service spelling", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ days: [] }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await fetchCalendar({ categoryIds: [4] }, "2026-10-22", 7);
+
+    const url = String(fetchMock.mock.calls[0]?.[0]);
+    expect(url).toContain("category_id=4");
+    expect(url).not.toContain("category_ids");
+  });
+
+  it("posts several services as category_ids", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(
+        jsonResponse({ ok: true, reference: "WZ123", status: "requested", message: "" }),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await createBooking({
+      name: "Hanna",
+      phone: "0911223344",
+      email: "",
+      category_ids: [4, 9],
+      date: "2026-10-22",
+      time: "09:00",
+      notes: "",
+    });
+
+    const body = JSON.parse(String((fetchMock.mock.calls[0]?.[1] as RequestInit).body)) as Record<
+      string,
+      unknown
+    >;
+
+    expect(body["category_ids"]).toBe("4,9");
+    expect(body["category_id"]).toBeUndefined();
   });
 
   it("sends the booking as JSON and returns the reference", async () => {

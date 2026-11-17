@@ -26,6 +26,9 @@ use Wiz\Support\SignedLink;
  */
 final class BookingApiController
 {
+    /** More than this in one booking is a mistake, not an order. */
+    private const MAX_SERVICES_PER_BOOKING = 6;
+
     public function __construct(
         private readonly AvailabilityService $availability,
         private readonly BookingService $bookings,
@@ -167,6 +170,29 @@ final class BookingApiController
     }
 
     /**
+     * "17,18,19", "[17,18]" or "17" → a clean list of positive ids.
+     *
+     * @return list<int>
+     */
+    private function categoryIdsFrom(string $raw): array
+    {
+        $raw = trim($raw);
+
+        if ($raw === '') {
+            return [];
+        }
+
+        $decoded = json_decode($raw, true);
+        $ids = is_array($decoded)
+            ? array_map('intval', $decoded)
+            : array_map('intval', array_filter(array_map('trim', explode(',', $raw))));
+
+        $ids = array_values(array_unique(array_filter($ids, static fn (int $id): bool => $id > 0)));
+
+        return array_slice($ids, 0, self::MAX_SERVICES_PER_BOOKING);
+    }
+
+    /**
      * Resolve a duration and a display service from the request, supporting
      * single, multi-service (service_ids) and undecided bookings.
      *
@@ -174,7 +200,54 @@ final class BookingApiController
      */
     private function resolveDuration(Request $request): ?array
     {
+        // Several services in one booking: the customer picks more than one
+        // treatment, the calendar has to offer only the times where the whole
+        // run fits. Each chosen service carries the salon's gap — the same
+        // length a single booking has always had — so the total is a multiple
+        // of the gap and lands on the grid exactly.
+        $categoryIds = $this->categoryIdsFrom(
+            $request->queryString('category_ids') !== ''
+                ? $request->queryString('category_ids')
+                : $request->queryString('categoryIds'),
+        );
+
+        if (count($categoryIds) > 1) {
+            $names = [];
+            $valid = 0;
+
+            foreach ($categoryIds as $id) {
+                $category = $this->categories->find($id);
+
+                if ($category === null || (int) ($category['is_active'] ?? 0) !== 1) {
+                    continue;
+                }
+
+                $names[] = (string) $category['name'];
+                $valid++;
+            }
+
+            if ($valid === 0) {
+                return null;
+            }
+
+            $duration = $valid * $this->availability->gridMinutes();
+
+            return [
+                'duration' => $duration,
+                'service' => [
+                    'id' => $categoryIds[0],
+                    'name' => implode(' + ', $names),
+                    'duration_minutes' => $duration,
+                ],
+            ];
+        }
+
         $categoryId = (int) $request->queryString('category_id');
+
+        // A list of one is the same request as the old single `category_id`.
+        if ($categoryId === 0 && count($categoryIds) === 1) {
+            $categoryId = $categoryIds[0];
+        }
 
         if ($categoryId > 0) {
             $category = $this->categories->find($categoryId);
@@ -325,6 +398,26 @@ final class BookingApiController
         if ($rawServiceIds === '' && is_array($request->input('serviceIds') ?? null)) {
             $rawServiceIds = json_encode($request->input('serviceIds'));
         }
+        // Several services in one booking (the website's multi-select). Stored
+        // as the ids the customer chose; the length is their sum, so the run
+        // claims exactly that many grid cells.
+        $rawCategoryIds = $request->string('category_ids') !== '' ? $request->string('category_ids') : $request->string('categoryIds');
+        if ($rawCategoryIds === '' && is_array($request->input('category_ids') ?? null)) {
+            $rawCategoryIds = json_encode($request->input('category_ids'));
+        }
+        if ($rawCategoryIds === '' && is_array($request->input('categoryIds') ?? null)) {
+            $rawCategoryIds = json_encode($request->input('categoryIds'));
+        }
+        if ($rawCategoryIds !== '') {
+            $chosen = $this->categoryIdsFrom($rawCategoryIds);
+
+            if ($chosen === []) {
+                throw HttpException::validation('Please choose a service.');
+            }
+
+            $rawCategoryIds = implode(',', $chosen);
+        }
+
         $rawIsUndecided = $request->string('is_undecided') !== '' ? $request->string('is_undecided') : $request->string('isUndecided');
         // Also support JSON boolean
         if ($rawIsUndecided === '' && $request->input('is_undecided') !== null) {
@@ -373,6 +466,7 @@ final class BookingApiController
                 'service_id' => $request->string('service_id'),
                 'service_ids' => $rawServiceIds,
                 'category_id' => $request->string('category_id'),
+                'category_ids' => $rawCategoryIds,
                 'is_undecided' => $rawIsUndecided,
                 'date' => $rawDate,
                 'time' => $request->string('time'),
@@ -385,6 +479,7 @@ final class BookingApiController
                 'service_id' => 'integer',
                 'service_ids' => 'string',
                 'category_id' => 'integer',
+                'category_ids' => 'string',
                 'is_undecided' => 'string',
                 'date' => 'required|date',
                 'time' => 'required|time',
@@ -396,6 +491,7 @@ final class BookingApiController
                 'customer_email' => 'Email address',
                 'service_id' => 'Service',
                 'category_id' => 'Service',
+                'category_ids' => 'Services',
                 'date' => 'Date',
                 'time' => 'Time',
                 'notes' => 'Notes',
@@ -413,7 +509,8 @@ final class BookingApiController
         $hasServiceIds = isset($input['service_ids']) && (string) $input['service_ids'] !== '' && (string) $input['service_ids'] !== '[]';
         $isUndecidedFlag = isset($input['is_undecided']) && in_array(strtolower((string) $input['is_undecided']), ['1', 'true', 'yes'], true);
         $hasCategoryId = isset($input['category_id']) && (string) $input['category_id'] !== '' && (int) $input['category_id'] > 0;
-        if (!$hasServiceId && !$hasServiceIds && !$hasCategoryId && !$isUndecidedFlag) {
+        $hasCategoryIds = isset($input['category_ids']) && (string) $input['category_ids'] !== '';
+        if (!$hasServiceId && !$hasServiceIds && !$hasCategoryIds && !$hasCategoryId && !$isUndecidedFlag) {
             throw HttpException::validation('Please choose a service.');
         }
 
@@ -424,6 +521,7 @@ final class BookingApiController
             'service_id' => $hasServiceId ? (int) $input['service_id'] : null,
             'service_ids' => $hasServiceIds ? (string) $input['service_ids'] : null,
             'category_id' => $hasCategoryId ? (int) $input['category_id'] : null,
+            'category_ids' => $hasCategoryIds ? (string) $input['category_ids'] : null,
             'is_undecided' => $isUndecidedFlag ? 1 : 0,
             'date' => (string) $input['date'],
             'time' => (string) $input['time'],

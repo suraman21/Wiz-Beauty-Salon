@@ -138,6 +138,59 @@ $isMissing = static fn (string $what): bool => in_array($what, $missing, true);
             </div>
         </form>
 
+        <form method="post" action="/admin/settings/booking" class="card" autocomplete="off">
+            <?= csrf_field() ?>
+
+            <h2 class="card__title">Booking rules</h2>
+            <p class="card__sub">
+                What the website's calendar offers. These are the only numbers behind every time a
+                customer sees.
+            </p>
+
+            <div class="field-row">
+                <div class="field">
+                    <label for="slot_minutes">Gap between times <span class="field__hint">minutes</span></label>
+                    <input type="number" id="slot_minutes" name="slot_minutes" min="5" max="120" step="5"
+                           value="<?= (int) $rules['slot_minutes'] ?>" required>
+                    <p class="field__hint">
+                        Times are offered every <?= (int) $rules['slot_minutes'] ?> minutes, from opening
+                        until the last one that still fits before closing.
+                    </p>
+                </div>
+
+                <div class="field">
+                    <label for="lead_minutes">Notice before a booking <span class="field__hint">minutes</span></label>
+                    <input type="number" id="lead_minutes" name="lead_minutes" min="0" max="4320" step="15"
+                           value="<?= (int) $rules['lead_minutes'] ?>" required>
+                    <p class="field__hint">
+                        A time today is only offered if it is at least
+                        <?= (int) $rules['lead_minutes'] ?> minutes away — two hours by default, so nobody
+                        books a slot while the customer is already on their way.
+                    </p>
+                </div>
+            </div>
+
+            <div class="field">
+                <label for="max_advance_days">Days the calendar opens ahead</label>
+                <input type="number" id="max_advance_days" name="max_advance_days" min="1" max="365"
+                       value="<?= (int) $rules['max_advance_days'] ?>" required>
+                <p class="field__hint">
+                    Customers can book up to <?= (int) $rules['max_advance_days'] ?> days ahead. Days past
+                    that are greyed out on the website rather than offered and then refused.
+                </p>
+            </div>
+
+            <p class="card__note card__note--left">
+                A customer who picks more than one service gets booked for the combined length, so a
+                larger gap makes longer appointments easier to place.
+            </p>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn--primary">Save booking rules</button>
+                <a class="btn btn--ghost" href="/admin/schedule">See the calendar</a>
+            </div>
+        </form>
+
         <form method="post" action="/admin/settings/salon" class="card">
             <?= csrf_field() ?>
 

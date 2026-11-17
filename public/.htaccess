@@ -1,0 +1,30 @@
+# The public site: prerendered HTML, hashed assets, nothing dynamic.
+#
+# Two jobs. First, unknown paths must 404 instead of falling through to a
+# rewrite rule that answers 200 with the home page — a soft 404 confuses search
+# engines and hides broken links from us. Second, add the headers a static host
+# will not add by itself.
+
+DirectoryIndex index.html
+
+ErrorDocument 404 /404.html
+
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
+    # Hashed build output never changes under the same name.
+    <FilesMatch "\.(js|css|woff2|avif|webp|png|jpg|jpeg|svg)$">
+        Header always set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+    <FilesMatch "\.html$">
+        Header always set Cache-Control "public, max-age=0, must-revalidate"
+    </FilesMatch>
+</IfModule>
+
+<IfModule mod_mime.c>
+    AddType image/avif .avif
+    AddType image/webp .webp
+    AddType font/woff2 .woff2
+</IfModule>

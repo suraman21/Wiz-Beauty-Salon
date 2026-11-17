@@ -26,6 +26,9 @@ use Wiz\Repositories\ServiceRepository;
  */
 final class BookingService
 {
+    /** No single appointment may ask for more than this many minutes. */
+    private const MAX_MINUTES = 480;
+
     public function __construct(
         private readonly Database $db,
         private readonly BookingRepository $bookings,
@@ -89,7 +92,61 @@ final class BookingService
         $serviceIdsJson = null;
         $isUndecidedFlag = 0;
 
-        if ($categoryId > 0) {
+        // More than one service in the same visit: "hair and nails on Friday".
+        // The customer picks what they want, the run is as long as the pieces
+        // put together, and the calendar only offers a time where all of it
+        // fits. Each piece keeps the length a single booking has always had
+        // (the salon's gap), which is what the site shows as the estimate.
+        $categoryIdsRaw = $input['category_ids'] ?? null;
+        $categoryIds = [];
+
+        if (is_string($categoryIdsRaw) && trim($categoryIdsRaw) !== '') {
+            $decoded = json_decode($categoryIdsRaw, true);
+            $categoryIds = is_array($decoded)
+                ? array_map('intval', $decoded)
+                : array_map('intval', array_filter(array_map('trim', explode(',', $categoryIdsRaw))));
+        } elseif (is_array($categoryIdsRaw)) {
+            $categoryIds = array_map('intval', $categoryIdsRaw);
+        }
+
+        $categoryIds = array_values(array_unique(array_filter($categoryIds, static fn (int $id): bool => $id > 0)));
+        $multiResolved = false;
+
+        // One choice is the plain single booking it has always been.
+        if (count($categoryIds) === 1 && $categoryId === 0) {
+            $categoryId = $categoryIds[0];
+        }
+
+        if (count($categoryIds) > 1) {
+            $names = [];
+            $valid = 0;
+
+            foreach ($categoryIds as $id) {
+                $category = $this->categories?->find($id);
+
+                if ($category === null || (int) ($category['is_active'] ?? 0) !== 1) {
+                    return ['ok' => false, 'error' => 'One of the selected services is not available any more.'];
+                }
+
+                $names[] = (string) $category['name'];
+                $valid++;
+            }
+
+            $duration = $valid * $this->availability->gridMinutes();
+
+            if ($duration > self::MAX_MINUTES) {
+                return ['ok' => false, 'error' => 'Those services need more time than one appointment can hold. Please call the salon.'];
+            }
+
+            $serviceName = implode(' + ', $names);
+            $serviceIdsJson = json_encode($categoryIds);
+            $isUndecidedFlag = 0;
+            $multiResolved = true;
+        }
+
+        if ($multiResolved) {
+            // Already decided above: the run, its name and its length.
+        } elseif ($categoryId > 0) {
             $category = $this->categories?->find($categoryId);
 
             if ($category === null || (int) ($category['is_active'] ?? 0) !== 1) {

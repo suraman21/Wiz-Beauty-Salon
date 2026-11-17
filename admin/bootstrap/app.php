@@ -414,6 +414,8 @@ $app->singleton(SettingsController::class, static fn (App $a): SettingsControlle
     $a->get(ActivityLogRepository::class),
     $a->get(Auth::class),
     $a->get(Session::class),
+    $a->get(SettingsRepository::class),
+    $a->get(AvailabilityService::class),
 ));
 
 $app->singleton(EmailTemplateController::class, static fn (App $a): EmailTemplateController => new EmailTemplateController(

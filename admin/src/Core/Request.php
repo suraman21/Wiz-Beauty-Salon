@@ -137,6 +137,17 @@ final class Request
         return array_merge($this->query, $this->body);
     }
 
+    /**
+     * A raw `$_SERVER` value, for the few facts about the connection itself
+     * (HTTPS, port) that are neither an input nor a header.
+     */
+    public function server(string $key): ?string
+    {
+        $value = $this->server[$key] ?? null;
+
+        return is_string($value) ? $value : null;
+    }
+
     public function header(string $name): ?string
     {
         $key = 'HTTP_' . strtoupper(str_replace('-', '_', $name));

@@ -65,6 +65,8 @@ export type BookingInput = {
   email: string;
   /** The service the customer picked, by its id in the panel. */
   category_id?: number | null | undefined;
+  /** Several services in one appointment; wins over `category_id` when set. */
+  category_ids?: number[] | undefined;
   date: string;
   time: string;
   notes: string;
@@ -103,6 +105,20 @@ export function fetchServices(signal?: AbortSignal): Promise<ApiService[]> {
 export type CalendarOpts = {
   /** The service the customer picked. */
   categoryId?: number | null | undefined;
+  /** Several services in one appointment — the whole run has to fit. */
+  categoryIds?: number[] | undefined;
+};
+
+/**
+ * The calendar, plus what the chosen services add up to.
+ *
+ * `service.duration_minutes` is the whole run — one service, or several booked
+ * together. The site prints it as a rough length so the customer knows what
+ * they are committing to, without the panel publishing prices.
+ */
+export type CalendarResult = {
+  days: CalendarDay[];
+  service: { id: number; name: string; duration_minutes: number } | null;
 };
 
 export function fetchCalendar(
@@ -110,19 +126,27 @@ export function fetchCalendar(
   from: string,
   days = 21,
   signal?: AbortSignal,
-): Promise<CalendarDay[]> {
+): Promise<CalendarResult> {
   const query = new URLSearchParams({
     from,
     days: String(days),
   });
 
-  if (opts.categoryId != null && opts.categoryId > 0) {
-    query.set("category_id", String(opts.categoryId));
+  // One service, or several at once. The API understands both spellings.
+  const ids = (opts.categoryIds ?? (opts.categoryId != null ? [opts.categoryId] : [])).filter(
+    (id) => Number.isFinite(id) && id > 0,
+  );
+
+  if (ids.length === 1) {
+    query.set("category_id", String(ids[0]));
+  } else if (ids.length > 1) {
+    query.set("category_ids", ids.join(","));
   }
 
-  return apiGet<{ days?: CalendarDay[] }>(`/api/v1/calendar?${query.toString()}`, signal).then(
-    (body) => body.days ?? [],
-  );
+  return apiGet<{ days?: CalendarDay[]; service?: CalendarResult["service"] }>(
+    `/api/v1/calendar?${query.toString()}`,
+    signal,
+  ).then((body) => ({ days: body.days ?? [], service: body.service ?? null }));
 }
 
 export function createBooking(input: BookingInput): Promise<BookingResult> {
@@ -135,7 +159,9 @@ export function createBooking(input: BookingInput): Promise<BookingResult> {
     notes: input.notes,
     website: "",
   };
-  if (input.category_id != null) {
+  if (input.category_ids != null && input.category_ids.length > 0) {
+    payload["category_ids"] = input.category_ids.join(",");
+  } else if (input.category_id != null) {
     payload["category_id"] = input.category_id;
   }
   return apiPost<BookingResult>("/api/v1/bookings", payload);

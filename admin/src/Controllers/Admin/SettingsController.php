@@ -13,6 +13,8 @@ use Wiz\Core\Validator;
 use Wiz\Core\View;
 use Wiz\Repositories\ActivityLogRepository;
 use Wiz\Repositories\RateLimitRepository;
+use Wiz\Services\AvailabilityService;
+use Wiz\Repositories\SettingsRepository;
 use Wiz\Support\MailSettings;
 use Wiz\Support\SalonDetails;
 
@@ -38,6 +40,8 @@ final class SettingsController
         private readonly ActivityLogRepository $activity,
         private readonly Auth $auth,
         private readonly Session $session,
+        private readonly SettingsRepository $settings,
+        private readonly AvailabilityService $availability,
     ) {
     }
 
@@ -68,6 +72,11 @@ final class SettingsController
             'test_recipient' => (string) ($user['email'] ?? ''),
             'test_left' => $this->testsLeft(),
             'salon' => $this->salon->all(),
+            'rules' => [
+                'slot_minutes' => $this->availability->gridMinutes(),
+                'lead_minutes' => $this->availability->leadMinutes(),
+                'max_advance_days' => $this->availability->maxAdvanceDays(),
+            ],
         ]);
     }
 
@@ -225,6 +234,69 @@ final class SettingsController
         );
 
         $this->session->flash('success', 'Salon details saved. The website shows them on the Contact page straight away.');
+
+        throw new RedirectException('/admin/settings');
+    }
+
+    /**
+     * The three numbers that decide what the calendar offers.
+     *
+     * They were settings already — the panel just never showed them, so the only
+     * way to change a 30-minute gap was to edit the database. Each is bounded:
+     * a gap under five minutes is not a real appointment, and a booking window
+     * over a year hides the truth about how far ahead the salon plans.
+     *
+     * @param array<string, string> $params
+     */
+    public function saveBooking(Request $request, array $params = []): Response
+    {
+        $slot = filter_var($request->string('slot_minutes'), FILTER_VALIDATE_INT, [
+            'options' => ['min_range' => 5, 'max_range' => 120],
+        ]);
+        $lead = filter_var($request->string('lead_minutes'), FILTER_VALIDATE_INT, [
+            'options' => ['min_range' => 0, 'max_range' => 4320],
+        ]);
+        $window = filter_var($request->string('max_advance_days'), FILTER_VALIDATE_INT, [
+            'options' => ['min_range' => 1, 'max_range' => 365],
+        ]);
+
+        if ($slot === false) {
+            $this->fail('The gap between times must be a whole number of minutes, 5 to 120.');
+        }
+
+        if ($lead === false) {
+            $this->fail('The notice period must be a whole number of minutes, 0 to 4320.');
+        }
+
+        if ($window === false) {
+            $this->fail('The booking window must be a whole number of days, 1 to 365.');
+        }
+
+        // A gap that does not divide the opening day evenly still works — the
+        // calculator simply stops at the last time that fits — but staff should
+        // know what they are choosing, so an odd number is allowed deliberately.
+        $this->settings->put('booking.slot_minutes', (string) $slot);
+        $this->settings->put('booking.lead_minutes', (string) $lead);
+        $this->settings->put('booking.max_advance_days', (string) $window);
+
+        $this->activity->record(
+            (int) $this->auth->id(),
+            'settings.booking_rules_updated',
+            'settings',
+            null,
+            ['slot_minutes' => $slot, 'lead_minutes' => $lead, 'max_advance_days' => $window],
+            $request->ip(),
+        );
+
+        $this->session->flash(
+            'success',
+            sprintf(
+                'Booking rules saved: a time every %d minutes, %d minutes notice, %d days ahead.',
+                $slot,
+                $lead,
+                $window,
+            ),
+        );
 
         throw new RedirectException('/admin/settings');
     }
