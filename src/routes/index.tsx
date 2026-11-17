@@ -29,13 +29,6 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
-/** "Four ways…" — the line follows whatever the panel puts on the home page. */
-function countWord(count: number): string {
-  const words = ["No", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight"];
-
-  return words[count] ?? String(count);
-}
-
 function Home() {
   const images = useSiteImages();
   const feeling = useReveal<HTMLElement>();
@@ -180,7 +173,7 @@ function Home() {
               <span className="feeling-line">Every detail,</span>
               <span className="feeling-line feeling-line-em">beautifully you.</span>
             </h2>
-            <p className="services-lede">{`${countWord(featured.length)} ${featured.length === 1 ? "way" : "ways"} to make a moment your own.`}</p>
+            <p className="services-lede">Many ways to make a moment your own.</p>
           </div>
           <div className="service-cards">
             {featured.map((c, i) => (
