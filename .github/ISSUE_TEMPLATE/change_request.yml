@@ -1,0 +1,46 @@
+name: Change request
+description: A rule, a screen or a piece of wording that should be different
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Most things the salon wants to change are already settings — check
+        `docs/BOOKING-RULES.md` § *Where each setting lives* and the panel's
+        **Settings** screen before opening this.
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What should change
+    validations:
+      required: true
+
+  - type: textarea
+    id: why
+    attributes:
+      label: Why
+      description: What is hard today, who it affects, and what happens if nothing changes.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind of change
+      options:
+        - A setting the salon should control (no code)
+        - Wording a customer reads
+        - Behaviour of the booking flow
+        - A new screen or field
+        - Something structural (schema, deploy, dependencies)
+    validations:
+      required: true
+
+  - type: textarea
+    id: doc
+    attributes:
+      label: Which document would need to change
+      description: Optional — `docs/BOOKING-RULES.md`, `docs/API.md`, `docs/ADMIN-HANDBOOK.md`, …
+    validations:
+      required: false

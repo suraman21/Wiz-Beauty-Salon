@@ -1,0 +1,37 @@
+Copyright (c) 2026 WIZ Beauty Salon, Addis Ababa, Ethiopia.
+All rights reserved.
+
+This software, its source code, its documentation and its visual design were
+commissioned by and prepared for WIZ Beauty Salon. The salon holds the rights to
+the work product; the author retains the right to be identified as its author.
+
+No permission is granted to copy, modify, distribute, sublicense, publish or
+sell this software or any portion of it, in source or compiled form, without the
+prior written permission of the copyright holder. Access to this repository does
+not grant a licence.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE COPYRIGHT
+HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+Third-party components are the property of their respective owners and are used
+under their own licences:
+
+  - PHPMailer — LGPL-2.1 (shipped in the release tree)
+  - HTML Purifier — LGPL-2.1 (shipped in the release tree)
+  - TanStack Start / TanStack Router — MIT
+  - React, React DOM — MIT
+  - Tailwind CSS — MIT
+  - Vite, Vitest, ESLint, Prettier — MIT
+  - Radix UI primitives, shadcn/ui — MIT
+  - GrapesJS (built into the panel's email designer) — BSD-3-Clause
+  - PHPUnit, PHPStan — BSD-3-Clause / MIT (development only, never shipped)
+
+The complete dependency trees and their licences are listed in `package-lock.json`
+and `admin/composer.lock`.
+
+Photography and brand assets in `public/` and `admin/public/` remain the property
+of WIZ Beauty Salon.

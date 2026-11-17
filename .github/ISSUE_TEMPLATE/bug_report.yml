@@ -1,0 +1,69 @@
+name: Bug report
+description: Something behaves differently from what the documentation says
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before filing: check `docs/RUNBOOK.md` — several symptoms are already
+        documented there with their cause.
+
+        **Do not report a security problem here.** See `SECURITY.md`.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Where
+      options:
+        - Public site (a page a customer sees)
+        - Booking flow
+        - Customer manage link or recovery
+        - Admin panel
+        - API (/api/v1)
+        - Deploy / CI
+        - Documentation
+    validations:
+      required: true
+
+  - type: input
+    id: url
+    attributes:
+      label: URL or route
+      placeholder: https://wiz.arkeonethiopia.com/booking
+    validations:
+      required: false
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+      description: Quote the documentation or the rule you are comparing against, if there is one.
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened
+      description: What you saw, including any message. Screenshots help.
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open /booking
+        2. Choose Hair and Nails
+        3. …
+    validations:
+      required: true
+
+  - type: input
+    id: env
+    attributes:
+      label: Device, browser, and whether it is a slow connection
+      placeholder: iPhone 12, Safari, 3G
+    validations:
+      required: false

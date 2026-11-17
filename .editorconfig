@@ -1,0 +1,40 @@
+# https://editorconfig.org
+# Editors that honour this file will match the repository's formatting
+# without anyone running the formatter first.
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+[*.{md,markdown}]
+# Trailing spaces are meaningful in Markdown (line breaks).
+trim_trailing_whitespace = false
+
+[*.php]
+indent_size = 4
+
+[{*.yml,*.yaml}]
+indent_size = 2
+
+[*.{css,scss}]
+indent_size = 2
+
+[Makefile]
+indent_style = tab
+
+[*.{sh,bash}]
+indent_size = 4
+
+# Generated, vendored or binary — never reformat these.
+[{package-lock.json,composer.lock,src/routeTree.gen.ts}]
+insert_final_newline = false
+
+[*.{png,jpg,jpeg,webp,gif,ico,woff,woff2,pdf}]
+insert_final_newline = false
+trim_trailing_whitespace = false
