@@ -33,7 +33,7 @@
         }
     },
     "scripts": {
-        "lint": "find src config database tests public -name '*.php' -print0 | xargs -0 -n1 php -l",
+        "lint": "find src config database tests public bin -name '*.php' -print0 | xargs -0 -n1 php -l",
         "analyse": "php vendor/bin/phpstan analyse --no-progress",
         "unit": "php vendor/bin/phpunit",
         "security": "composer audit --locked --no-interaction",
