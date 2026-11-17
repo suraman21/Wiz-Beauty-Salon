@@ -16,7 +16,12 @@ import { SiteLayout } from "@/components/site/SiteChrome";
 import { Button } from "@/components/ui/button";
 import { ApiError } from "@/lib/api";
 import { recoverBookings, type RecoverBooking } from "@/lib/booking-api";
-import { formatEthiopian, formatEthiopianClock, formatGregorian } from "@/lib/ethiopian-calendar";
+import {
+  formatEthiopian,
+  formatEthiopianClock,
+  formatGregorian,
+  gregorianClockLabel,
+} from "@/lib/ethiopian-calendar";
 
 export const Route = createFileRoute("/booking_/recover")({
   head: () => ({
@@ -347,8 +352,12 @@ function ManageBookingPage() {
                             >
                               <span>{fmtDate(b.booking_date)}</span> <span aria-hidden>·</span>{" "}
                               <span>
-                                {formatEthiopianClock(b.start_time)}–
-                                {formatEthiopianClock(b.end_time)}
+                                {formatEthiopianClock(b.start_time, { gregorian: false })}–
+                                {formatEthiopianClock(b.end_time, { gregorian: false })}
+                              </span>
+                              <span>
+                                ({gregorianClockLabel(b.start_time)} –{" "}
+                                {gregorianClockLabel(b.end_time)})
                               </span>
                             </p>
                           </div>

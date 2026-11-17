@@ -119,13 +119,18 @@ final class EthiopianDateTest extends TestCase
             self::assertSame($case['minute'], $clock['minute'], 'minute: ' . $case['time']);
             self::assertSame($case['period'], $clock['period'], 'period: ' . $case['time']);
             self::assertSame(
-                $case['label'] . ' (' . $case['time'] . ')',
-                EthiopianDate::formatClock($case['time']),
-                'short clock: ' . $case['time'],
+                $case['label'],
+                EthiopianDate::formatClock($case['time'], false),
+                'Ethiopian clock alone: ' . $case['time'],
             );
             self::assertSame(
-                $case['full'] . ' (' . $case['time'] . ')',
-                EthiopianDate::formatClock($case['time'], true),
+                $case['meridiem'],
+                $clock['meridiem'],
+                'AM/PM: ' . $case['time'],
+            );
+            self::assertSame(
+                $case['full'],
+                EthiopianDate::formatClock($case['time']),
                 'full clock: ' . $case['time'],
             );
         }
@@ -175,6 +180,20 @@ final class EthiopianDateTest extends TestCase
         self::assertSame('2100-09-12', EthiopianDate::newYear(2093)->format(self::ISO));
         self::assertSame(['year' => 2092, 'month' => 13, 'day' => 5], EthiopianDate::toEthiopian('2100-09-11'));
         self::assertSame(['year' => 2093, 'month' => 1, 'day' => 1], EthiopianDate::toEthiopian('2100-09-12'));
+    }
+
+    public function testTheGregorianTimeIsAlwaysTwelveHour(): void
+    {
+        // A customer should never meet "17:00" or "20:00" anywhere.
+        self::assertSame("9 o'clock AM", EthiopianDate::gregorianClockLabel('09:00'));
+        self::assertSame("12 o'clock AM", EthiopianDate::gregorianClockLabel('00:00'));
+        self::assertSame("12 o'clock PM", EthiopianDate::gregorianClockLabel('12:00'));
+        self::assertSame("5 o'clock PM", EthiopianDate::gregorianClockLabel('17:00'));
+        self::assertSame("8 o'clock PM", EthiopianDate::gregorianClockLabel('20:00'));
+        // "9:30 o'clock" is not English, so minutes keep the plain form.
+        self::assertSame('9:30 AM', EthiopianDate::gregorianClockLabel('09:30'));
+        self::assertSame('7:45 PM', EthiopianDate::gregorianClockLabel('19:45'));
+        self::assertSame('Closed', EthiopianDate::gregorianClockLabel('Closed'));
     }
 
     public function testPagumeSixExistsOnceEveryFourYearsAndOnlyThen(): void
@@ -312,11 +331,17 @@ final class EthiopianDateTest extends TestCase
 
     public function testClockLabelsAndRanges(): void
     {
-        self::assertSame('3:00 ሰዓት (09:00)', EthiopianDate::formatClock('09:00'));
-        self::assertSame('3:00 ሰዓት ጠዋት (09:00)', EthiopianDate::formatClock('09:00', true));
-        self::assertSame('7:00 ሰዓት (13:00)', EthiopianDate::formatClock('13:00'));
-        self::assertSame('3:00 ጠዋት – 2:00 ማታ (09:00 – 20:00)', EthiopianDate::formatClockRange('09:00', '20:00'));
-        self::assertSame('8:00 ከሰዓት – 4:00 ማታ (14:00 – 22:00)', EthiopianDate::formatClockRange('14:00', '22:00'));
+        self::assertSame("3:00 ጠዋት (9 o'clock AM)", EthiopianDate::formatClock('09:00'));
+        self::assertSame('3:00 ጠዋት', EthiopianDate::formatClock('09:00', false));
+        self::assertSame("7:00 ከሰዓት (1 o'clock PM)", EthiopianDate::formatClock('13:00'));
+        self::assertSame(
+            "3:00 ጠዋት – 2:00 ማታ (9 o'clock AM – 8 o'clock PM)",
+            EthiopianDate::formatClockRange('09:00', '20:00'),
+        );
+        self::assertSame(
+            "8:00 ከሰዓት – 4:00 ማታ (2 o'clock PM – 10 o'clock PM)",
+            EthiopianDate::formatClockRange('14:00', '22:00'),
+        );
         // Unreadable input is printed as it came, never swallowed.
         self::assertSame('Closed', EthiopianDate::formatClock('Closed'));
         self::assertSame('nope – 20:00', EthiopianDate::formatClockRange('nope', '20:00'));

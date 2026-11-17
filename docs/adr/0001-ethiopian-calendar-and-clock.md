@@ -26,14 +26,26 @@ announced over the phone could be written down as the wrong day.
 2. **Everything a person reads is Ethiopian.** The Ethiopian date is derived
    from the stored Gregorian value at render time — in the browser via
    `src/lib/ethiopian-calendar.ts`, in the panel via `Wiz\Support\EthiopianDate`.
-3. **Times are shown on the Ethiopian clock, with the 24-hour time in
-   brackets**: `3:00 ሰዓት (09:00)`. Ethiopian 12 o'clock is 06:00.
-4. **The panel's date inputs stay Gregorian.** A native `<input type="date">`
-   submits `YYYY-MM-DD`; converting it would mean a second Ethiopian
-   implementation in JavaScript and a picker that fights the browser. The
-   Ethiopian reading is shown immediately beside the field ("Today is Hidar 8,
-   2019 EC") and on every screen that displays the saved value.
-5. **The API gained fields, it did not change any.** `ethiopian`, `label`,
+3. **Times are shown on the Ethiopian clock, with the Gregorian time beside it
+   in twelve-hour English**: `3:00 ጠዋት (9 o'clock AM)`. Ethiopian 12 o'clock is
+   06:00 — the day starts at dawn — so the Ethiopian dial shows twelve twice a
+   day and the period word (ጠዋት / ከሰዓት / ማታ / ሌሊት) is never dropped.
+   The Gregorian half is never printed as `17:00` or `20:00`: a customer should
+   not have to subtract twelve, and AM/PM alone does not say *which* twelve the
+   Ethiopian number meant. "o'clock" appears only on the hour, because
+   "9:30 o'clock" is not English. Narrow columns print the Ethiopian reading
+   alone and keep the full form one hover away.
+4. **The panel's date and time inputs stay Gregorian.** A native
+   `<input type="date">` submits `YYYY-MM-DD`; converting it would mean a second
+   Ethiopian implementation in JavaScript and a picker that fights the browser.
+   The Ethiopian reading is shown immediately beside the field ("Today is Hidar
+   8, 2019 EC") and on every screen that displays the saved value — including
+   the opening-hours table, which says what a saved row reads back as.
+5. **Nothing is a code the customer has to decode.** The booking calendar
+   prints the Ethiopian month in full ("Hidar", not "HID"), with the Gregorian
+   date under every cell rather than only in a tooltip, and both the date and
+   the time steps carry a short paragraph explaining how to read them.
+6. **The API gained fields, it did not change any.** `ethiopian`, `label`,
    `slots_ethiopian`, `booking_date_ec`, `start_time_label` are additive;
    `date`, `time`, `slots` are untouched. `POST /api/v1/bookings` additionally
    *accepts* `date_ec` (or `ethiopian_date`) and cross-checks it against `date`

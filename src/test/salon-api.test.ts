@@ -89,8 +89,8 @@ describe("opening hours rows", () => {
     );
 
     expect(hoursRows(hours)).toEqual([
-      { day: "Monday – Friday", time: "3:00 ጠዋት – 2:00 ማታ (09:00 – 20:00)" },
-      { day: "Saturday", time: "3:00 ጠዋት – 12:00 ማታ (09:00 – 18:00)" },
+      { day: "Monday – Friday", time: "3:00 ጠዋት – 2:00 ማታ (9 o'clock AM – 8 o'clock PM)" },
+      { day: "Saturday", time: "3:00 ጠዋት – 12:00 ማታ (9 o'clock AM – 6 o'clock PM)" },
       { day: "Sunday", time: "Closed" },
     ]);
   });
@@ -103,13 +103,13 @@ describe("opening hours rows", () => {
     });
 
     expect(hoursRows(hours)).toEqual([
-      { day: "Monday", time: "3:00 ጠዋት – 2:00 ማታ (09:00 – 20:00)" },
+      { day: "Monday", time: "3:00 ጠዋት – 2:00 ማታ (9 o'clock AM – 8 o'clock PM)" },
       // 11:00 is Ethiopian 5 o'clock, still morning — the period word keeps
       // the two halves of the day apart.
-      { day: "Tuesday", time: "5:00 ጠዋት – 2:00 ማታ (11:00 – 20:00)" },
-      { day: "Wednesday", time: "3:00 ጠዋት – 2:00 ማታ (09:00 – 20:00)" },
+      { day: "Tuesday", time: "5:00 ጠዋት – 2:00 ማታ (11 o'clock AM – 8 o'clock PM)" },
+      { day: "Wednesday", time: "3:00 ጠዋት – 2:00 ማታ (9 o'clock AM – 8 o'clock PM)" },
       { day: "Thursday", time: "Closed" },
-      { day: "Friday – Sunday", time: "3:00 ጠዋት – 2:00 ማታ (09:00 – 20:00)" },
+      { day: "Friday – Sunday", time: "3:00 ጠዋት – 2:00 ማታ (9 o'clock AM – 8 o'clock PM)" },
     ]);
   });
 
@@ -117,7 +117,7 @@ describe("opening hours rows", () => {
     const shuffled = [...week("10:00", "19:00")].reverse();
 
     expect(hoursRows(shuffled)).toEqual([
-      { day: "Monday – Sunday", time: "4:00 ጠዋት – 1:00 ማታ (10:00 – 19:00)" },
+      { day: "Monday – Sunday", time: "4:00 ጠዋት – 1:00 ማታ (10 o'clock AM – 7 o'clock PM)" },
     ]);
   });
 });

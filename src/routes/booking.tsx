@@ -18,10 +18,13 @@ import { useSiteImages } from "@/lib/site-content";
 import { bookingDetailsSchema } from "@/data/services";
 import { ApiError, isoToday } from "@/lib/api";
 import {
+  EC_MONTHS_EN,
   formatEthiopian,
   formatEthiopianClock,
   formatGregorian,
+  gregorianClockLabel,
   toEthiopian,
+  toEthiopianClock,
 } from "@/lib/ethiopian-calendar";
 import {
   createBooking,
@@ -87,6 +90,12 @@ const fmt = (iso: string) => {
 };
 
 /** The compact month and weekday the date cells have room for. */
+/**
+ * One date cell: the Ethiopian day is the headline, the Ethiopian month is
+ * spelled out in full (a three-letter "HID" beside seven neighbours reads as a
+ * code, not a month), and the Gregorian date sits underneath so nobody has to
+ * hover to find out which day of the salon's calendar they just picked.
+ */
 const cellParts = (iso: string) => {
   const date = parseIso(iso);
   const ethiopian = toEthiopian(date);
@@ -94,7 +103,9 @@ const cellParts = (iso: string) => {
   return {
     weekday: date.toLocaleDateString("en-GB", { weekday: "short" }),
     day: ethiopian === null ? date.getDate() : ethiopian.day,
-    month: formatEthiopian(iso, "medium", "").split(" ")[0] ?? "",
+    month: ethiopian === null ? "" : EC_MONTHS_EN[ethiopian.month],
+    monthAm: ethiopian === null ? "" : (formatEthiopian(iso, "amharic", "").split(" ")[0] ?? ""),
+    gregorian: date.toLocaleDateString("en-GB", { day: "numeric", month: "short" }),
     title: fmt(iso),
   };
 };
@@ -457,17 +468,27 @@ function Booking() {
                             className={`date-cell h-auto rounded-none ${date === day.date ? "is-selected" : ""} ${full ? "is-full" : ""}`}
                             onClick={() => chooseDate(day)}
                           >
-                            <span>{cell.weekday}</span>
+                            <span className="date-cell__weekday">{cell.weekday}</span>
                             <strong>{cell.day}</strong>
-                            <span>{cell.month}</span>
+                            <span className="date-cell__month">{cell.month}</span>
+                            <span className="date-cell__gregorian">{cell.gregorian}</span>
                           </Button>
                         );
                       })}
                     </div>
-                    <span className="demo-note">
-                      Days are in the Ethiopian calendar (ዓ.ም); the salon&rsquo;s Gregorian date is
-                      in each cell&rsquo;s tooltip. Days the salon is closed are greyed out.
-                    </span>
+                    <div className="calendar-note">
+                      <p>
+                        <strong>Reading these dates.</strong> The big number is the day in the
+                        Ethiopian calendar, the one the salon books by; the month is written out in
+                        full and its Amharic name is in the tooltip. The small grey date underneath
+                        is the same day on the Gregorian calendar your phone uses.
+                      </p>
+                      <p>
+                        Greyed cells are days the salon is closed, or days we cannot fill in time.
+                        Today is {formatEthiopian(isoToday(), "long", "")}{" "}
+                        <span className="calendar-note__gc">({formatGregorian(isoToday())})</span>.
+                      </p>
+                    </div>
                   </>
                 )}
               </>
@@ -489,11 +510,14 @@ function Booking() {
                         type="button"
                         role="radio"
                         aria-checked={time === t}
+                        aria-label={formatEthiopianClock(t)}
                         key={t}
-                        className={`chip h-auto rounded-none ${time === t ? "is-active" : ""}`}
+                        className={`chip chip--time h-auto rounded-none ${time === t ? "is-active" : ""}`}
                         onClick={() => setTime(t)}
                       >
-                        <Clock3 size={14} /> {formatEthiopianClock(t)}
+                        <Clock3 size={14} />
+                        <span className="chip__ethiopian">{toEthiopianClock(t)?.label ?? t}</span>
+                        <span className="chip__gregorian">{gregorianClockLabel(t)}</span>
                       </Button>
                     ))}
                   </div>
@@ -505,10 +529,18 @@ function Booking() {
                     </button>
                   </p>
                 )}
-                <span className="demo-note">
-                  Times read on the Ethiopian clock, with the 24-hour time in brackets. They are
-                  still free right now; the salon confirms every request.
-                </span>
+                <div className="calendar-note">
+                  <p>
+                    <strong>Reading these times.</strong> The big time is the Ethiopian clock the
+                    salon keeps: the day starts at dawn, so Ethiopian 1 o&rsquo;clock is 7 in the
+                    morning and Ethiopian 12 o&rsquo;clock is noon. The small grey time underneath
+                    is the same moment on the Gregorian clock, with AM or PM.
+                  </p>
+                  <p>
+                    Every time listed is still free; the salon confirms each request by phone before
+                    it is fixed.
+                  </p>
+                </div>
               </>
             )}
 
@@ -762,7 +794,7 @@ function Summary({
       </div>
       <div>
         <span>Time</span>
-        <strong>{time === "" ? "—" : formatEthiopianClock(time, { withPeriod: true })}</strong>
+        <strong>{time === "" ? "—" : formatEthiopianClock(time)}</strong>
       </div>
       <div>
         <span>Name</span>

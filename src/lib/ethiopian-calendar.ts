@@ -307,7 +307,12 @@ export function currentEthiopianMonth(): number {
 /**
  * Ethiopian time runs twelve hours from dawn: 6:00 is Ethiopian 12 o'clock,
  * 7:00 is 1:00, noon is 6:00 and 6 in the evening is 12:00 again. The period
- * word (ጠዋት / ከሰዓት / ማታ / ሌሊት) is what tells the two twelves apart.
+ * word (ጠዋት / ከሰዓት / ማታ / ሌሊት) is what tells the two twelves apart, so it is
+ * never left off.
+ *
+ * The Gregorian time beside it is always twelve-hour as well — "9 o'clock AM",
+ * never "09:00" or "21:00": a customer reading a booking should not have to
+ * subtract twelve in their head.
  *
  * NOTE: the FKSS sources convert dates only. This clock is the salon's
  * addition, kept beside the ported maths so both live in one file.
@@ -316,9 +321,11 @@ export type EthiopianClock = {
   hour: number;
   minute: number;
   period: DayPeriod;
-  /** "3:00 ሰዓት" — Ethiopian o'clock, no period word. */
+  /** "AM" or "PM" — the Gregorian half of the day. */
+  meridiem: "AM" | "PM";
+  /** "3:00 ጠዋት" — the Ethiopian clock with its period word. */
   label: string;
-  /** "3:00 ሰዓት ጠዋት" — Ethiopian o'clock with the period word. */
+  /** "3:00 ጠዋት (9 o'clock AM)" — with the Gregorian reading beside it. */
   full: string;
 };
 
@@ -331,7 +338,32 @@ function periodFor(gregorianHour: number): DayPeriod {
 }
 
 /**
- * "09:00" → 3:00 ሰዓት ጠዋት. Accepts "09:00", "09:00:00" or "9:00".
+ * "09:00" → "9 o'clock AM"; "09:30" → "9:30 AM"; "17:00" → "5 o'clock PM".
+ *
+ * "o'clock" only appears on the hour, because "9:30 o'clock" is not English.
+ * Input that is not a time is returned untouched, so a closed day still reads
+ * "Closed" rather than becoming a guess.
+ */
+export function gregorianClockLabel(time: string): string {
+  const match = /^(\d{1,2}):(\d{2})(?::\d{2})?$/.exec(time.trim());
+
+  if (match === null) return time;
+
+  const hour24 = Number(match[1]);
+  const minute = Number(match[2]);
+
+  if (hour24 > 23 || minute > 59) return time;
+
+  const meridiem = hour24 < 12 ? "AM" : "PM";
+  const hour = hour24 % 12 === 0 ? 12 : hour24 % 12;
+
+  return minute === 0
+    ? `${hour} o'clock ${meridiem}`
+    : `${hour}:${String(minute).padStart(2, "0")} ${meridiem}`;
+}
+
+/**
+ * "09:00" → 3:00 ጠዋት (9 o'clock AM). Accepts "09:00", "09:00:00" or "9:00".
  * `null` when the string is not a time, so callers can show the raw value.
  */
 export function toEthiopianClock(time: string): EthiopianClock | null {
@@ -347,42 +379,41 @@ export function toEthiopianClock(time: string): EthiopianClock | null {
   const raw = (gregorianHour + 6) % 12;
   const hour = raw === 0 ? 12 : raw;
   const period = periodFor(gregorianHour);
-  const label = `${hour}:${String(minute).padStart(2, "0")} ሰዓት`;
+  const meridiem = gregorianHour < 12 ? "AM" : "PM";
+  const label = `${hour}:${String(minute).padStart(2, "0")} ${period}`;
 
-  return { hour, minute, period, label, full: `${label} ${period}` };
+  return {
+    hour,
+    minute,
+    period,
+    meridiem,
+    label,
+    full: `${label} (${gregorianClockLabel(time)})`,
+  };
 }
 
 /**
  * The default reading everywhere a time is printed:
- *   "3:00 ሰዓት (09:00)"
- * An unreadable time is printed as it came — never swallowed.
+ *   "3:00 ጠዋት (9 o'clock AM)"
+ * `{ gregorian: false }` when the space is too narrow and the Ethiopian
+ * reading stands alone. An unreadable time is printed as it came.
  */
-export function formatEthiopianClock(time: string, options?: { withPeriod?: boolean }): string {
+export function formatEthiopianClock(time: string, options?: { gregorian?: boolean }): string {
   const clock = toEthiopianClock(time);
 
   if (clock === null) return time;
 
-  const ethiopian = options?.withPeriod === true ? clock.full : clock.label;
-
-  return `${ethiopian} (${time.slice(0, 5)})`;
+  return options?.gregorian === false ? clock.label : clock.full;
 }
 
-/**
- * "3:00 ጠዋት – 2:00 ማታ (09:00 – 20:00)" for a pair such as opening hours.
- *
- * Both ends carry their period word. A single time can lean on "ሰዓት" alone,
- * but in a range the first end would otherwise read as the wrong half of the
- * day ("8:00 – 4:00 ማታ" could be 8 in the morning or 8 in the evening), so the
- * range is spelled out in full and "ሰዓት" is left out to keep it short.
- */
 export function formatEthiopianClockRange(opensAt: string, closesAt: string): string {
   const from = toEthiopianClock(opensAt);
   const to = toEthiopianClock(closesAt);
 
   if (from === null || to === null) return `${opensAt} – ${closesAt}`;
 
-  const clock = (time: EthiopianClock) =>
-    `${time.hour}:${String(time.minute).padStart(2, "0")} ${time.period}`;
+  const ethiopian = (clock: EthiopianClock) =>
+    `${clock.hour}:${String(clock.minute).padStart(2, "0")} ${clock.period}`;
 
-  return `${clock(from)} – ${clock(to)} (${opensAt.slice(0, 5)} – ${closesAt.slice(0, 5)})`;
+  return `${ethiopian(from)} – ${ethiopian(to)} (${gregorianClockLabel(opensAt)} – ${gregorianClockLabel(closesAt)})`;
 }

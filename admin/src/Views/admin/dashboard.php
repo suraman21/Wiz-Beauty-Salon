@@ -83,8 +83,21 @@ $cards = [
             <ul class="timeline timeline--schedule">
                 <?php foreach ($today as $appointment): ?>
                     <?php $state = BookingStatus::tryFrom((string) $appointment['status']); ?>
+                    <?php
+                    $startTime = substr((string) $appointment['start_time'], 0, 5);
+                    $clock = \Wiz\Support\EthiopianDate::clock($startTime);
+                    ?>
                     <li class="timeline__item">
-                        <span class="schedule__time" title="<?= e(substr((string) $appointment['start_time'], 0, 5)) ?>"><?= e(ethiopian_clock_label(substr((string) $appointment['start_time'], 0, 5))) ?></span>
+                        <span class="schedule__time" title="<?= e(ethiopian_clock($startTime)) ?>">
+                            <?php if ($clock === null): ?>
+                                <strong><?= e($startTime) ?></strong>
+                            <?php else: ?>
+                                <strong><?= e(ethiopian_clock_label($startTime)) ?></strong>
+                                <span class="schedule__time-gc">
+                                    <?= e(\Wiz\Support\EthiopianDate::gregorianClockLabel($startTime)) ?>
+                                </span>
+                            <?php endif; ?>
+                        </span>
                         <div class="schedule__body">
                             <p class="timeline__text">
                                 <a href="/admin/bookings/<?= (int) $appointment['id'] ?>"><?= e($appointment['customer_name']) ?></a>

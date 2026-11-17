@@ -8,7 +8,12 @@
     "keeping the file outside both trees. Add vectors here, never in one language only.",
     "",
     "The 2091/2092/2093 entries pin the behaviour across Gregorian 2100, which is not",
-    "a leap year while Ethiopian 2092 is a full 365-day year starting on 12 September."
+    "a leap year while Ethiopian 2092 is a full 365-day year starting on 12 September.",
+    "",
+    "Clock entries pin three rules at once: the Ethiopian hour (Gregorian + 6, on a",
+    "twelve-hour dial), the period word (ጠዋት / ከሰዓት / ማታ / ሌሊት) which is never dropped,",
+    "and the Gregorian reading beside it in twelve-hour English (\"9 o'clock AM\", never",
+    "09:00 or 21:00). \"o'clock\" only appears on the hour."
   ],
   "conversions": [
     {
@@ -159,104 +164,126 @@
       "hour": 6,
       "minute": 0,
       "period": "ሌሊት",
-      "label": "6:00 ሰዓት",
-      "full": "6:00 ሰዓት ሌሊት"
+      "meridiem": "AM",
+      "label": "6:00 ሌሊት",
+      "full": "6:00 ሌሊት (12 o'clock AM)"
     },
     {
       "time": "00:30",
       "hour": 6,
       "minute": 30,
       "period": "ሌሊት",
-      "label": "6:30 ሰዓት",
-      "full": "6:30 ሰዓት ሌሊት"
+      "meridiem": "AM",
+      "label": "6:30 ሌሊት",
+      "full": "6:30 ሌሊት (12:30 AM)"
     },
     {
       "time": "05:59",
       "hour": 11,
       "minute": 59,
       "period": "ሌሊት",
-      "label": "11:59 ሰዓት",
-      "full": "11:59 ሰዓት ሌሊት"
+      "meridiem": "AM",
+      "label": "11:59 ሌሊት",
+      "full": "11:59 ሌሊት (5:59 AM)"
     },
     {
       "time": "06:00",
       "hour": 12,
       "minute": 0,
       "period": "ጠዋት",
-      "label": "12:00 ሰዓት",
-      "full": "12:00 ሰዓት ጠዋት"
+      "meridiem": "AM",
+      "label": "12:00 ጠዋት",
+      "full": "12:00 ጠዋት (6 o'clock AM)"
     },
     {
       "time": "07:00",
       "hour": 1,
       "minute": 0,
       "period": "ጠዋት",
-      "label": "1:00 ሰዓት",
-      "full": "1:00 ሰዓት ጠዋት"
+      "meridiem": "AM",
+      "label": "1:00 ጠዋት",
+      "full": "1:00 ጠዋት (7 o'clock AM)"
     },
     {
       "time": "09:00",
       "hour": 3,
       "minute": 0,
       "period": "ጠዋት",
-      "label": "3:00 ሰዓት",
-      "full": "3:00 ሰዓት ጠዋት"
+      "meridiem": "AM",
+      "label": "3:00 ጠዋት",
+      "full": "3:00 ጠዋት (9 o'clock AM)"
     },
     {
       "time": "11:59",
       "hour": 5,
       "minute": 59,
       "period": "ጠዋት",
-      "label": "5:59 ሰዓት",
-      "full": "5:59 ሰዓት ጠዋት"
+      "meridiem": "AM",
+      "label": "5:59 ጠዋት",
+      "full": "5:59 ጠዋት (11:59 AM)"
     },
     {
       "time": "12:00",
       "hour": 6,
       "minute": 0,
       "period": "ከሰዓት",
-      "label": "6:00 ሰዓት",
-      "full": "6:00 ሰዓት ከሰዓት"
+      "meridiem": "PM",
+      "label": "6:00 ከሰዓት",
+      "full": "6:00 ከሰዓት (12 o'clock PM)"
     },
     {
       "time": "13:00",
       "hour": 7,
       "minute": 0,
       "period": "ከሰዓት",
-      "label": "7:00 ሰዓት",
-      "full": "7:00 ሰዓት ከሰዓት"
+      "meridiem": "PM",
+      "label": "7:00 ከሰዓት",
+      "full": "7:00 ከሰዓት (1 o'clock PM)"
     },
     {
       "time": "17:59",
       "hour": 11,
       "minute": 59,
       "period": "ከሰዓት",
-      "label": "11:59 ሰዓት",
-      "full": "11:59 ሰዓት ከሰዓት"
+      "meridiem": "PM",
+      "label": "11:59 ከሰዓት",
+      "full": "11:59 ከሰዓት (5:59 PM)"
     },
     {
       "time": "18:00",
       "hour": 12,
       "minute": 0,
       "period": "ማታ",
-      "label": "12:00 ሰዓት",
-      "full": "12:00 ሰዓት ማታ"
+      "meridiem": "PM",
+      "label": "12:00 ማታ",
+      "full": "12:00 ማታ (6 o'clock PM)"
     },
     {
       "time": "20:00",
       "hour": 2,
       "minute": 0,
       "period": "ማታ",
-      "label": "2:00 ሰዓት",
-      "full": "2:00 ሰዓት ማታ"
+      "meridiem": "PM",
+      "label": "2:00 ማታ",
+      "full": "2:00 ማታ (8 o'clock PM)"
     },
     {
       "time": "23:59",
       "hour": 5,
       "minute": 59,
       "period": "ማታ",
-      "label": "5:59 ሰዓት",
-      "full": "5:59 ሰዓት ማታ"
+      "meridiem": "PM",
+      "label": "5:59 ማታ",
+      "full": "5:59 ማታ (11:59 PM)"
+    },
+    {
+      "time": "14:30",
+      "hour": 8,
+      "minute": 30,
+      "period": "ከሰዓት",
+      "meridiem": "PM",
+      "label": "8:30 ከሰዓት",
+      "full": "8:30 ከሰዓት (2:30 PM)"
     }
   ],
   "formats": [

@@ -1183,7 +1183,7 @@ a.nav__item:hover { background: rgba(255, 255, 255, .06); color: #fff; }
 
 .booking-row {
     display: grid;
-    grid-template-columns: 74px minmax(0, 1.1fr) minmax(0, 1fr) auto auto;
+    grid-template-columns: 132px minmax(0, 1.1fr) minmax(0, 1fr) auto auto;
     gap: 16px;
     align-items: center;
     padding: 13px 16px;
@@ -1206,6 +1206,17 @@ a.nav__item:hover { background: rgba(255, 255, 255, .06); color: #fff; }
     font-size: 11px;
     font-weight: 400;
     color: var(--muted);
+}
+
+.booking-row__time-gc {
+    display: block;
+    margin-top: 2px;
+    font-size: 10.5px;
+    font-weight: 400;
+    line-height: 1.35;
+    color: var(--muted);
+    white-space: normal;
+    overflow-wrap: break-word;
 }
 
 .booking-row__who { min-width: 0; }
@@ -1706,17 +1717,38 @@ summary:focus-visible {
 
 .attention__label { flex: 1 1 auto; font-size: 13.5px; color: var(--ink-soft); }
 
-.timeline--schedule .timeline__item { align-items: flex-start; }
-
-.schedule__time {
-    flex: 0 0 52px;
-    font-size: 13px;
-    font-weight: 650;
-    color: var(--brand-dark);
-    font-variant-numeric: tabular-nums;
+/* The schedule row has a time where the timeline has a dot, so it needs its own
+   columns — inheriting the 14px dot column is what made the time print on top
+   of the customer's name. */
+.timeline--schedule .timeline__item {
+    grid-template-columns: 74px minmax(0, 1fr);
+    column-gap: 12px;
+    align-items: start;
 }
 
-.schedule__body { flex: 1 1 auto; min-width: 0; }
+.schedule__time {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    padding-top: 1px;
+    font-size: 13px;
+    font-weight: 650;
+    line-height: 1.25;
+    color: var(--brand-dark);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.schedule__time strong { font-weight: 650; }
+
+.schedule__time-gc {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--muted);
+    letter-spacing: 0;
+}
+
+.schedule__body { min-width: 0; }
 
 .schedule__body .timeline__time { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 

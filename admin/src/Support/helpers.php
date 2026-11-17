@@ -146,24 +146,28 @@ if (!function_exists('ethiopian_date')) {
 
 if (!function_exists('ethiopian_clock')) {
     /**
-     * "3:00 ሰዓት (09:00)" — the Ethiopian clock, with the 24-hour time the
-     * salon sets and the database stores in brackets beside it.
+     * "3:00 ጠዋት (9 o'clock AM)" — the Ethiopian clock with its period word,
+     * and the Gregorian time in twelve-hour English beside it.
+     *
+     * Pass false as the second argument for the Ethiopian reading alone, in a
+     * column too narrow for both halves.
      */
-    function ethiopian_clock(?string $time, bool $withPeriod = false, string $fallback = '—'): string
+    function ethiopian_clock(?string $time, bool $withGregorian = true, string $fallback = '—'): string
     {
         if ($time === null || trim($time) === '') {
             return $fallback;
         }
 
-        return \Wiz\Support\EthiopianDate::formatClock($time, $withPeriod);
+        return \Wiz\Support\EthiopianDate::formatClock($time, $withGregorian);
     }
 }
 
 if (!function_exists('ethiopian_clock_label')) {
     /**
-     * Just "3:00 ሰዓት" — for the narrow columns (booking rows, the dashboard
-     * schedule) where the 24-hour cross-check would wrap onto four lines. Drop
-     * it into a title attribute instead so it is still one hover away.
+     * Just "3:00 ጠዋት" — for the narrow columns (booking rows, the dashboard
+     * schedule) where the Gregorian reading beside it would wrap onto a second
+     * line. Pair it with gregorian_clock_label() underneath, or drop the full
+     * reading into a title attribute so it is still one hover away.
      */
     function ethiopian_clock_label(?string $time, string $fallback = '—'): string
     {
@@ -176,7 +180,9 @@ if (!function_exists('ethiopian_clock_label')) {
 }
 
 if (!function_exists('ethiopian_clock_range')) {
-    /** "3:00 ጠዋት – 2:00 ማታ (09:00 – 20:00)" for opening hours. */
+    /**
+     * "3:00 ጠዋት – 2:00 ማታ (9 o'clock AM – 8 o'clock PM)" for opening hours.
+     */
     function ethiopian_clock_range(?string $opensAt, ?string $closesAt, string $fallback = 'Closed'): string
     {
         if ($opensAt === null || $closesAt === null || trim($opensAt) === '' || trim($closesAt) === '') {

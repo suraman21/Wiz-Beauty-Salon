@@ -340,14 +340,17 @@ final class EthiopianDate
     // ─────────────────────────── the clock ───────────────────────────
 
     /**
-     * Ethiopian time runs twelve hours from dawn: 6:00 is 12 o'clock, 7:00 is
-     * 1:00, noon is 6:00, and 6 in the evening is 12:00 again. The period word
-     * is what tells the two twelves apart.
+     * "09:00" → 3:00 ጠዋት (9 o'clock AM).
+     *
+     * Two rules the panel depends on. The period word (ጠዋት / ከሰዓት / ማታ / ሌሊት)
+     * is never dropped: the Ethiopian dial shows twelve twice a day, so the word
+     * is what tells them apart. And the Gregorian time beside it is always
+     * twelve-hour English — "17:00" makes a customer count backwards.
      *
      * NOTE: the FKSS sources convert dates only; the clock is the salon's
      * addition, kept beside the ported arithmetic so both live in one file.
      *
-     * @return array{hour: int, minute: int, period: string, label: string, full: string}|null
+     * @return array{hour: int, minute: int, period: string, meridiem: string, label: string, full: string}|null
      */
     public static function clock(string $time): ?array
     {
@@ -371,19 +374,50 @@ final class EthiopianDate
             default => 'ሌሊት',
         };
 
-        $label = sprintf('%d:%02d ሰዓት', $ethiopianHour, $minute);
+        $label = sprintf('%d:%02d %s', $ethiopianHour, $minute, $period);
 
         return [
             'hour' => $ethiopianHour,
             'minute' => $minute,
             'period' => $period,
+            'meridiem' => $hour < 12 ? 'AM' : 'PM',
             'label' => $label,
-            'full' => $label . ' ' . $period,
+            'full' => sprintf('%s (%s)', $label, self::gregorianClockLabel($time)),
         ];
     }
 
-    /** "3:00 ሰዓት (09:00)"; an unreadable time is printed as it came. */
-    public static function formatClock(string $time, bool $withPeriod = false): string
+    /**
+     * "09:00" → "9 o'clock AM"; "09:30" → "9:30 AM"; "17:00" → "5 o'clock PM".
+     *
+     * "o'clock" only appears on the hour — "9:30 o'clock" is not English. Input
+     * that is not a time comes back untouched, so "Closed" stays "Closed".
+     */
+    public static function gregorianClockLabel(string $time): string
+    {
+        if (preg_match('/^(\d{1,2}):(\d{2})(?::\d{2})?$/', trim($time), $m) !== 1) {
+            return $time;
+        }
+
+        $hour24 = (int) $m[1];
+        $minute = (int) $m[2];
+
+        if ($hour24 > 23 || $minute > 59) {
+            return $time;
+        }
+
+        $meridiem = $hour24 < 12 ? 'AM' : 'PM';
+        $hour = $hour24 % 12 === 0 ? 12 : $hour24 % 12;
+
+        return $minute === 0
+            ? sprintf("%d o'clock %s", $hour, $meridiem)
+            : sprintf('%d:%02d %s', $hour, $minute, $meridiem);
+    }
+
+    /**
+     * "3:00 ጠዋት (9 o'clock AM)"; an unreadable time is printed as it came.
+     * Pass false for the Ethiopian reading alone, in a column too narrow for both.
+     */
+    public static function formatClock(string $time, bool $withGregorian = true): string
     {
         $clock = self::clock($time);
 
@@ -391,14 +425,14 @@ final class EthiopianDate
             return $time;
         }
 
-        return sprintf('%s (%s)', $withPeriod ? $clock['full'] : $clock['label'], substr($time, 0, 5));
+        return $withGregorian ? $clock['full'] : $clock['label'];
     }
 
     /**
-     * "3:00 ጠዋት – 2:00 ማታ (09:00 – 20:00)".
+     * "3:00 ጠዋት – 2:00 ማታ (9 o'clock AM – 8 o'clock PM)".
      *
      * Both ends carry their period word: a bare first end would read as the
-     * wrong half of the day, and "ሰዓት" is dropped to keep the line short.
+     * wrong half of the day.
      */
     public static function formatClockRange(string $opensAt, string $closesAt): string
     {
@@ -417,8 +451,8 @@ final class EthiopianDate
             $to['hour'],
             $to['minute'],
             $to['period'],
-            substr($opensAt, 0, 5),
-            substr($closesAt, 0, 5),
+            self::gregorianClockLabel($opensAt),
+            self::gregorianClockLabel($closesAt),
         );
     }
 

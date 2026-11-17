@@ -9,6 +9,7 @@ import {
   formatEthiopianClock,
   formatEthiopianClockRange,
   formatGregorian,
+  gregorianClockLabel,
   isValidEthiopianDate,
   parseEthiopianIso,
   toEthiopian,
@@ -39,6 +40,7 @@ type Vectors = {
     hour: number;
     minute: number;
     period: string;
+    meridiem: string;
     label: string;
     full: string;
   }[];
@@ -243,11 +245,32 @@ describe("the Ethiopian clock", () => {
   });
 
   it("labels a time the way the salon says it", () => {
-    expect(toEthiopianClock("09:00")?.label).toBe("3:00 ሰዓት");
-    expect(toEthiopianClock("09:00")?.full).toBe("3:00 ሰዓት ጠዋት");
-    expect(formatEthiopianClock("09:00")).toBe("3:00 ሰዓት (09:00)");
-    expect(formatEthiopianClock("09:00", { withPeriod: true })).toBe("3:00 ሰዓት ጠዋት (09:00)");
-    expect(formatEthiopianClock("13:00")).toBe("7:00 ሰዓት (13:00)");
+    // The period word is never dropped, and the Gregorian reading beside it is
+    // twelve-hour: a customer should never meet "17:00".
+    expect(toEthiopianClock("09:00")?.label).toBe("3:00 ጠዋት");
+    expect(toEthiopianClock("09:00")?.full).toBe("3:00 ጠዋት (9 o'clock AM)");
+    expect(formatEthiopianClock("09:00")).toBe("3:00 ጠዋት (9 o'clock AM)");
+    expect(formatEthiopianClock("13:00")).toBe("7:00 ከሰዓት (1 o'clock PM)");
+    expect(formatEthiopianClock("09:00", { gregorian: false })).toBe("3:00 ጠዋት");
+  });
+
+  it("carries AM/PM beside the Ethiopian period word", () => {
+    expect(toEthiopianClock("00:00")?.meridiem).toBe("AM");
+    expect(toEthiopianClock("11:59")?.meridiem).toBe("AM");
+    expect(toEthiopianClock("12:00")?.meridiem).toBe("PM");
+    expect(toEthiopianClock("23:59")?.meridiem).toBe("PM");
+  });
+
+  it("writes the Gregorian time as o'clock, never as a 24-hour clock", () => {
+    expect(gregorianClockLabel("09:00")).toBe("9 o'clock AM");
+    expect(gregorianClockLabel("00:00")).toBe("12 o'clock AM");
+    expect(gregorianClockLabel("12:00")).toBe("12 o'clock PM");
+    expect(gregorianClockLabel("17:00")).toBe("5 o'clock PM");
+    expect(gregorianClockLabel("20:00")).toBe("8 o'clock PM");
+    // "9:30 o'clock" is not English, so minutes keep the plain form.
+    expect(gregorianClockLabel("09:30")).toBe("9:30 AM");
+    expect(gregorianClockLabel("19:45")).toBe("7:45 PM");
+    expect(gregorianClockLabel("Closed")).toBe("Closed");
   });
 
   it("passes through what it cannot parse", () => {
@@ -258,12 +281,16 @@ describe("the Ethiopian clock", () => {
   });
 
   it("prints a range such as opening hours", () => {
-    expect(formatEthiopianClockRange("09:00", "20:00")).toBe("3:00 ጠዋት – 2:00 ማታ (09:00 – 20:00)");
+    expect(formatEthiopianClockRange("09:00", "20:00")).toBe(
+      "3:00 ጠዋት – 2:00 ማታ (9 o'clock AM – 8 o'clock PM)",
+    );
     expect(formatEthiopianClockRange("09:00:00", "19:00:00")).toBe(
-      "3:00 ጠዋት – 1:00 ማታ (09:00 – 19:00)",
+      "3:00 ጠዋት – 1:00 ማታ (9 o'clock AM – 7 o'clock PM)",
     );
     // An afternoon opening cannot be mistaken for a morning one.
-    expect(formatEthiopianClockRange("14:00", "22:00")).toBe("8:00 ከሰዓት – 4:00 ማታ (14:00 – 22:00)");
+    expect(formatEthiopianClockRange("14:00", "22:00")).toBe(
+      "8:00 ከሰዓት – 4:00 ማታ (2 o'clock PM – 10 o'clock PM)",
+    );
     expect(formatEthiopianClockRange("nope", "20:00")).toBe("nope – 20:00");
   });
 });
@@ -300,6 +327,7 @@ describe("shared vectors: the clock", () => {
         hour: vector.hour,
         minute: vector.minute,
         period: vector.period,
+        meridiem: vector.meridiem,
         label: vector.label,
         full: vector.full,
         why: vector.time,

@@ -75,6 +75,11 @@ $short = static fn (mixed $time): string => $time === null ? '' : substr((string
             Appointment slots are <?= $grid ?> minutes apart · bookings need <?= $lead ?> minutes notice ·
             the calendar opens <?= $horizon ?> days ahead.
         </p>
+        <p class="card__note card__note--left">
+            Type these times on the Gregorian clock — the browser&rsquo;s own time picker, 09:00 to 19:00.
+            Every screen that shows them back reads them on the Ethiopian clock as well, for example
+            <strong><?= e(ethiopian_clock_range('09:00', '19:00')) ?></strong>.
+        </p>
     </section>
 
     <div class="side-stack">
