@@ -108,9 +108,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" className="js-reveal">
       <head>
+        {/* `async`, and that is the whole point: a classic script — inline or
+            not — waits for the stylesheet ahead of it, and on a slow connection
+            the stylesheet is precisely what is late. See public/boot.js. */}
+        <script src="/boot.js" async />
         <HeadContent />
+        <noscript>
+          {/* Without JavaScript at all there is no observer to wait for. */}
+          <style>{`.feeling-line,.feeling-rule,.story-line,.story-cols,.works .masonry-item,.visit .hours,.booking-inner .booking-title,.footer-top .footer-headline{opacity:1!important;animation:none!important;transform:none!important}`}</style>
+        </noscript>
       </head>
       <body>
         {children}
@@ -122,6 +130,12 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+
+  // The bundle is alive: the reveal animations may take their time again.
+  useEffect(() => {
+    const ready = (window as unknown as { __wizReady?: () => void }).__wizReady;
+    ready?.();
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>

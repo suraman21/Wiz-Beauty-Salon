@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { SmartImage } from "@/components/site/SmartImage";
 import { useEffect, useState } from "react";
 import { ArrowRight, Heart } from "lucide-react";
 import { BookingBand, PageHero, SiteLayout } from "@/components/site/SiteChrome";
@@ -50,6 +51,7 @@ function Services() {
   return (
     <SiteLayout>
       <PageHero
+        variant="services"
         overline="Our services"
         title={
           <>
@@ -92,7 +94,7 @@ function Services() {
               aria-label={`Book ${service.name}`}
             >
               <div className="svc-category-image">
-                <img src={service.image} alt={service.alt} loading="lazy" />
+                <SmartImage src={service.image} alt={service.alt} loading="lazy" />
                 <span className="svc-category-index">{String(index + 1).padStart(2, "0")}</span>
               </div>
               <div className="svc-category-body">

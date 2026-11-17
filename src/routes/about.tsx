@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { SmartImage } from "@/components/site/SmartImage";
 import { BookingBand, EditorialLink, PageHero, SiteLayout } from "@/components/site/SiteChrome";
 import { useSiteImages } from "@/lib/site-content";
 import { useReveal } from "@/lib/use-reveal";
@@ -46,6 +47,7 @@ function About() {
   return (
     <SiteLayout>
       <PageHero
+        variant="about"
         tone="mist"
         overline="About WIZ"
         title={
@@ -97,7 +99,7 @@ function About() {
           <style>{`.about-eyebrow,.about-split li,.about-split .editorial-link,.feeling-rule{opacity:1!important;animation:none!important;transform:none!important}.about-split figure,.about-bloom{opacity:1!important}`}</style>
         </noscript>
         <figure className="img-frame">
-          <img src={images.space.url} alt={images.space.alt} loading="lazy" />
+          <SmartImage src={images.space.url} alt={images.space.alt} loading="lazy" />
         </figure>
         <div className="about-split-copy">
           <span className="about-bloom" aria-hidden="true" />

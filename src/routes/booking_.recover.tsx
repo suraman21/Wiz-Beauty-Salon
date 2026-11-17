@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { SmartImage } from "@/components/site/SmartImage";
 import { useState } from "react";
 import {
   ArrowLeft,
@@ -98,9 +99,10 @@ function ManageBookingPage() {
       <section className="booking-page manage-page">
         <aside className="booking-visual">
           <div className="booking-visual-frame">
-            <img
+            <SmartImage
               src={heroPortrait}
               alt="WIZ Beauty Salon"
+              loading="eager"
               style={{ objectFit: "cover", width: "100%", height: "100%" }}
             />
           </div>

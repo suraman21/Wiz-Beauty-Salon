@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { SmartImage } from "@/components/site/SmartImage";
 import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { BeforeAfter, BookingBand, PageHero, SiteLayout } from "@/components/site/SiteChrome";
@@ -125,6 +126,7 @@ function Gallery() {
   return (
     <SiteLayout>
       <PageHero
+        variant="gallery"
         overline="Gallery"
         title={
           <>
@@ -182,7 +184,7 @@ function Gallery() {
                 onClick={() => setOpen(i)}
                 aria-label={`Open ${g.title}`}
               >
-                <img src={g.image} alt={g.alt} loading="lazy" />
+                <SmartImage src={g.image} alt={g.alt} loading="lazy" />
                 <span>{g.title}</span>
               </button>
             ))}
@@ -248,7 +250,7 @@ function Gallery() {
             <ChevronLeft />
           </button>
           <figure onClick={(e) => e.stopPropagation()}>
-            <img src={shown[open].image} alt={shown[open].alt} />
+            <SmartImage src={shown[open].image} alt={shown[open].alt} loading="eager" />
             <figcaption>{shown[open].title}</figcaption>
           </figure>
           <button

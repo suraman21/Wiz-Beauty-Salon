@@ -1,4 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
+import { SmartImage } from "@/components/site/SmartImage";
 import { useEffect, useState, type ReactNode } from "react";
 import { ArrowRight, CalendarDays, Menu, X } from "lucide-react";
 import logo from "@/assets/wiz-logo.png";
@@ -49,7 +50,14 @@ export function SiteHeader() {
         className="brand-mark"
         onClick={() => setOpen(false)}
       >
-        <img className="brand-logo" src={logo} alt="WIZ Beauty Salon" width={56} height={56} />
+        <SmartImage
+          className="brand-logo"
+          src={logo}
+          alt="WIZ Beauty Salon"
+          width={56}
+          height={56}
+          loading="eager"
+        />
         <span className="brand-wordmark">WIZ Beauty Salon</span>
       </Link>
       <nav className="desktop-nav" aria-label="Main navigation">
@@ -227,35 +235,50 @@ export function SiteLayout({ children }: { children: ReactNode }) {
  * slight over-scale, everything else rises behind it — and plays immediately,
  * because this is the first thing on the page.
  */
+export type HeroVariant = "about" | "gallery" | "services" | "contact";
+
 export function PageHero({
   overline,
   title,
   copy,
   tone = "plum",
   cta,
+  variant = "about",
 }: {
   overline: string;
   title: ReactNode;
   copy: string;
   tone?: "plum" | "mist";
   cta?: ReactNode;
+  /**
+   * Which cut of the photograph this page opens on. The picture is the same
+   * everywhere — the site should feel like one place — but the crop, the
+   * direction of the drift and the wash over it differ, so moving between
+   * pages is visibly a change rather than the same frame with new words.
+   */
+  variant?: HeroVariant;
 }) {
   return (
-    <section className={`page-hero page-hero-${tone}`} aria-labelledby="page-hero-title">
+    <section
+      className={`page-hero page-hero-${tone}`}
+      data-hero={variant}
+      aria-labelledby="page-hero-title"
+    >
       <noscript>
         <style>{`.hero-band-eyebrow,.hero-band-title,.hero-band-lede,.hero-band-cta{opacity:1!important;animation:none!important;transform:none!important}`}</style>
       </noscript>
 
       <div className="section-wrap">
         <div className="hero-band hero-band-hero">
-          <img
+          <SmartImage
             className="hero-band-image"
             src={heroArt.url}
-            alt=""
+            /* named rather than empty: if the picture never arrives, this is the
+               text the drawn placeholder puts in its place */
+            alt="WIZ salon portrait"
             width={heroArt.width}
             height={heroArt.height}
             loading="eager"
-            decoding="async"
             fetchPriority="high"
           />
           <span className="hero-band-veil" aria-hidden="true" />
@@ -346,9 +369,9 @@ export function BeforeAfter({
   const [v, setV] = useState(50);
   return (
     <div className="comparison" aria-label={label}>
-      <img src={after} alt="After" loading="lazy" />
+      <SmartImage src={after} alt="After" loading="lazy" />
       <div className="comparison-before" style={{ width: `${v}%` }}>
-        <img src={before} alt="Before" loading="lazy" />
+        <SmartImage src={before} alt="Before" loading="lazy" />
       </div>
       <span className="comparison-label comparison-label-before">BEFORE</span>
       <span className="comparison-label comparison-label-after">AFTER</span>

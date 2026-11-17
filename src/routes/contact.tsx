@@ -123,6 +123,7 @@ function Contact() {
   return (
     <SiteLayout>
       <PageHero
+        variant="contact"
         tone="mist"
         overline="Contact"
         title={

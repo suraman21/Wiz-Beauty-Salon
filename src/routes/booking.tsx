@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { SmartImage } from "@/components/site/SmartImage";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
@@ -380,7 +381,12 @@ function Booking() {
       <section className="booking-page">
         <aside className="booking-visual">
           <div className="booking-visual-frame">
-            <img src={images.portrait.url} alt={images.portrait.alt} fetchPriority="high" />
+            <SmartImage
+              src={images.portrait.url}
+              alt={images.portrait.alt}
+              loading="eager"
+              fetchPriority="high"
+            />
           </div>
           <div className="booking-visual-copy">
             <span className="overline">Book your moment</span>

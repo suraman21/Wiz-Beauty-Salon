@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { SmartImage } from "@/components/site/SmartImage";
 import { useEffect, useState, type CSSProperties } from "react";
 import { ArrowRight, CalendarDays, ChevronDown, Play } from "lucide-react";
 import { BeforeAfter, BookingBand, EditorialLink, SiteLayout } from "@/components/site/SiteChrome";
@@ -76,12 +77,13 @@ function Home() {
         aria-labelledby="hero-title"
         style={{ "--hero-art": `url(${heroArt.url})` } as CSSProperties}
       >
-        <img
+        <SmartImage
           className="home-hero-image"
           src={heroArt.url}
           alt={heroArt.alt}
           width={heroArt.width}
           height={heroArt.height}
+          loading="eager"
           fetchPriority="high"
         />
         <div className="home-hero-shade" />
@@ -198,7 +200,7 @@ function Home() {
                 style={{ "--i": i } as CSSProperties}
               >
                 <div className="service-card-media">
-                  <img src={c.image} alt={c.alt} loading="lazy" />
+                  <SmartImage src={c.image} alt={c.alt} loading="lazy" />
                   <span className="service-card-sheen" aria-hidden="true" />
                   <span className="service-card-index">{String(i + 1).padStart(2, "0")}</span>
                 </div>
@@ -246,19 +248,19 @@ function Home() {
               className="gallery-one gallery-figure img-frame"
               style={{ "--i": 0 } as CSSProperties}
             >
-              <img src={mood[0]?.url} alt={mood[0]?.alt} loading="lazy" />
+              <SmartImage src={mood[0]?.url} alt={mood[0]?.alt} loading="lazy" />
             </figure>
             <figure
               className="gallery-two gallery-figure img-frame"
               style={{ "--i": 1 } as CSSProperties}
             >
-              <img src={mood[1]?.url} alt={mood[1]?.alt} loading="lazy" />
+              <SmartImage src={mood[1]?.url} alt={mood[1]?.alt} loading="lazy" />
             </figure>
             <figure
               className="gallery-three gallery-figure img-frame"
               style={{ "--i": 2 } as CSSProperties}
             >
-              <img src={mood[2]?.url} alt={mood[2]?.alt} loading="lazy" />
+              <SmartImage src={mood[2]?.url} alt={mood[2]?.alt} loading="lazy" />
             </figure>
             <span className="gallery-word" aria-hidden="true">
               WIZ
