@@ -27,7 +27,14 @@ async function grab(w, h, tag) {
     });
 
     console.log(tag, name, JSON.stringify(info));
-    await hero.screenshot({ path: `${OUT}/hero-${name}${tag === "mob" ? "-mobile" : ""}.png` });
+    // a clipped page screenshot, not an element screenshot: the hero's picture is
+    // on its own composited layer (it is animating), and an element capture of an
+    // animating layer can come back without it
+    const box = await hero.boundingBox();
+    await pg.screenshot({
+      path: `${OUT}/hero-${name}${tag === "mob" ? "-mobile" : ""}.png`,
+      clip: box,
+    });
     await pg.close();
   }
 

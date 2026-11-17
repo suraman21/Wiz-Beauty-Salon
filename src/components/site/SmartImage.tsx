@@ -177,9 +177,13 @@ export function SmartImage({
     return () => window.clearTimeout(timer);
   }, [status, attempt, retries, retryDelay, src, empty]);
 
+  // The stand-in is for when there is nothing better to show; once a picture has
+  // loaded — whether through the element itself or through a retry — that is
+  // what the box shows.
+  const standIn = status === "retrying" || status === "missing";
   const shown = empty
     ? placeholder(alt)
-    : (painted ?? (status === "loading" ? (src as string) : placeholder(alt)));
+    : (painted ?? (standIn ? placeholder(alt) : (src as string)));
 
   return (
     <img

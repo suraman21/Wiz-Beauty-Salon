@@ -36,6 +36,8 @@ describe("SmartImage", () => {
     });
 
     expect(img.className).toContain("is-loaded");
+    // the picture stays the picture: a load must not swap in the stand-in
+    expect(img.getAttribute("src")).toBe("/photo.jpg");
   });
 
   it("draws a stand-in the moment the picture fails, never a broken icon", () => {
