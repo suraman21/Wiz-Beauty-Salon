@@ -45,9 +45,11 @@ final class ChangePolicy
      */
     public function hours(): int
     {
+        // SettingsRepository::get() never returns null — it falls back to the
+        // default it was given — so an unset key arrives as an empty string.
         $stored = $this->settings->get(self::SETTING, '');
 
-        if ($stored === '' || $stored === null) {
+        if ($stored === '') {
             return self::DEFAULT_HOURS;
         }
 

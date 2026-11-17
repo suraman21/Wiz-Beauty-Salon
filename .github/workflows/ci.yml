@@ -137,7 +137,13 @@ jobs:
     name: Security — dependency scans
     runs-on: ubuntu-latest
     steps:
+      # Full history: a secret scan over a shallow clone cannot walk the
+      # commits it is asked about. With depth 1, gitleaks resolves its base to
+      # a revision the checkout does not have, scans nothing, and exits 1 — a
+      # failing gate that inspected zero bytes.
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: oven-sh/setup-bun@v2
         with:
