@@ -7096,6 +7096,7 @@ body {
 
 .gallery-composition {
   position: relative;
+  container-type: inline-size;
   height: clamp(30rem, 58vw, 46rem);
   display: grid;
   grid-template-columns: 1.05fr 1.1fr 0.67fr;
@@ -7143,7 +7144,8 @@ body {
   margin: 0 0 -0.06em clamp(0.4rem, 1.4vw, 1.4rem);
   pointer-events: none;
   font-family: "Bodoni Moda", "Playfair Display", var(--font-display);
-  font-size: clamp(3.5rem, 10.2vw, 9.25rem);
+  /* sized to its quadrant: the name fills the space beside the photographs */
+  font-size: clamp(3.5rem, 17.5cqi, 20rem);
   line-height: 0.74;
   letter-spacing: 0.01em;
   background-image: linear-gradient(96deg, rgba(255, 255, 255, 0.95), rgba(255, 167, 236, 0.55) 82%);
@@ -7231,7 +7233,7 @@ body {
     text-align: left;
   }
   .gallery-word {
-    left: 18%;
+    left: 0;
   }
 }
 
@@ -7273,7 +7275,7 @@ body {
     grid-row: 3;
     place-self: start;
     margin: 0.7rem 0 0 0.15rem;
-    font-size: clamp(3.2rem, 17vw, 5rem);
+    font-size: clamp(3.2rem, 47cqi, 12rem);
   }
 }
 
