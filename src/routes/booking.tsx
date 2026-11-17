@@ -15,7 +15,7 @@ import {
 import { z } from "zod";
 import { SiteLayout } from "@/components/site/SiteChrome";
 import { Button } from "@/components/ui/button";
-import { useSiteImages } from "@/lib/site-content";
+import { useBookingPolicy, useSiteImages } from "@/lib/site-content";
 import { bookingDetailsSchema } from "@/data/services";
 import { ApiError, isoToday } from "@/lib/api";
 import {
@@ -152,6 +152,7 @@ function Booking() {
   const [time, setTime] = useState("");
   const [details, setDetails] = useState<Details>(emptyDetails);
 
+  const policy = useBookingPolicy();
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [confirmed, setConfirmed] = useState<Confirmed | null>(null);
@@ -770,9 +771,16 @@ function Booking() {
                         <CalendarPlus size={14} /> Find this booking later
                       </Link>
                     </div>
-                    <p className="manage-policy">
-                      Free to change or cancel until 24 hours before your time. After that, please
-                      call the salon.
+                    <p className="manage-policy">{policy.summary}</p>
+                    <p className="manage-policy-note">
+                      <Link
+                        to="/booking/information"
+                        search={{ lang: "en" }}
+                        className="editorial-link"
+                        style={{ fontSize: "12.5px" }}
+                      >
+                        Read the booking terms <ArrowRight size={12} />
+                      </Link>
                     </p>
                   </div>
                 ) : (
@@ -853,6 +861,28 @@ function Booking() {
                   {submitting ? "Sending…" : "Request appointment"} <Check size={16} />
                 </Button>
               )}
+            </div>
+          )}
+
+          {/* The terms sit beside the button that accepts them, not in a footer:
+              a customer should be able to read what they are agreeing to at the
+              moment they agree to it — and read it in their own language. */}
+          {step === 4 && (
+            <div className="booking-terms-note">
+              <p>
+                By requesting this appointment you accept the salon's{" "}
+                <Link to="/booking/information" search={{ lang: "en" }}>
+                  booking terms
+                </Link>
+                . {policy.summary}
+              </p>
+              <p className="booking-terms-note__am">
+                ቀጠሮ በመጠየቅ የሳሎኑን{" "}
+                <Link to="/booking/information" search={{ lang: "am" }}>
+                  የቀጠሮ ደንቦች
+                </Link>{" "}
+                ተቀብለዋል።
+              </p>
             </div>
           )}
 

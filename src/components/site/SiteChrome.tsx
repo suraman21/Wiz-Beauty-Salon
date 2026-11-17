@@ -153,6 +153,9 @@ export function SiteFooter() {
             ))}
             <Link to="/booking">Booking</Link>
             <Link to="/booking/recover">Manage booking</Link>
+            <Link to="/booking/information" search={{ lang: "en" }}>
+              Booking terms
+            </Link>
           </nav>
           <FooterContact />
         </div>
@@ -235,7 +238,7 @@ export function SiteLayout({ children }: { children: ReactNode }) {
  * slight over-scale, everything else rises behind it — and plays immediately,
  * because this is the first thing on the page.
  */
-export type HeroVariant = "about" | "gallery" | "services" | "contact";
+export type HeroVariant = "about" | "gallery" | "services" | "contact" | "terms";
 
 export function PageHero({
   overline,

@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  FALLBACK_POLICY,
   closureLabel,
   fetchSalon,
   hasDetails,
@@ -164,5 +165,36 @@ describe("closure labels", () => {
 
   it("still shows an unreadable date as it came", () => {
     expect(closureLabel({ from: "not-a-date", to: "not-a-date", reason: "" })).toBe("not-a-date");
+  });
+  it("carries the change window the salon set", async () => {
+    const policy = {
+      change_window_hours: 48,
+      has_cut_off: true,
+      hours_label: "48 hours",
+      summary: "Free to change or cancel up to 48 hours before your appointment.",
+      chip: "Changes close 48 hours before",
+    };
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(jsonResponse({ contact: {}, hours: [], closures: [], policy })),
+    );
+
+    const salon = await fetchSalon();
+
+    expect(salon.policy).toEqual(policy);
+  });
+
+  it("falls back to a day's notice when the API has no policy yet", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(jsonResponse({ contact: {}, hours: [], closures: [] })),
+    );
+
+    const salon = await fetchSalon();
+
+    // The booking page must never promise nothing: an older API, a failed
+    // request, or a half-written payload all read as the shipped rule.
+    expect(salon.policy).toEqual(FALLBACK_POLICY);
+    expect(salon.policy.summary).toContain("24 hours");
   });
 });

@@ -1155,6 +1155,17 @@ tokens it uses. */
   --hero-wash: rgba(246, 92, 196, 0.2);
 }
 
+/* Terms looks down at the gown and the hands — quiet, documentary, and slower
+   than any other page, because this is a page you read rather than admire. */
+.page-hero[data-hero="terms"] {
+  --hero-focus: 44% 62%;
+  --hero-from: 1.1;
+  --hero-to: 1.03;
+  --hero-pan: 0.9%;
+  --hero-drift-time: 48s;
+  --hero-wash: rgba(150, 120, 200, 0.14);
+}
+
 /* Contact steps back and looks at the flowers, the lilac side of the room. */
 .page-hero[data-hero="contact"] {
   --hero-focus: 30% 22%;
@@ -10039,3 +10050,405 @@ html.reveal-off .time-grid {
 
 /* The hero is not gated behind JavaScript at all: it plays from CSS on load.
    If the stylesheet itself is slow, the markup is still plain text. */
+
+/* ==========================================================================
+   Booking terms and information (/booking/information)
+   --------------------------------------------------------------------------
+   A document, not a landing page. Wide measure for the contents on the left,
+   a column of clauses on the right, and a language switch that swaps the whole
+   text rather than sitting in a corner as a footnote.
+   ========================================================================== */
+.terms-page {
+  background: var(--ivory);
+  padding-block: 88px 104px;
+}
+
+.terms-shell {
+  display: grid;
+  grid-template-columns: 268px minmax(0, 1fr);
+  gap: 64px;
+  align-items: start;
+}
+
+/* --- contents ------------------------------------------------------------ */
+.terms-toc {
+  position: sticky;
+  top: 96px;
+  font-size: 13px;
+}
+.terms-toc__label {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 10px;
+}
+.terms-toc ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  counter-reset: toc;
+}
+.terms-toc a {
+  display: flex;
+  gap: 10px;
+  padding: 7px 0;
+  color: var(--foreground);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+}
+.terms-toc a:hover,
+.terms-toc a:focus-visible {
+  color: var(--plum);
+  border-color: var(--lilac);
+}
+.terms-toc__num {
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted-foreground);
+  padding-top: 2px;
+  flex: none;
+}
+
+/* --- the document -------------------------------------------------------- */
+.terms-doc {
+  max-width: 74ch;
+}
+.terms-langbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 26px;
+}
+.terms-langbar__switch {
+  display: inline-flex;
+  padding: 3px;
+  gap: 3px;
+  background: var(--stone);
+  border-radius: 999px;
+}
+.terms-langbar__switch button {
+  min-height: 38px;
+  padding: 8px 18px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 650;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.terms-langbar__switch button.is-active {
+  background: var(--ink);
+  color: var(--ivory);
+}
+.terms-langbar__switch button:focus-visible {
+  outline: 2px solid var(--plum);
+  outline-offset: 2px;
+}
+.terms-print {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 8px 4px;
+  border: 0;
+  background: none;
+  color: var(--muted-foreground);
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+  border-bottom: 1px solid currentColor;
+}
+.terms-print:hover {
+  color: var(--ink);
+}
+
+.terms-lede {
+  font-size: 17px;
+  line-height: 1.7;
+  color: var(--foreground);
+  max-width: 62ch;
+}
+.terms-langnote {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 12px 14px;
+  background: var(--stone);
+  border-radius: var(--radius-md);
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--muted-foreground);
+}
+.terms-langnote svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--plum);
+}
+
+/* Amharic needs a little more room: the script is taller than Latin at the
+   same size, and the Ethiopic faces already declared on the theme take over. */
+.terms-doc--am {
+  font-family: "Noto Sans Ethiopic", "Noto Serif Ethiopic", var(--font-sans);
+}
+.terms-doc--am .terms-lede,
+.terms-doc--am .terms-clauses li {
+  line-height: 1.95;
+  letter-spacing: 0;
+}
+
+.terms-section {
+  margin-top: 46px;
+  scroll-margin-top: 96px;
+}
+.terms-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  font-family: var(--font-display);
+  font-size: clamp(21px, 2.4vw, 27px);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.terms-doc--am .terms-heading {
+  font-family: "Noto Serif Ethiopic", var(--font-display);
+  font-size: clamp(20px, 2.2vw, 25px);
+}
+.terms-heading__num {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: var(--lilac-deep);
+  flex: none;
+  padding-top: 4px;
+}
+.terms-clauses {
+  list-style: none;
+  margin: 18px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 14px;
+}
+.terms-clauses li {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 10px;
+  font-size: 15px;
+  line-height: 1.72;
+  color: var(--foreground);
+}
+.terms-clause__num {
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted-foreground);
+  padding-top: 5px;
+}
+
+.terms-foot {
+  margin-top: 48px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+.terms-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 22px;
+}
+.terms-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 12px 22px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 650;
+  text-decoration: none;
+}
+.terms-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  font-size: 12.5px;
+  color: var(--muted-foreground);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+}
+.terms-back:hover {
+  color: var(--ink);
+  border-color: currentColor;
+}
+
+/* --- closing band -------------------------------------------------------- */
+.terms-contact {
+  margin-top: 84px;
+  padding-block: 56px;
+  background: var(--stone);
+}
+.terms-contact__inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+.terms-contact h2 {
+  font-family: var(--font-display);
+  font-size: clamp(22px, 2.6vw, 30px);
+  font-weight: 500;
+}
+.terms-contact p {
+  margin-top: 8px;
+  max-width: 52ch;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--muted-foreground);
+}
+.terms-contact__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.terms-contact__actions .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 12px 22px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+/* --- responsive ---------------------------------------------------------- */
+@media (max-width: 1024px) {
+  .terms-shell {
+    grid-template-columns: 1fr;
+    gap: 34px;
+  }
+  .terms-toc {
+    position: static;
+  }
+  .terms-toc ol {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .terms-toc a {
+    padding: 9px 14px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--card);
+    font-size: 12.5px;
+  }
+  .terms-toc__num {
+    padding-top: 0;
+  }
+  .terms-doc {
+    max-width: none;
+  }
+}
+@media (max-width: 640px) {
+  .terms-page {
+    padding-block: 56px 72px;
+  }
+  .terms-clauses li {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+  .terms-clause__num {
+    padding-top: 0;
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
+  }
+  .terms-contact {
+    margin-top: 56px;
+    padding-block: 40px;
+  }
+  .terms-actions .btn,
+  .terms-contact__actions .btn {
+    width: 100%;
+  }
+}
+
+/* --- print --------------------------------------------------------------- */
+@media print {
+  .site-header,
+  .site-footer,
+  .terms-toc,
+  .terms-langbar,
+  .terms-contact,
+  .terms-actions {
+    display: none !important;
+  }
+  .terms-page {
+    padding: 0;
+  }
+  .terms-shell {
+    display: block;
+  }
+  .terms-doc {
+    max-width: none;
+  }
+  .terms-section {
+    break-inside: avoid;
+  }
+}
+
+/* The terms, offered where they are accepted: beside the submit button and on
+   the confirmation card, in English and in Amharic. */
+.booking-terms-note {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--card);
+  text-align: center;
+}
+.booking-terms-note p {
+  font-size: 12.5px;
+  line-height: 1.65;
+  color: var(--muted-foreground);
+  max-width: 58ch;
+  margin-inline: auto;
+}
+.booking-terms-note a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-weight: 600;
+}
+.booking-terms-note a:hover {
+  color: var(--plum);
+}
+.booking-terms-note__am {
+  margin-top: 6px;
+  font-family: "Noto Sans Ethiopic", var(--font-sans);
+}
+.manage-policy-note {
+  margin-top: 10px;
+}

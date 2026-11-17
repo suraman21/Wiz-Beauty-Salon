@@ -34,10 +34,35 @@ export type SalonHour = {
 
 export type SalonClosure = { from: string; to: string; reason: string };
 
+/**
+ * How late a customer may change or cancel — set in the panel, printed here.
+ *
+ * The sentence is written by the salon's setting on the server, so the website
+ * never holds a second copy of "24 hours" that could fall out of step with the
+ * booking page, the email, or the manage link.
+ */
+export type BookingPolicy = {
+  change_window_hours: number;
+  has_cut_off: boolean;
+  hours_label: string;
+  summary: string;
+  chip: string;
+};
+
+/** What the site said before the panel could answer: a day's notice. */
+export const FALLBACK_POLICY: BookingPolicy = {
+  change_window_hours: 24,
+  has_cut_off: true,
+  hours_label: "24 hours",
+  summary: "Free to change or cancel up to 24 hours before your appointment.",
+  chip: "Changes close 24 hours before",
+};
+
 export type SalonInfo = {
   contact: SalonContact;
   hours: SalonHour[];
   closures: SalonClosure[];
+  policy: BookingPolicy;
 };
 
 export type HoursRow = { day: string; time: string };
@@ -48,18 +73,21 @@ const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Frid
 const WEEK = [1, 2, 3, 4, 5, 6, 0];
 
 export function fetchSalon(signal?: AbortSignal): Promise<SalonInfo> {
-  return apiGet<Partial<SalonInfo>>("/api/v1/salon", signal).then((body) => ({
-    contact: {
-      phone: body.contact?.phone ?? "",
-      whatsapp: body.contact?.whatsapp ?? "",
-      email: body.contact?.email ?? "",
-      instagram: body.contact?.instagram ?? "",
-      tiktok: body.contact?.tiktok ?? "",
-      address: body.contact?.address ?? "",
-    },
-    hours: Array.isArray(body.hours) ? body.hours : [],
-    closures: Array.isArray(body.closures) ? body.closures : [],
-  }));
+  return apiGet<Partial<SalonInfo> & { policy?: BookingPolicy }>("/api/v1/salon", signal).then(
+    (body) => ({
+      contact: {
+        phone: body.contact?.phone ?? "",
+        whatsapp: body.contact?.whatsapp ?? "",
+        email: body.contact?.email ?? "",
+        instagram: body.contact?.instagram ?? "",
+        tiktok: body.contact?.tiktok ?? "",
+        address: body.contact?.address ?? "",
+      },
+      hours: Array.isArray(body.hours) ? body.hours : [],
+      closures: Array.isArray(body.closures) ? body.closures : [],
+      policy: body.policy?.summary ? body.policy : FALLBACK_POLICY,
+    }),
+  );
 }
 
 /**

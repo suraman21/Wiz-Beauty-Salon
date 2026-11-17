@@ -13,7 +13,7 @@
 import { useSyncExternalStore } from "react";
 import { images as bundled } from "@/data/wiz";
 import { apiGet } from "@/lib/api";
-import { fetchSalon, type SalonInfo } from "@/lib/salon-api";
+import { FALLBACK_POLICY, fetchSalon, type BookingPolicy, type SalonInfo } from "@/lib/salon-api";
 
 export type SiteImage = { url: string; alt: string };
 
@@ -111,4 +111,14 @@ export function useSiteImages(): SiteImageSet {
 
 export function useSalonInfo(): SalonInfo | null {
   return useSiteContent().salon;
+}
+
+/**
+ * The change/cancel window, in the salon's own words.
+ *
+ * The fallback is the same day-of-notice the site shipped with, so the promise
+ * on the booking page is never blank while the API is in flight.
+ */
+export function useBookingPolicy(): BookingPolicy {
+  return useSiteContent().salon?.policy ?? FALLBACK_POLICY;
 }

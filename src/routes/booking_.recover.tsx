@@ -446,6 +446,9 @@ function ManageBookingPage() {
             <Link to="/contact" className="editorial-link">
               Need help? Contact salon <ArrowRight size={14} />
             </Link>
+            <Link to="/booking/information" search={{ lang: "en" }} className="editorial-link">
+              Booking terms <ArrowRight size={14} />
+            </Link>
           </div>
 
           <div className="recover-card" style={{ marginTop: "1.35rem" }}>
