@@ -128,16 +128,95 @@ if (!function_exists('activity_label')) {
     }
 }
 
+if (!function_exists('ethiopian_date')) {
+    /**
+     * The Ethiopian reading of a stored Gregorian date — "Hidar 8, 2019 EC".
+     *
+     * Every date the panel shows a person goes through here or through
+     * full_date(), so the calendar is switched in one place. Storage and the
+     * API stay Gregorian (see Wiz\Support\EthiopianDate).
+     *
+     * Styles: short · medium · long · full · amharic · month-year
+     */
+    function ethiopian_date(?string $value, string $style = 'long', string $fallback = '—'): string
+    {
+        return \Wiz\Support\EthiopianDate::format($value, $style, $fallback);
+    }
+}
+
+if (!function_exists('ethiopian_clock')) {
+    /**
+     * "3:00 ሰዓት (09:00)" — the Ethiopian clock, with the 24-hour time the
+     * salon sets and the database stores in brackets beside it.
+     */
+    function ethiopian_clock(?string $time, bool $withPeriod = false, string $fallback = '—'): string
+    {
+        if ($time === null || trim($time) === '') {
+            return $fallback;
+        }
+
+        return \Wiz\Support\EthiopianDate::formatClock($time, $withPeriod);
+    }
+}
+
+if (!function_exists('ethiopian_clock_label')) {
+    /**
+     * Just "3:00 ሰዓት" — for the narrow columns (booking rows, the dashboard
+     * schedule) where the 24-hour cross-check would wrap onto four lines. Drop
+     * it into a title attribute instead so it is still one hover away.
+     */
+    function ethiopian_clock_label(?string $time, string $fallback = '—'): string
+    {
+        if ($time === null || trim($time) === '') {
+            return $fallback;
+        }
+
+        return \Wiz\Support\EthiopianDate::clock(substr($time, 0, 5))['label'] ?? $time;
+    }
+}
+
+if (!function_exists('ethiopian_clock_range')) {
+    /** "3:00 ጠዋት – 2:00 ማታ (09:00 – 20:00)" for opening hours. */
+    function ethiopian_clock_range(?string $opensAt, ?string $closesAt, string $fallback = 'Closed'): string
+    {
+        if ($opensAt === null || $closesAt === null || trim($opensAt) === '' || trim($closesAt) === '') {
+            return $fallback;
+        }
+
+        return \Wiz\Support\EthiopianDate::formatClockRange($opensAt, $closesAt);
+    }
+}
+
+if (!function_exists('ethiopian_year')) {
+    /** The Ethiopian year we are in now — 2019 for November 2026. */
+    function ethiopian_year(): int
+    {
+        return \Wiz\Support\EthiopianDate::toEthiopian(date('Y-m-d'))['year'] ?? 0;
+    }
+}
+
 if (!function_exists('full_date')) {
+    /**
+     * A timestamp as the panel shows it: Ethiopian date, then the Ethiopian
+     * clock with the 24-hour time in brackets — "Hid 8, 2019 · 2:15 ሰዓት (11:15)".
+     *
+     * The Gregorian value is still what is stored and what the database holds;
+     * this is a rendering choice, and it is deliberately made once, here, so
+     * every list and detail screen changes together.
+     */
     function full_date(?string $value, string $fallback = '—'): string
     {
-        if ($value === null || $value === '') {
+        if ($value === null || $value === '' || $value === '0000-00-00 00:00:00') {
             return $fallback;
         }
 
         $timestamp = strtotime($value);
 
-        return $timestamp === false ? $fallback : date('j M Y, H:i', $timestamp);
+        if ($timestamp === false) {
+            return $fallback;
+        }
+
+        return ethiopian_date($value, 'medium') . ' · ' . ethiopian_clock(date('H:i', $timestamp));
     }
 }
 

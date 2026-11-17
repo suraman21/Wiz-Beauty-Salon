@@ -10,7 +10,9 @@
 
 use Wiz\Domain\Enums\BookingStatus;
 
-$short = static fn (mixed $time): string => substr((string) $time, 0, 5);
+// Ethiopian clock for the row, e.g. "3:00 ሰዓት". The stored 24-hour time is
+// kept in a title attribute so staff can still read it either way.
+$short = static fn (mixed $time): string => ethiopian_clock_label((string) $time);
 
 $chip = static function (array $query, string $label, bool $active): string {
     $href = '/admin/bookings?' . http_build_query($query);
@@ -70,7 +72,7 @@ $chip = static function (array $query, string $label, bool $active): string {
                         $id = (int) $booking['id'];
                         ?>
                         <li class="booking-row">
-                            <span class="booking-row__time">
+                            <span class="booking-row__time" title="<?= e(substr((string) $booking['start_time'], 0, 5)) ?>–<?= e(substr((string) $booking['end_time'], 0, 5)) ?>">
                                 <?= e($short($booking['start_time'])) ?>
                                 <em><?= e($short($booking['end_time'])) ?></em>
                             </span>

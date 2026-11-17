@@ -383,19 +383,24 @@ final class BookingService
     }
 
     /**
-     * "Monday 20 October, 10:00–11:00" — the old time, for the "moved" email.
+     * "Hidar 9, 2019 EC (18 Nov 2026), 3:00 ሰዓት (09:00)–4:00 ሰዓት (10:00)" —
+     * the old time, for the "moved" email. Reads exactly like the new time
+     * printed beside it, so the two can be compared at a glance.
      *
      * @param array<string, mixed> $booking
      */
     private function describe(array $booking): string
     {
-        $date = strtotime((string) $booking['booking_date']);
+        $date = (string) $booking['booking_date'];
+        $start = substr((string) $booking['start_time'], 0, 5);
+        $end = substr((string) $booking['end_time'], 0, 5);
 
         return sprintf(
-            '%s, %s–%s',
-            $date === false ? (string) $booking['booking_date'] : date('l j F', $date),
-            substr((string) $booking['start_time'], 0, 5),
-            substr((string) $booking['end_time'], 0, 5),
+            '%s (%s), %s–%s',
+            \Wiz\Support\EthiopianDate::format($date, 'long', $date),
+            \Wiz\Support\EthiopianDate::formatGregorian($date, $date),
+            \Wiz\Support\EthiopianDate::formatClock($start),
+            \Wiz\Support\EthiopianDate::formatClock($end),
         );
     }
 

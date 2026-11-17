@@ -16,6 +16,7 @@ import { SiteLayout } from "@/components/site/SiteChrome";
 import { Button } from "@/components/ui/button";
 import { ApiError } from "@/lib/api";
 import { recoverBookings, type RecoverBooking } from "@/lib/booking-api";
+import { formatEthiopian, formatEthiopianClock, formatGregorian } from "@/lib/ethiopian-calendar";
 
 export const Route = createFileRoute("/booking_/recover")({
   head: () => ({
@@ -77,18 +78,14 @@ function ManageBookingPage() {
     }
   };
 
+  // The booking the customer is looking for, in the calendar they booked it in.
+  // Stored Gregorian, read Ethiopian, with the Gregorian day beside it.
   const fmtDate = (iso: string) => {
-    try {
-      const d = new Date(`${iso}T00:00:00`);
-      return d.toLocaleDateString("en-GB", {
-        weekday: "long",
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      });
-    } catch {
-      return iso;
-    }
+    const ethiopian = formatEthiopian(iso, "full", "");
+
+    if (ethiopian === "") return iso;
+
+    return `${ethiopian} (${formatGregorian(iso, iso)})`;
   };
 
   return (
@@ -350,7 +347,8 @@ function ManageBookingPage() {
                             >
                               <span>{fmtDate(b.booking_date)}</span> <span aria-hidden>·</span>{" "}
                               <span>
-                                {b.start_time}–{b.end_time}
+                                {formatEthiopianClock(b.start_time)}–
+                                {formatEthiopianClock(b.end_time)}
                               </span>
                             </p>
                           </div>

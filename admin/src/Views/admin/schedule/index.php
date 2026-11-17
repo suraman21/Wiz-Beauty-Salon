@@ -86,12 +86,13 @@ $short = static fn (mixed $time): string => $time === null ? '' : substr((string
                 <?= csrf_field() ?>
 
                 <div class="field">
-                    <label for="start_date">From</label>
+                    <label for="start_date">From <span class="field__hint">Gregorian — stored as-is</span></label>
                     <input type="date" id="start_date" name="start_date" value="<?= e(date('Y-m-d')) ?>" required>
+                    <span class="field__hint">Today is <?= e(ethiopian_date(date('Y-m-d'), 'long')) ?></span>
                 </div>
 
                 <div class="field">
-                    <label for="end_date">To <span class="field__hint">same day is fine</span></label>
+                    <label for="end_date">To <span class="field__hint">same day is fine · Gregorian</span></label>
                     <input type="date" id="end_date" name="end_date" value="<?= e(date('Y-m-d')) ?>" required>
                 </div>
 
@@ -115,10 +116,16 @@ $short = static fn (mixed $time): string => $time === null ? '' : substr((string
                         <li>
                             <div>
                                 <p class="closure-list__dates">
-                                    <?= e(date('j M Y', (int) strtotime((string) $closure['start_date']))) ?>
+                                    <?= e(ethiopian_date((string) $closure['start_date'], 'medium')) ?>
                                     <?php if ($closure['end_date'] !== $closure['start_date']): ?>
-                                        → <?= e(date('j M Y', (int) strtotime((string) $closure['end_date']))) ?>
+                                        → <?= e(ethiopian_date((string) $closure['end_date'], 'medium')) ?>
                                     <?php endif; ?>
+                                    <span class="cell-sub" style="display:block;font-weight:400">
+                                        <?= e(\Wiz\Support\EthiopianDate::formatGregorian((string) $closure['start_date'])) ?>
+                                        <?php if ($closure['end_date'] !== $closure['start_date']): ?>
+                                            – <?= e(\Wiz\Support\EthiopianDate::formatGregorian((string) $closure['end_date'])) ?>
+                                        <?php endif; ?>
+                                    </span>
                                 </p>
                                 <p class="cell-sub"><?= e($closure['reason'] ?? 'Closed') ?></p>
                             </div>

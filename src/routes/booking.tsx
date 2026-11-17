@@ -18,6 +18,12 @@ import { useSiteImages } from "@/lib/site-content";
 import { bookingDetailsSchema } from "@/data/services";
 import { ApiError, isoToday } from "@/lib/api";
 import {
+  formatEthiopian,
+  formatEthiopianClock,
+  formatGregorian,
+  toEthiopian,
+} from "@/lib/ethiopian-calendar";
+import {
   createBooking,
   fetchCalendar,
   fetchCatalogue,
@@ -64,8 +70,34 @@ type Confirmed = {
 
 const emptyDetails: Details = { name: "", phone: "", email: "", notes: "" };
 const parseIso = (iso: string) => new Date(`${iso}T00:00:00`);
-const fmt = (iso: string) =>
-  parseIso(iso).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
+
+/**
+ * The day, as the salon keeps it.
+ *
+ * "ማክሰኞ ህዳር 8, 2019 ዓ.ም · 17 Nov 2026" — Ethiopian calendar first, because
+ * that is the day the customer means, with the Gregorian one beside it so a
+ * booking can be matched either way. Storage and the API stay Gregorian.
+ */
+const fmt = (iso: string) => {
+  const ethiopian = formatEthiopian(iso, "full", "");
+
+  if (ethiopian === "") return iso;
+
+  return `${ethiopian} · ${formatGregorian(iso, iso)}`;
+};
+
+/** The compact month and weekday the date cells have room for. */
+const cellParts = (iso: string) => {
+  const date = parseIso(iso);
+  const ethiopian = toEthiopian(date);
+
+  return {
+    weekday: date.toLocaleDateString("en-GB", { weekday: "short" }),
+    day: ethiopian === null ? date.getDate() : ethiopian.day,
+    month: formatEthiopian(iso, "medium", "").split(" ")[0] ?? "",
+    title: fmt(iso),
+  };
+};
 
 function Booking() {
   const images = useSiteImages();
@@ -264,7 +296,9 @@ function Booking() {
       `DTSTART:${stamp(start)}`,
       `DTEND:${stamp(endOfVisit)}`,
       `SUMMARY:WIZ Beauty Salon - ${confirmed.serviceName}`,
-      `DESCRIPTION:Reference ${confirmed.reference}`,
+      // DTSTART/DTEND stay Gregorian — that is what calendar apps read — but
+      // the human-readable lines carry the day as the salon says it.
+      `DESCRIPTION:Reference ${confirmed.reference} · ${formatEthiopian(confirmed.date, "long", "")} · ${formatEthiopianClock(confirmed.time)}`,
       "LOCATION:WIZ Beauty Salon, Addis Ababa",
       "END:VEVENT",
       "END:VCALENDAR",
@@ -407,7 +441,7 @@ function Booking() {
                     </p>
                     <div className="date-grid" role="radiogroup" aria-label="Choose a date">
                       {calendar.map((day) => {
-                        const d = parseIso(day.date);
+                        const cell = cellParts(day.date);
                         const full = day.slots.length === 0;
 
                         return (
@@ -418,24 +452,21 @@ function Booking() {
                             aria-checked={date === day.date}
                             aria-disabled={full}
                             disabled={full}
-                            title={
-                              full
-                                ? (day.reason ?? "Fully booked")
-                                : `${day.slots.length} times free`
-                            }
+                            title={`${cell.title}${full ? ` · ${day.reason ?? "Fully booked"}` : ` · ${day.slots.length} times free`}`}
                             key={day.date}
                             className={`date-cell h-auto rounded-none ${date === day.date ? "is-selected" : ""} ${full ? "is-full" : ""}`}
                             onClick={() => chooseDate(day)}
                           >
-                            <span>{d.toLocaleDateString("en-GB", { weekday: "short" })}</span>
-                            <strong>{d.getDate()}</strong>
-                            <span>{d.toLocaleDateString("en-GB", { month: "short" })}</span>
+                            <span>{cell.weekday}</span>
+                            <strong>{cell.day}</strong>
+                            <span>{cell.month}</span>
                           </Button>
                         );
                       })}
                     </div>
                     <span className="demo-note">
-                      Days the salon is closed are greyed out. Times are in Addis Ababa time.
+                      Days are in the Ethiopian calendar (ዓ.ም); the salon&rsquo;s Gregorian date is
+                      in each cell&rsquo;s tooltip. Days the salon is closed are greyed out.
                     </span>
                   </>
                 )}
@@ -462,7 +493,7 @@ function Booking() {
                         className={`chip h-auto rounded-none ${time === t ? "is-active" : ""}`}
                         onClick={() => setTime(t)}
                       >
-                        <Clock3 size={14} /> {t}
+                        <Clock3 size={14} /> {formatEthiopianClock(t)}
                       </Button>
                     ))}
                   </div>
@@ -475,7 +506,8 @@ function Booking() {
                   </p>
                 )}
                 <span className="demo-note">
-                  Times shown are still free right now. The salon confirms every request.
+                  Times read on the Ethiopian clock, with the 24-hour time in brackets. They are
+                  still free right now; the salon confirms every request.
                 </span>
               </>
             )}
@@ -730,7 +762,7 @@ function Summary({
       </div>
       <div>
         <span>Time</span>
-        <strong>{time === "" ? "—" : time}</strong>
+        <strong>{time === "" ? "—" : formatEthiopianClock(time, { withPeriod: true })}</strong>
       </div>
       <div>
         <span>Name</span>

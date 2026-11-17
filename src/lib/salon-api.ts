@@ -9,6 +9,11 @@
  */
 
 import { apiGet } from "@/lib/api";
+import {
+  formatEthiopian,
+  formatEthiopianClockRange,
+  formatGregorian,
+} from "@/lib/ethiopian-calendar";
 
 export type SalonContact = {
   phone: string;
@@ -80,31 +85,44 @@ export function hasDetails(contact: SalonContact): boolean {
 }
 
 /**
- * "25 Dec – 26 Dec · Holiday" — the way the salon would say it out loud.
- * A one-day closure prints once, not twice.
+ * "Tik 25–26, 2018 (25–26 Dec) · Holiday" — the way the salon would say it out
+ * loud, in the calendar it keeps. A one-day closure prints once, not twice.
+ *
+ * The Gregorian dates stay in brackets because a closure is the one date a
+ * customer may have been told over the phone in either calendar.
  */
 export function closureLabel(closure: SalonClosure): string {
-  const format = (iso: string) => {
-    const date = new Date(`${iso}T00:00:00`);
+  const ethiopian = (iso: string) => formatEthiopian(iso, "medium", iso);
+  const gregorian = (iso: string) => formatGregorian(iso, iso);
 
-    if (Number.isNaN(date.getTime())) return iso;
+  const sameDay = closure.from === closure.to || ethiopian(closure.to) === ethiopian(closure.from);
 
-    return date.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
-  };
+  // An unreadable date comes back as the raw string from both formatters;
+  // print it once rather than twice.
+  const withGregorian = (ethiopianText: string, gregorianText: string) =>
+    ethiopianText === gregorianText ? ethiopianText : `${ethiopianText} (${gregorianText})`;
 
-  const from = format(closure.from);
-  const to = format(closure.to);
-  const days = closure.from === closure.to || to === from ? from : `${from} – ${to}`;
+  const days = sameDay
+    ? withGregorian(ethiopian(closure.from), gregorian(closure.from))
+    : `${ethiopian(closure.from)} – ${ethiopian(closure.to)} (${gregorian(closure.from)} – ${gregorian(
+        closure.to,
+      )})`;
+
   const reason = closure.reason.trim();
 
   return reason === "" ? days : `${days} · ${reason}`;
 }
 
-/** "09:00 – 20:00", or "Closed" — already 24-hour, as the salon sets it. */
+/**
+ * "3:00 ጠዋት – 2:00 ማታ (09:00 – 20:00)", or "Closed".
+ *
+ * The salon sets 24-hour times; the customer reads the Ethiopian clock with
+ * the 24-hour time in brackets, so nobody has to convert in their head.
+ */
 function timeFor(hour: SalonHour): string {
   if (hour.is_closed || hour.opens_at === null || hour.closes_at === null) return "Closed";
 
-  return `${hour.opens_at} – ${hour.closes_at}`;
+  return formatEthiopianClockRange(hour.opens_at, hour.closes_at);
 }
 
 /**

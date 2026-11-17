@@ -188,6 +188,11 @@ export const galleryWork: {
 // The salon's details, as the panel publishes them. The salon has given us its
 // location, its opening hours and its map, so they live here until the panel
 // publishes them itself.
+//
+// The hours below are written in the same reading the live panel data gets:
+// Ethiopian calendar and Ethiopian clock, 24-hour time in brackets. A fallback
+// that printed 9:00 AM – 7:00 PM would be the one place on the site with a
+// different idea of what time it is.
 export const contact = {
   phone: "",
   whatsapp: "",
@@ -195,7 +200,7 @@ export const contact = {
   instagram: "",
   tiktok: "",
   address: "Wiz Beauty Salon",
-  hours: [{ day: "Monday – Saturday", time: "9:00 AM – 7:00 PM" }],
+  hours: [{ day: "Monday – Saturday", time: "3:00 ጠዋት – 1:00 ማታ (09:00 – 19:00)" }],
   mapEmbed:
     "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d4675.060274126608!2d38.78350027569145!3d8.952384490182014!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x164b830018fa71dd%3A0xd006890ffa49c035!2sWiz%20Beauty%20Salon!5e1!3m2!1sen!2set!4v1794870347332!5m2!1sen!2set",
 };

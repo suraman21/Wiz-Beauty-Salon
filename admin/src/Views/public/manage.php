@@ -31,11 +31,19 @@ $statusClass = match ((string) ($status?->value ?? $booking['status'])) {
 $hasSlots = false;
 foreach ($days as $d) { if ($d['slots'] !== []) { $hasSlots = true; break; } }
 
-// Human date for hero + summary
-$heroDate = $dateTs !== false ? date('l, j F', $dateTs) : (string) $booking['booking_date'];
-$heroDayNum = $dateTs !== false ? date('j', $dateTs) : '–';
-$heroMonth = $dateTs !== false ? date('M', $dateTs) : '';
+// The day as the customer reads it: Ethiopian calendar, Gregorian beside it.
+// The stored value is Gregorian — only the reading changes.
+$bookingDate = (string) $booking['booking_date'];
+$ethiopian = \Wiz\Support\EthiopianDate::toEthiopian($bookingDate);
+$heroDate = $ethiopian === null
+    ? $bookingDate
+    : \Wiz\Support\EthiopianDate::format($bookingDate, 'long') . ' · ' . date('j M Y', (int) $dateTs);
+$heroDayNum = $ethiopian === null ? '–' : (string) $ethiopian['day'];
+$heroMonth = $ethiopian === null ? '' : \Wiz\Support\EthiopianDate::MONTHS_SHORT[$ethiopian['month']];
 $heroWeekday = $dateTs !== false ? date('D', $dateTs) : '';
+// Times: Ethiopian clock first, the 24-hour time the salon sets in brackets.
+$startLabel = ethiopian_clock($start);
+$endLabel = ethiopian_clock($end);
 $duration = 0;
 try {
     $s = strtotime((string) $booking['booking_date'] . ' ' . (string) $booking['start_time']);
@@ -80,7 +88,7 @@ $priceText = $price !== null && (int)$price > 0 ? number_format((int)$price/100)
         </div>
         <div class="manage-hero-main">
             <h1 class="manage-hero-title"><?= e($booking['service_name']) ?></h1>
-            <p class="manage-hero-when"><?= e($heroDate) ?> · <?= e($start) ?>–<?= e($end) ?><?php if ($duration) echo ' · ' . $duration . ' min'; ?><?php if ($priceText) echo ' · ' . $priceText; ?></p>
+            <p class="manage-hero-when"><?= e($heroDate) ?> · <?= e($startLabel) ?>–<?= e($endLabel) ?><?php if ($duration) echo ' · ' . $duration . ' min'; ?><?php if ($priceText) echo ' · ' . $priceText; ?></p>
             <p class="manage-hero-policy">Free to change or cancel until 24 hours before. After that, please call.</p>
         </div>
     </header>
@@ -97,7 +105,7 @@ $priceText = $price !== null && (int)$price > 0 ? number_format((int)$price/100)
                     </div>
                     <div>
                         <dt>When</dt>
-                        <dd><?= e($heroDate) ?> at <?= e($start) ?><?php if ($duration) echo ' · ' . $duration . ' min'; ?></dd>
+                        <dd><?= e($heroDate) ?> at <?= e($startLabel) ?><?php if ($duration) echo ' · ' . $duration . ' min'; ?></dd>
                     </div>
                     <div>
                         <dt>Name</dt>
@@ -144,11 +152,20 @@ $priceText = $price !== null && (int)$price > 0 ? number_format((int)$price/100)
                                 <div class="manage-date-row" role="radiogroup" aria-label="Choose a new date">
                                     <?php foreach ($days as $day): ?>
                                         <?php if ($day['slots'] === []) { continue; } ?>
-                                        <?php $d = (int) strtotime($day['date']); ?>
-                                        <button type="button" class="manage-date-pill" data-date="<?= e($day['date']) ?>" data-slots="<?= e(implode(',', $day['slots'])) ?>" role="radio" aria-checked="false">
+                                        <?php
+                                        $d = (int) strtotime($day['date']);
+                                        $dayEc = \Wiz\Support\EthiopianDate::toEthiopian($day['date']);
+                                        // Slot labels are rendered here, in PHP, so the page keeps
+                                        // one Ethiopian implementation instead of a second one in JS.
+                                        $slotLabels = [];
+                                        foreach ($day['slots'] as $slot) {
+                                            $slotLabels[$slot] = ethiopian_clock($slot);
+                                        }
+                                        ?>
+                                        <button type="button" class="manage-date-pill" data-date="<?= e($day['date']) ?>" data-slots="<?= e(implode(',', $day['slots'])) ?>" data-slot-labels="<?= e((string) json_encode($slotLabels, JSON_UNESCAPED_UNICODE)) ?>" role="radio" aria-checked="false">
                                             <span class="pill-weekday"><?= e(date('D', $d)) ?></span>
-                                            <strong class="pill-day"><?= e(date('j', $d)) ?></strong>
-                                            <span class="pill-month"><?= e(date('M', $d)) ?></span>
+                                            <strong class="pill-day"><?= e($dayEc === null ? date('j', $d) : (string) $dayEc['day']) ?></strong>
+                                            <span class="pill-month"><?= e($dayEc === null ? date('M', $d) : \Wiz\Support\EthiopianDate::MONTHS_SHORT[$dayEc['month']]) ?></span>
                                             <span class="pill-count"><?= count($day['slots']) ?> slots</span>
                                         </button>
                                     <?php endforeach; ?>
@@ -331,20 +348,24 @@ $priceText = $price !== null && (int)$price > 0 ? number_format((int)$price/100)
   }
   if (!datePills.length || !timeGrid || !dateInput) return;
   let selectedDate = '';
-  function renderTimes(slots) {
+  let selectedDateLabel = '';
+  function renderTimes(slots, labels) {
     timeGrid.innerHTML = '';
     slots.forEach((t) => {
+      // The Ethiopian label is rendered by PHP and read from the pill, so the
+      // Ethiopian clock lives in one place. The value posted stays 24-hour.
+      const label = (labels && labels[t]) ? labels[t] : t;
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'manage-time-chip';
-      btn.textContent = t;
+      btn.textContent = label;
       btn.setAttribute('role','radio');
       btn.setAttribute('aria-checked','false');
       btn.addEventListener('click', () => {
         timeGrid.querySelectorAll('.manage-time-chip').forEach(c=>{c.classList.remove('is-active'); c.setAttribute('aria-checked','false');});
         btn.classList.add('is-active'); btn.setAttribute('aria-checked','true');
-        timeInput.value = t; previewTime.textContent = t; preview.hidden = false;
-        submitBtn.disabled = false; submitBtn.textContent = 'Reschedule to ' + selectedDate + ' at ' + t;
+        timeInput.value = t; previewTime.textContent = label; preview.hidden = false;
+        submitBtn.disabled = false; submitBtn.textContent = 'Reschedule to ' + selectedDateLabel + ' at ' + label;
       });
       timeGrid.appendChild(btn);
     });
@@ -357,13 +378,16 @@ $priceText = $price !== null && (int)$price > 0 ? number_format((int)$price/100)
       selectedDate = pill.getAttribute('data-date') || '';
       const slotsAttr = pill.getAttribute('data-slots') || '';
       const slots = slotsAttr ? slotsAttr.split(',') : [];
+      let labels = {};
+      try { labels = JSON.parse(pill.getAttribute('data-slot-labels') || '{}'); } catch (err) { labels = {}; }
       dateInput.value = selectedDate; timeInput.value = '';
       const d = pill.querySelector('.pill-day')?.textContent || '';
       const m = pill.querySelector('.pill-month')?.textContent || '';
       const w = pill.querySelector('.pill-weekday')?.textContent || '';
-      previewDate.textContent = w + ' ' + d + ' ' + m;
+      selectedDateLabel = w + ' ' + d + ' ' + m;
+      previewDate.textContent = selectedDateLabel;
       preview.hidden = true; submitBtn.disabled = true; submitBtn.textContent = 'Choose a time';
-      renderTimes(slots);
+      renderTimes(slots, labels);
       // scroll time into view on mobile
       if (window.innerWidth < 860) timeFieldset.scrollIntoView({behavior:'smooth', block:'nearest'});
     });

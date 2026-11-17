@@ -55,8 +55,11 @@ if (!empty($booking['service_ids'])) {
         <div class="detail-head">
             <div>
                 <p class="detail-when">
-                    <?= e(date('l j F Y', (int) strtotime($date))) ?>
-                    <strong><?= e($short($booking['start_time'])) ?>–<?= e($short($booking['end_time'])) ?></strong>
+                    <?= e(ethiopian_date($date, 'full')) ?>
+                    <span class="cell-sub" style="display:block;font-weight:400">
+                        <?= e(\Wiz\Support\EthiopianDate::formatGregorian($date)) ?>
+                    </span>
+                    <strong><?= e(ethiopian_clock($short($booking['start_time']))) ?>–<?= e(ethiopian_clock($short($booking['end_time']))) ?></strong>
                     <?php if ($duration): ?>
                         <span style="font-weight:400;color:var(--muted-foreground);font-size:0.9em"> · <?= e($duration) ?> min</span>
                     <?php endif; ?>

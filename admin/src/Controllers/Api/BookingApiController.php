@@ -13,6 +13,7 @@ use Wiz\Repositories\RateLimitRepository;
 use Wiz\Repositories\ServiceRepository;
 use Wiz\Services\AvailabilityService;
 use Wiz\Services\BookingService;
+use Wiz\Support\EthiopianDate;
 use Wiz\Support\Origin;
 use Wiz\Support\SignedLink;
 
@@ -105,6 +106,14 @@ final class BookingApiController
 
         return Response::json([
             'date' => $date,
+            // Additive: the same day in the Ethiopian calendar, and every slot
+            // in the Ethiopian clock. Existing clients ignore what they do not
+            // read; nothing that was here before has changed shape.
+            'ethiopian' => EthiopianDate::wire($date),
+            'slots_ethiopian' => array_map(
+                static fn (string $slot): string => EthiopianDate::formatClock($slot),
+                $slots,
+            ),
             'service' => $serviceInfo,
             'open' => $status['open'],
             'reason' => $status['reason'],
@@ -133,9 +142,27 @@ final class BookingApiController
         $from = $request->queryString('from', date('Y-m-d'));
         $days = (int) $request->queryString('days', '14');
 
+        // Each day gains its Ethiopian reading and its slots gain the Ethiopian
+        // clock. The Gregorian `date` and `slots` stay exactly as they were —
+        // they are what the site posts back and what the database stores.
+        $rows = [];
+
+        foreach ($this->availability->calendar($from, $days, $duration) as $row) {
+            $slotList = is_array($row['slots'] ?? null) ? $row['slots'] : [];
+
+            $row['ethiopian'] = EthiopianDate::wire(is_string($row['date'] ?? null) ? $row['date'] : null);
+            $row['label'] = is_array($row['ethiopian']) ? $row['ethiopian']['label'] : null;
+            $row['slots_ethiopian'] = array_map(
+                static fn (string $slot): string => EthiopianDate::formatClock($slot),
+                $slotList,
+            );
+
+            $rows[] = $row;
+        }
+
         return Response::json([
             'service' => $serviceInfo,
-            'days' => $this->availability->calendar($from, $days, $duration),
+            'days' => $rows,
         ])->withHeader('Cache-Control', 'public, max-age=60');
     }
 
@@ -305,6 +332,39 @@ final class BookingApiController
             $rawIsUndecided = is_bool($v) ? ($v ? '1' : '0') : (string) $v;
         }
 
+        // An Ethiopian-speaking client may send the day in its own calendar.
+        // `date_ec` is additive: it is checked against `date` when both are
+        // given, and it can stand alone when `date` is omitted. Whatever comes
+        // in, Gregorian `date` is what reaches the database.
+        $rawDateEc = $request->string('date_ec') !== ''
+            ? $request->string('date_ec')
+            : $request->string('ethiopian_date');
+        $rawDate = $request->string('date');
+
+        if ($rawDateEc !== '') {
+            $parsedEc = EthiopianDate::parseIso($rawDateEc);
+
+            if ($parsedEc === null) {
+                throw HttpException::validation(
+                    'That Ethiopian date does not exist. Check the day and the month.',
+                );
+            }
+
+            $derived = EthiopianDate::toGregorian(
+                $parsedEc['year'],
+                $parsedEc['month'],
+                $parsedEc['day'],
+            )->format('Y-m-d');
+
+            if ($rawDate === '') {
+                $rawDate = $derived;
+            } elseif ($rawDate !== $derived) {
+                throw HttpException::validation(
+                    'The Ethiopian and Gregorian dates do not match.',
+                );
+            }
+        }
+
         $validator = new Validator(
             [
                 'customer_name' => $request->string('name'),
@@ -314,7 +374,7 @@ final class BookingApiController
                 'service_ids' => $rawServiceIds,
                 'category_id' => $request->string('category_id'),
                 'is_undecided' => $rawIsUndecided,
-                'date' => $request->string('date'),
+                'date' => $rawDate,
                 'time' => $request->string('time'),
                 'notes' => $request->string('notes'),
             ],
@@ -383,6 +443,13 @@ final class BookingApiController
             'reference' => (string) ($result['reference'] ?? ''),
             'status' => 'requested',
             'manage_url' => $token === null ? null : rtrim($this->appOrigin, '/') . '/booking/manage/' . $token,
+            // Additive: what the customer just asked for, in both calendars.
+            'date' => (string) $input['date'],
+            'time' => (string) $input['time'],
+            'ethiopian' => [
+                'date' => EthiopianDate::wire((string) $input['date']),
+                'time' => EthiopianDate::formatClock((string) $input['time'], true),
+            ],
             'message' => 'Thank you. The salon will confirm your appointment shortly.',
         ], 201);
     }
@@ -475,12 +542,24 @@ final class BookingApiController
         foreach ($rows as $row) {
             $id = (int) ($row['id'] ?? 0);
             $token = $this->links?->issue('booking', $id);
+            $bookingDate = (string) ($row['booking_date'] ?? '');
+            $bookingEc = EthiopianDate::toEthiopian($bookingDate);
+            $startTime = substr((string) ($row['start_time'] ?? ''), 0, 5);
+            $endTime = substr((string) ($row['end_time'] ?? ''), 0, 5);
+
             $bookings[] = [
                 'reference' => (string) ($row['reference'] ?? ''),
                 'service_name' => (string) ($row['service_name'] ?? ''),
-                'booking_date' => (string) ($row['booking_date'] ?? ''),
-                'start_time' => substr((string) ($row['start_time'] ?? ''), 0, 5),
-                'end_time' => substr((string) ($row['end_time'] ?? ''), 0, 5),
+                'booking_date' => $bookingDate,
+                'start_time' => $startTime,
+                'end_time' => $endTime,
+                // Additive: the same booking in the Ethiopian calendar and clock.
+                'booking_date_ec' => $bookingEc === null
+                    ? null
+                    : EthiopianDate::iso($bookingEc['year'], $bookingEc['month'], $bookingEc['day']),
+                'ethiopian' => EthiopianDate::wire($bookingDate),
+                'start_time_label' => EthiopianDate::formatClock($startTime),
+                'end_time_label' => EthiopianDate::formatClock($endTime),
                 'status' => (string) ($row['status'] ?? ''),
                 'manage_url' => $token === null ? null : rtrim($this->appOrigin, '/') . '/booking/manage/' . $token,
             ];

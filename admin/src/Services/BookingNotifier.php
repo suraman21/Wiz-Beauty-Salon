@@ -7,6 +7,7 @@ use Throwable;
 use Wiz\Contracts\MailTransport;
 use Wiz\Core\Logger;
 use Wiz\Core\View;
+use Wiz\Support\EthiopianDate;
 use Wiz\Support\SignedLink;
 
 /**
@@ -288,13 +289,15 @@ final class BookingNotifier
         $start = substr((string) $booking['start_time'], 0, 5);
         $end = substr((string) $booking['end_time'], 0, 5);
 
-        $stamp = strtotime($date);
-
+        // The same reading the site and the panel use: the Ethiopian date and
+        // the Ethiopian clock, with the Gregorian day and 24-hour time beside
+        // it, because this line is printed in an email the customer keeps.
         return sprintf(
-            '%s, %s–%s',
-            $stamp === false ? $date : date('l j F Y', $stamp),
-            $start,
-            $end,
+            '%s (%s), %s–%s',
+            EthiopianDate::format($date, 'long', $date),
+            EthiopianDate::formatGregorian($date, $date),
+            EthiopianDate::formatClock($start),
+            EthiopianDate::formatClock($end),
         );
     }
 

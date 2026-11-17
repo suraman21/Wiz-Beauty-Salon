@@ -347,10 +347,21 @@ final class BookingController
         return array_values($groups);
     }
 
+    /**
+     * The heading over a day's appointments, in the calendar the salon uses.
+     *
+     * "Today · Hid 8, 2019 (17 Nov)" — Ethiopian date first because that is
+     * how staff say the day, with the Gregorian one in brackets so a booking
+     * taken on the phone in either calendar can still be matched. The stored
+     * value stays Gregorian; only the label changes.
+     */
     private function dateLabel(string $date): string
     {
         $timestamp = strtotime($date . ' 12:00:00');
-        $label = $timestamp === false ? $date : date('D j M', $timestamp);
+
+        $label = $timestamp === false
+            ? $date
+            : ethiopian_date($date, 'medium') . ' (' . date('j M', $timestamp) . ')';
 
         return match ($date) {
             date('Y-m-d') => 'Today · ' . $label,

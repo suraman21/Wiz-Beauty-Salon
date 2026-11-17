@@ -70,7 +70,7 @@ $cards = [
     <section class="card">
         <header class="card__head">
             <h2 class="card__title">Today’s schedule</h2>
-            <p class="card__sub"><?= e(date('l j F')) ?> · first six appointments</p>
+            <p class="card__sub"><?= e(ethiopian_date(date('Y-m-d'), 'full')) ?> · first six appointments</p>
         </header>
 
         <?php if ($today === []): ?>
@@ -84,7 +84,7 @@ $cards = [
                 <?php foreach ($today as $appointment): ?>
                     <?php $state = BookingStatus::tryFrom((string) $appointment['status']); ?>
                     <li class="timeline__item">
-                        <span class="schedule__time"><?= e(substr((string) $appointment['start_time'], 0, 5)) ?></span>
+                        <span class="schedule__time" title="<?= e(substr((string) $appointment['start_time'], 0, 5)) ?>"><?= e(ethiopian_clock_label(substr((string) $appointment['start_time'], 0, 5))) ?></span>
                         <div class="schedule__body">
                             <p class="timeline__text">
                                 <a href="/admin/bookings/<?= (int) $appointment['id'] ?>"><?= e($appointment['customer_name']) ?></a>

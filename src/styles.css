@@ -11,8 +11,11 @@
  */
 
 @theme inline {
-  --font-display: "Bodoni Moda", "Cormorant Garamond", ui-serif, Georgia, serif;
-  --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  /* The Ethiopic faces are fallbacks only: Latin glyphs still come from
+     Bodoni/Manrope, and Amharic dates and the Ethiopian clock (ዓ.ም, ሰዓት) get a
+     face that has them instead of whatever the system happens to pick. */
+  --font-display: "Bodoni Moda", "Cormorant Garamond", "Noto Serif Ethiopic", ui-serif, Georgia, serif;
+  --font-sans: "Manrope", "Noto Sans Ethiopic", ui-sans-serif, system-ui, sans-serif;
 
   --radius-sm: 2px;
   --radius-md: 4px;

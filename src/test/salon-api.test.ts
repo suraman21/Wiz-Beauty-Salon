@@ -89,8 +89,8 @@ describe("opening hours rows", () => {
     );
 
     expect(hoursRows(hours)).toEqual([
-      { day: "Monday – Friday", time: "09:00 – 20:00" },
-      { day: "Saturday", time: "09:00 – 18:00" },
+      { day: "Monday – Friday", time: "3:00 ጠዋት – 2:00 ማታ (09:00 – 20:00)" },
+      { day: "Saturday", time: "3:00 ጠዋት – 12:00 ማታ (09:00 – 18:00)" },
       { day: "Sunday", time: "Closed" },
     ]);
   });
@@ -103,18 +103,22 @@ describe("opening hours rows", () => {
     });
 
     expect(hoursRows(hours)).toEqual([
-      { day: "Monday", time: "09:00 – 20:00" },
-      { day: "Tuesday", time: "11:00 – 20:00" },
-      { day: "Wednesday", time: "09:00 – 20:00" },
+      { day: "Monday", time: "3:00 ጠዋት – 2:00 ማታ (09:00 – 20:00)" },
+      // 11:00 is Ethiopian 5 o'clock, still morning — the period word keeps
+      // the two halves of the day apart.
+      { day: "Tuesday", time: "5:00 ጠዋት – 2:00 ማታ (11:00 – 20:00)" },
+      { day: "Wednesday", time: "3:00 ጠዋት – 2:00 ማታ (09:00 – 20:00)" },
       { day: "Thursday", time: "Closed" },
-      { day: "Friday – Sunday", time: "09:00 – 20:00" },
+      { day: "Friday – Sunday", time: "3:00 ጠዋት – 2:00 ማታ (09:00 – 20:00)" },
     ]);
   });
 
   it("orders Monday first whatever order the API used", () => {
     const shuffled = [...week("10:00", "19:00")].reverse();
 
-    expect(hoursRows(shuffled)).toEqual([{ day: "Monday – Sunday", time: "10:00 – 19:00" }]);
+    expect(hoursRows(shuffled)).toEqual([
+      { day: "Monday – Sunday", time: "4:00 ጠዋት – 1:00 ማታ (10:00 – 19:00)" },
+    ]);
   });
 });
 
@@ -134,20 +138,31 @@ describe("WhatsApp links", () => {
   });
 });
 
+/**
+ * A closure is the one date a customer may have been told over the phone in
+ * either calendar, so the Ethiopian dates lead and the Gregorian days follow
+ * in brackets. 25 and 26 December 2026 are Tahsas 16 and 17, 2019.
+ */
 describe("closure labels", () => {
   it("prints a run of days once", () => {
     expect(closureLabel({ from: "2026-12-25", to: "2026-12-26", reason: "Holiday" })).toBe(
-      "25 Dec – 26 Dec · Holiday",
+      "Tah 16, 2019 – Tah 17, 2019 (25 Dec 2026 – 26 Dec 2026) · Holiday",
     );
   });
 
   it("does not repeat a single day", () => {
-    expect(closureLabel({ from: "2027-01-07", to: "2027-01-07", reason: "" })).toBe("7 Jan");
+    expect(closureLabel({ from: "2027-01-07", to: "2027-01-07", reason: "" })).toBe(
+      "Tah 29, 2019 (7 Jan 2027)",
+    );
   });
 
   it("keeps the reason when there is one", () => {
     expect(closureLabel({ from: "2027-03-01", to: "2027-03-01", reason: "  Training  " })).toBe(
-      "1 Mar · Training",
+      "Yek 22, 2019 (1 Mar 2027) · Training",
     );
+  });
+
+  it("still shows an unreadable date as it came", () => {
+    expect(closureLabel({ from: "not-a-date", to: "not-a-date", reason: "" })).toBe("not-a-date");
   });
 });

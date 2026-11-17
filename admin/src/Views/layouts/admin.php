@@ -121,7 +121,7 @@ $navItem = static function (string $key, string $href, string $label, int $badge
     </main>
 
     <footer class="foot">
-        WIZ Beauty Salon admin &middot; <?= e(date('Y')) ?>
+        WIZ Beauty Salon admin &middot; <?= e(ethiopian_year()) ?> ዓ.ም
     </footer>
 </div>
 

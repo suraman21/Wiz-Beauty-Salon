@@ -111,7 +111,10 @@ final class PublicBookingController
         $this->session->flash(
             $result['ok'] ? 'success' : 'error',
             $result['ok']
-                ? 'Done — your appointment is now on ' . date('l j F', (int) strtotime($date)) . ' at ' . $time . '.'
+                ? 'Done — your appointment is now on '
+                    . ethiopian_date($date, 'long')
+                    . ' (' . \Wiz\Support\EthiopianDate::formatGregorian($date) . ') at '
+                    . ethiopian_clock($time) . '.'
                 : (string) ($result['error'] ?? 'That time could not be kept.'),
         );
 

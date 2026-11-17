@@ -27,11 +27,36 @@ export type ApiService = {
   show_on_home?: boolean | undefined;
 };
 
+/**
+ * The Ethiopian reading of a Gregorian day, as the API sends it.
+ *
+ * The site derives its own Ethiopian dates from `date` — same algorithm, and
+ * it has to work when the API is unreachable and the bundled catalogue is
+ * shown instead — so these fields are informational. They exist so the panel,
+ * exports and future clients can read the day without carrying a converter.
+ */
+export type ApiEthiopianDate = {
+  year: number;
+  month: number;
+  day: number;
+  iso: string;
+  label: string;
+  label_am: string;
+  gregorian: string;
+};
+
 export type CalendarDay = {
+  /** Gregorian "YYYY-MM-DD" — what the site posts back and the database stores. */
   date: string;
   open: boolean;
   reason: string | null;
   slots: string[];
+  /** Additive: the same day in the Ethiopian calendar. */
+  ethiopian?: ApiEthiopianDate | null;
+  /** Additive: "Hidar 8, 2019 EC". */
+  label?: string | null;
+  /** Additive: each slot in the Ethiopian clock, index-matched with `slots`. */
+  slots_ethiopian?: string[];
 };
 
 export type BookingInput = {
@@ -51,6 +76,10 @@ export type BookingResult = {
   message: string;
   /** A signed link the customer can keep to cancel or move the booking. */
   manage_url?: string | null;
+  /** Additive: the day and time as received, plus their Ethiopian reading. */
+  date?: string;
+  time?: string;
+  ethiopian?: { date: ApiEthiopianDate | null; time: string } | null;
 };
 
 export type ServiceCatalogue = {
@@ -120,6 +149,11 @@ export type RecoverBooking = {
   end_time: string;
   status: string;
   manage_url: string | null;
+  /** Additive: the same booking in the Ethiopian calendar and clock. */
+  booking_date_ec?: string | null;
+  ethiopian?: ApiEthiopianDate | null;
+  start_time_label?: string;
+  end_time_label?: string;
 };
 
 /**
