@@ -98,7 +98,7 @@ Be honest about the gaps rather than pretend:
 
 1. **Site** — `npm ci`, lint, typecheck, test, build, artifact upload.
 2. **Admin** — `composer validate --strict`, install, `php -l` everywhere, PHPStan, PHPUnit, migrations twice, seed twice, `composer audit`.
-3. **Security** — `npm audit` (advisory, not a gate: a CVE in a build tool must not stop a release that ships no server-side Node) and **gitleaks** over the full history.
+3. **Security** — `npm audit` (advisory, not a gate: a CVE in a build tool must not stop a release that ships no server-side Node) and **gitleaks** run directly over every ref (`--log-opts --all`) with the repository's own `.gitleaks.toml`.
 4. **Publish deploy branch** — assembles `site/` + `admin/` (with `vendor/`, without `tests/` or `.env`), writes `RELEASE` with the commit SHA, force-orphans the `deploy` branch.
 
-The gitleaks job checks out with `fetch-depth: 0`; on a shallow clone it resolves a missing base commit and exits 0 having scanned nothing, which is the one failure mode that looks like success.
+The security job checks out with `fetch-depth: 0` and scans **all refs**, not a `before..after` range. That is not a style preference: the range is the fragile part. On a shallow clone gitleaks cannot resolve it, reports "no leaks found in partial scan" after reading zero bytes, and the only thing standing between that and a green build is the exit code. Scanning everything costs about a second here.

@@ -8,6 +8,10 @@ The project has been live since 2026-10-23. Everything before that date is the b
 
 ## Unreleased
 
+### Fixed
+- **The security job scanned nothing and called it clean.** Its checkout was a one-commit clone, so the commit range gitleaks derived from the push event could not be resolved; it read zero bytes and printed "no leaks found". The job now fetches full history and runs gitleaks directly over every ref, and the marketplace action is gone. Verified locally with the same build: 131 commits, 11.2 MB, no leaks.
+- Dependabot opened twelve pull requests in its first minute, eleven of them major-version bumps (jsdom 20 → 31, PHPUnit 11 → 13, PHPMailer 6 → 7), all red. Majors are now ignored on npm and composer and the open-PR limit is three; the twelve were closed. A wall of red bot pull requests teaches everyone to ignore the colour.
+
 ### Added
 - `bin/preflight.php` — one command that checks a server is ready to serve: PHP version and extensions, `.env` readability, `APP_KEY`, upload and storage paths, database connection, migrations applied, an active administrator, and whether the tree looks like a release.
 - `scripts/serve-build.mjs` (`npm run preview`) — serves `.output/public` the way the host will, because `vite preview` looks for an SSR entry this build does not produce.
