@@ -7,6 +7,7 @@ import { useReveal } from "@/lib/use-reveal";
 import heroPurple from "@/assets/hero-wiz-purple.jpg";
 import { fetchCatalogue } from "@/lib/booking-api";
 import { buildServices, localServices, servicesForHome } from "@/lib/service-pages";
+import { fetchGallery, homeMoodPhotos, type GalleryPhoto } from "@/lib/content-api";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -40,6 +41,10 @@ function Home() {
   // salon decides what its home page leads with — no deploy needed.
   const [featured, setFeatured] = useState(() => servicesForHome(localServices(), 4));
 
+  // The three photos of "A visual mood" are the ones staff tick "Show on home
+  // page" for in the Gallery; the Website Images slots fill any shortfall.
+  const [galleryPhotos, setGalleryPhotos] = useState<GalleryPhoto[]>([]);
+
   useEffect(() => {
     const controller = new AbortController();
 
@@ -53,8 +58,16 @@ function Home() {
         // Keep the local four.
       });
 
+    fetchGallery(controller.signal)
+      .then(setGalleryPhotos)
+      .catch(() => {
+        // Keep the Website Images fallbacks.
+      });
+
     return () => controller.abort();
   }, []);
+
+  const mood = homeMoodPhotos(galleryPhotos, [images.portrait, images.space, images.nails], 3);
 
   return (
     <SiteLayout>
@@ -233,19 +246,19 @@ function Home() {
               className="gallery-one gallery-figure img-frame"
               style={{ "--i": 0 } as CSSProperties}
             >
-              <img src={images.portrait.url} alt={images.portrait.alt} loading="lazy" />
+              <img src={mood[0]?.url} alt={mood[0]?.alt} loading="lazy" />
             </figure>
             <figure
               className="gallery-two gallery-figure img-frame"
               style={{ "--i": 1 } as CSSProperties}
             >
-              <img src={images.space.url} alt={images.space.alt} loading="lazy" />
+              <img src={mood[1]?.url} alt={mood[1]?.alt} loading="lazy" />
             </figure>
             <figure
               className="gallery-three gallery-figure img-frame"
               style={{ "--i": 2 } as CSSProperties}
             >
-              <img src={images.nails.url} alt={images.nails.alt} loading="lazy" />
+              <img src={mood[2]?.url} alt={mood[2]?.alt} loading="lazy" />
             </figure>
             <span className="gallery-word" aria-hidden="true">
               WIZ

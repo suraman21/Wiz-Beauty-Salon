@@ -132,6 +132,7 @@ return static function (Router $router, App $app): void {
     $router->get('/admin/gallery', [GalleryController::class, 'index'], ['auth']);
     $router->post('/admin/gallery', [GalleryController::class, 'store'], ['auth']);
     $router->post('/admin/gallery/{id}/toggle', [GalleryController::class, 'toggle'], ['auth']);
+    $router->post('/admin/gallery/{id}/home', [GalleryController::class, 'home'], ['auth']);
     $router->post('/admin/gallery/{id}/delete', [GalleryController::class, 'destroy'], ['auth']);
     $router->post('/admin/gallery/{id}/move', [GalleryController::class, 'move'], ['auth']);
     $router->post('/admin/gallery/{id}/category', [GalleryController::class, 'setCategory'], ['auth']);

@@ -121,6 +121,31 @@ final class GalleryController
     }
 
     /**
+     * Tick a photo for the home page's "A visual mood" section — the three
+     * ticked photos lead the section, in the order the arrows set.
+     *
+     * @param array<string, string> $params
+     */
+    public function home(Request $request, array $params = []): Response
+    {
+        $item = $this->gallery->find((int) ($params['id'] ?? 0));
+
+        if ($item === null) {
+            throw HttpException::notFound('That photo no longer exists.');
+        }
+
+        $show = (int) ($item['show_on_home'] ?? 0) !== 1;
+        $this->gallery->setShowOnHome((int) $item['id'], $show);
+
+        $this->session->flash(
+            'success',
+            $show ? 'Photo will lead the home page.' : 'Photo removed from the home page.',
+        );
+
+        throw new RedirectException('/admin/gallery');
+    }
+
+    /**
      * @param array<string, string> $params
      */
     public function destroy(Request $request, array $params = []): Response

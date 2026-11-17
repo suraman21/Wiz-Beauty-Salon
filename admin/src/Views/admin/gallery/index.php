@@ -79,6 +79,7 @@ $published = count(array_filter($items, static fn (array $i): bool => (int) ($i[
             <?php
             $id = (int) $item['id'];
             $isPublished = (int) ($item['is_published'] ?? 0) === 1;
+            $showOnHome = (int) ($item['show_on_home'] ?? 0) === 1;
             $path = is_string($item['image_path'] ?? null) ? $item['image_path'] : '';
             ?>
             <figure class="photo">
@@ -87,6 +88,9 @@ $published = count(array_filter($items, static fn (array $i): bool => (int) ($i[
 
                     <?php if (!$isPublished): ?>
                         <span class="photo__flag">Hidden</span>
+                    <?php endif; ?>
+                    <?php if ($showOnHome): ?>
+                        <span class="photo__flag photo__flag--home">On home page</span>
                     <?php endif; ?>
                 </div>
 
@@ -116,6 +120,13 @@ $published = count(array_filter($items, static fn (array $i): bool => (int) ($i[
                             <?= csrf_field() ?>
                             <button type="submit" class="btn btn--ghost btn--sm">
                                 <?= $isPublished ? 'Hide' : 'Publish' ?>
+                            </button>
+                        </form>
+
+                        <form method="post" action="/admin/gallery/<?= $id ?>/home">
+                            <?= csrf_field() ?>
+                            <button type="submit" class="btn btn--ghost btn--sm">
+                                <?= $showOnHome ? 'Remove from home' : 'Show on home page' ?>
                             </button>
                         </form>
 

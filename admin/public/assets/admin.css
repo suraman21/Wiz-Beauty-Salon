@@ -1032,6 +1032,12 @@ a.nav__item:hover { background: rgba(255, 255, 255, .06); color: #fff; }
     border-radius: 99px;
 }
 
+.photo__flag--home {
+    left: auto;
+    right: 8px;
+    background: #c8158e;
+}
+
 .photo__body { padding: 12px 14px 14px; }
 
 .photo__title { font-size: 13.5px; font-weight: 600; }

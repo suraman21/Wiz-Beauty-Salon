@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/lib/api";
-import { fetchGallery, fetchReviews } from "@/lib/content-api";
+import { fetchGallery, fetchReviews, homeMoodPhotos } from "@/lib/content-api";
 
 const jsonResponse = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -57,5 +57,52 @@ describe("content API client", () => {
 
     await expect(fetchGallery()).rejects.toBeInstanceOf(ApiError);
     await expect(fetchGallery()).rejects.toThrow("Server is unwell.");
+  });
+});
+
+describe("home mood photos", () => {
+  const photo = (id: number, show: boolean, title = "") => ({
+    id,
+    title,
+    caption: "",
+    url: `/uploads/p${id}.jpg`,
+    category_id: null,
+    category: null,
+    category_slug: null,
+    show_on_home: show,
+  });
+
+  const fallback = [
+    { url: "/fallback/a.jpg", alt: "A" },
+    { url: "/fallback/b.jpg", alt: "B" },
+    { url: "/fallback/c.jpg", alt: "C" },
+  ];
+
+  it("leads with the photos staff ticked, in gallery order", () => {
+    const mood = homeMoodPhotos(
+      [photo(1, false), photo(2, true, "Silk"), photo(3, true), photo(4, true)],
+      fallback,
+    );
+
+    expect(mood.map((m) => m.url)).toEqual([
+      "/uploads/p2.jpg",
+      "/uploads/p3.jpg",
+      "/uploads/p4.jpg",
+    ]);
+    expect(mood[0]?.alt).toBe("Silk");
+  });
+
+  it("fills any shortfall from the website image slots", () => {
+    const mood = homeMoodPhotos([photo(7, true, "Bridal")], fallback);
+
+    expect(mood.map((m) => m.url)).toEqual([
+      "/uploads/p7.jpg",
+      "/fallback/a.jpg",
+      "/fallback/b.jpg",
+    ]);
+  });
+
+  it("uses the fallback set when nothing is ticked", () => {
+    expect(homeMoodPhotos([photo(1, false)], fallback)).toEqual(fallback);
   });
 });

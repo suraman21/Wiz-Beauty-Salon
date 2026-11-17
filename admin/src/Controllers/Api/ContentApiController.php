@@ -58,6 +58,7 @@ final class ContentApiController
                 'category_id' => $item['category_id'] === null ? null : (int) $item['category_id'],
                 'category' => $item['category_name'] === null ? null : (string) $item['category_name'],
                 'category_slug' => $item['category_slug'] === null ? null : (string) $item['category_slug'],
+                'show_on_home' => (int) ($item['show_on_home'] ?? 0) === 1,
             ];
         }
 

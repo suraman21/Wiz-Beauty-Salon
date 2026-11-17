@@ -93,6 +93,14 @@ final class GalleryRepository extends OrderedRepository
         );
     }
 
+    public function setShowOnHome(int $id, bool $show): void
+    {
+        $this->db->execute(
+            'UPDATE gallery_items SET show_on_home = :show WHERE id = :id',
+            [':id' => $id, ':show' => $show ? 1 : 0],
+        );
+    }
+
     public function delete(int $id): void
     {
         $this->db->execute('DELETE FROM gallery_items WHERE id = :id', [':id' => $id]);
