@@ -185,16 +185,19 @@ export const galleryWork: {
   },
 ];
 
-// The salon's details, as the panel publishes them. Empty here on purpose: a
-// detail the salon has not given us is left out of the page, never faked.
+// The salon's details, as the panel publishes them. The salon has given us its
+// location, its opening hours and its map, so they live here until the panel
+// publishes them itself.
 export const contact = {
   phone: "",
   whatsapp: "",
   email: "",
   instagram: "",
   tiktok: "",
-  address: "",
-  hours: [] as { day: string; time: string }[],
+  address: "Wiz Beauty Salon",
+  hours: [{ day: "Monday – Saturday", time: "9:00 AM – 7:00 PM" }],
+  mapEmbed:
+    "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d4675.060274126608!2d38.78350027569145!3d8.952384490182014!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x164b830018fa71dd%3A0xd006890ffa49c035!2sWiz%20Beauty%20Salon!5e1!3m2!1sen!2set!4v1794870347332!5m2!1sen!2set",
 };
 
 // Appointment times, shown only until the panel's calendar answers.

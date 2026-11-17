@@ -167,15 +167,39 @@ function Contact() {
         className={`visit${address === "" ? " visit-solo" : ""}${visitReveal.revealed ? " is-revealed" : ""}`}
       >
         <noscript>
-          <style>{`.visit-eyebrow,.visit-line,.visit-address,.hours,.closures,.visit .editorial-link,.feeling-rule{opacity:1!important;animation:none!important;transform:none!important}.visit-bloom,.map-placeholder{opacity:1!important}`}</style>
+          <style>{`.visit-eyebrow,.visit-line,.hours,.closures,.visit .editorial-link,.feeling-rule{opacity:1!important;animation:none!important;transform:none!important}.visit-bloom,.visit-map,.visit-chip{opacity:1!important}`}</style>
         </noscript>
         <span className="visit-bloom" aria-hidden="true" />
         <div className="section-wrap visit-inner">
           {address !== "" && (
-            <div className="map-placeholder" role="img" aria-label={`Salon location — ${address}`}>
-              <MapPin size={30} strokeWidth={1.2} />
-              <span>{address}</span>
-            </div>
+            <figure className="visit-map">
+              <span className="visit-map-fallback" aria-hidden="true">
+                <MapPin size={30} strokeWidth={1.2} />
+                <span>{address}</span>
+              </span>
+              <iframe
+                title="Wiz Beauty Salon on Google Maps"
+                src={contact.mapEmbed}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="strict-origin-when-cross-origin"
+              />
+              <figcaption className="visit-chip">
+                <span className="visit-chip-pin" aria-hidden="true">
+                  <MapPin size={16} strokeWidth={1.6} />
+                </span>
+                <span className="visit-chip-text">
+                  <strong>{address}</strong>
+                  <a
+                    href="https://www.google.com/maps/search/?api=1&query=Wiz+Beauty+Salon"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Get directions <span aria-hidden="true">→</span>
+                  </a>
+                </span>
+              </figcaption>
+            </figure>
           )}
           <div className="visit-copy">
             <p className="visit-eyebrow">
@@ -187,11 +211,6 @@ function Contact() {
               <span className="feeling-line visit-line">Location</span>
               <span className="feeling-line feeling-line-em visit-line">&amp; hours.</span>
             </h2>
-            {address !== "" && (
-              <p className="visit-address">
-                <MapPin size={16} /> {address}
-              </p>
-            )}
             {hours.length > 0 && (
               <dl className="hours">
                 {hours.map((h) => (

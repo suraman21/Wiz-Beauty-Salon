@@ -9229,3 +9229,242 @@ body {
     transform: none !important;
   }
 }
+
+/* ------------------------------------------------- visit us, futuristic map
+   The salon's real map takes the bright room. The frame is a thin plum to
+   pink gradient border with a neon glow and HUD corner brackets; the
+   location name rides on a glass chip over the map with a directions link,
+   and the opening hours sit in a glass card. The fallback behind the iframe
+   keeps the frame beautiful while the map loads or if it is blocked. */
+
+.visit-map {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  padding: 1px;
+  border-radius: 26px;
+  background: linear-gradient(
+    135deg,
+    rgba(51, 8, 47, 0.55),
+    rgba(200, 21, 142, 0.65) 45%,
+    rgba(238, 63, 156, 0.4) 80%,
+    rgba(51, 8, 47, 0.35)
+  );
+  box-shadow:
+    0 34px 90px rgba(200, 21, 142, 0.32),
+    0 10px 34px rgba(90, 10, 80, 0.22);
+  opacity: 0;
+}
+
+/* HUD corner brackets, offset just outside the frame */
+.visit-map::before,
+.visit-map::after {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  width: 26px;
+  height: 26px;
+  pointer-events: none;
+}
+
+.visit-map::before {
+  top: -9px;
+  left: -9px;
+  border-top: 2px solid #c8158e;
+  border-left: 2px solid #c8158e;
+  border-top-left-radius: 10px;
+}
+
+.visit-map::after {
+  right: -9px;
+  bottom: -9px;
+  border-right: 2px solid #c8158e;
+  border-bottom: 2px solid #c8158e;
+  border-bottom-right-radius: 10px;
+}
+
+.visit-map-fallback {
+  position: absolute;
+  inset: 1px;
+  z-index: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border-radius: 25px;
+  background:
+    radial-gradient(80% 80% at 50% 38%, rgba(255, 255, 255, 0.95), transparent 70%),
+    linear-gradient(160deg, #ffd9ef 0%, #f7b9e2 55%, #f2a5d8 100%);
+  color: #6f2f61;
+  text-align: center;
+  padding: 20px;
+}
+
+.visit-map iframe {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border: 0;
+  border-radius: 25px;
+  background: transparent;
+}
+
+/* the glass chip: location name and directions, riding the map */
+.visit-chip {
+  position: absolute;
+  z-index: 3;
+  left: 18px;
+  bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: calc(100% - 36px);
+  padding: 12px 16px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 14px 34px rgba(90, 10, 80, 0.22);
+  -webkit-backdrop-filter: blur(14px) saturate(1.3);
+  backdrop-filter: blur(14px) saturate(1.3);
+}
+
+.visit-chip-pin {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  color: #fff;
+  background: linear-gradient(135deg, #c8158e, #ee3f9c);
+  box-shadow: 0 6px 16px rgba(200, 21, 142, 0.45);
+}
+
+.visit-chip-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.visit-chip-text strong {
+  font-size: 0.95rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  color: #33082f;
+  white-space: nowrap;
+}
+
+.visit-chip-text a {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #9c1379;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.visit-chip-text a:hover {
+  color: #c8158e;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* the opening hours become a glass card */
+.visit .hours {
+  margin: 26px 0 0;
+  padding: 18px 22px;
+  border: 1px solid rgba(61, 15, 61, 0.14);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 16px 40px rgba(122, 20, 102, 0.14);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.visit .hours div {
+  padding-block: 0;
+  border-bottom: 0;
+  font-size: 0.95rem;
+}
+
+.visit .hours dt {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.visit .hours dd {
+  font-weight: 550;
+  color: #581150;
+  white-space: nowrap;
+}
+
+.visit .hours dt svg {
+  color: #c8158e;
+}
+
+/* Entrance — the map zooms in, the chip rises after it. */
+.visit.is-revealed .visit-map {
+  animation: wiz-zoom 1.1s var(--ease-quiet) both 0.25s;
+}
+
+.visit.is-revealed .visit-chip {
+  animation: wiz-rise 0.9s var(--ease-quiet) both 0.55s;
+}
+
+@media (max-width: 900px) {
+  .visit-map iframe {
+    aspect-ratio: 16 / 11;
+  }
+}
+
+@media (max-width: 600px) {
+  .visit-map {
+    border-radius: 20px;
+  }
+  .visit-map iframe,
+  .visit-map-fallback {
+    border-radius: 19px;
+  }
+  .visit-map::before {
+    top: -7px;
+    left: -7px;
+  }
+  .visit-map::after {
+    right: -7px;
+    bottom: -7px;
+  }
+  .visit-chip {
+    left: 12px;
+    bottom: 12px;
+    padding: 10px 13px;
+    border-radius: 15px;
+  }
+  .visit-chip-pin {
+    width: 30px;
+    height: 30px;
+  }
+  .visit .hours {
+    padding: 15px 18px;
+  }
+  .visit .hours div {
+    flex-direction: column;
+    gap: 3px;
+  }
+  .visit .hours dd {
+    white-space: normal;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .visit .visit-map,
+  .visit .visit-chip {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
