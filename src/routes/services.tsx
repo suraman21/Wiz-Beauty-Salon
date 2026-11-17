@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ArrowRight, Heart } from "lucide-react";
-import { BookingBand, ServicesHero, SiteLayout } from "@/components/site/SiteChrome";
+import { BookingBand, PageHero, SiteLayout } from "@/components/site/SiteChrome";
 import { useSiteImages } from "@/lib/site-content";
 import { fetchCatalogue } from "@/lib/booking-api";
 import { buildServices, localServices, type SalonService } from "@/lib/service-pages";
@@ -49,7 +49,21 @@ function Services() {
 
   return (
     <SiteLayout>
-      <ServicesHero image={images.servicesHero.url} alt={images.servicesHero.alt} />
+      <PageHero
+        overline="Our services"
+        title={
+          <>
+            Made for <em>every</em> moment.
+          </>
+        }
+        copy="From everyday beauty to special occasions, we offer premium services tailored for you."
+        cta={
+          <a className="wiz-btn-primary" href="#service-list">
+            Explore Services
+            <ArrowRight size={16} aria-hidden="true" />
+          </a>
+        }
+      />
 
       <section id="service-list" className="svc-hub section-wrap">
         <div className="svc-hub-head">

@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { Clock, Mail, MapPin, MessageCircle, Phone, Instagram, Music2 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { EditorialLink, HeroBand, SiteLayout } from "@/components/site/SiteChrome";
+import { EditorialLink, PageHero, SiteLayout } from "@/components/site/SiteChrome";
 import { contact } from "@/data/wiz";
 import { ApiError } from "@/lib/api";
 import { sendMessage } from "@/lib/contact-api";
@@ -13,7 +13,7 @@ import {
   whatsappHref,
   type SalonContact,
 } from "@/lib/salon-api";
-import { useSalonInfo, useSiteImages } from "@/lib/site-content";
+import { useSalonInfo } from "@/lib/site-content";
 import { useReveal } from "@/lib/use-reveal";
 
 export const Route = createFileRoute("/contact")({
@@ -81,7 +81,6 @@ type FormState = { name: string; contact: string; message: string };
 const emptyForm: FormState = { name: "", contact: "", message: "" };
 
 function Contact() {
-  const images = useSiteImages();
   const salon = useSalonInfo();
   const visitReveal = useReveal<HTMLElement>();
   const messageReveal = useReveal<HTMLElement>();
@@ -123,45 +122,41 @@ function Contact() {
   };
   return (
     <SiteLayout>
-      <section className="contact-hero">
+      <PageHero
+        tone="mist"
+        overline="Contact"
+        title={
+          <>
+            Let's talk <em>beauty.</em>
+          </>
+        }
+        copy="Questions, ideas or special requests — reach us the way that suits you."
+        cta={
+          <a className="wiz-btn-primary" href="#message">
+            Send us a message
+          </a>
+        }
+      />
+
+      {/* The ways to reach the salon, out of the hero and into the light where
+          they can be read at leisure. */}
+      <section className="contact-channels" hidden={channels.length === 0}>
         <div className="section-wrap">
-          <HeroBand tone="mist" />
-        </div>
-        <div className="section-wrap contact-grid">
-          <div className="reveal-up">
-            <span className="overline">Contact</span>
-            <h1>
-              Let's talk
-              <br />
-              <em>beauty.</em>
-            </h1>
-            <p className="contact-lead">
-              Questions, ideas or special requests — reach us the way that suits you.
-            </p>
-            {channels.length === 0 && (
-              <a className="editorial-link contact-write" href="#message">
-                Send us a message <span aria-hidden="true">→</span>
-              </a>
-            )}
-            <ul className="channels" hidden={channels.length === 0}>
-              {channels.map(({ icon: Icon, label, value, href }) => (
-                <li key={label}>
-                  <Icon size={18} strokeWidth={1.4} />
-                  <span className="ch-label">{label}</span>
-                  {href === undefined ? (
-                    <span className="ch-value">{value}</span>
-                  ) : (
-                    <a className="ch-value" href={href} rel="noreferrer">
-                      {value}
-                    </a>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </div>
-          <figure className="contact-image img-frame reveal">
-            <img src={images.skin.url} alt={images.skin.alt} />
-          </figure>
+          <ul className="channels">
+            {channels.map(({ icon: Icon, label, value, href }) => (
+              <li key={label}>
+                <Icon size={18} strokeWidth={1.4} />
+                <span className="ch-label">{label}</span>
+                {href === undefined ? (
+                  <span className="ch-value">{value}</span>
+                ) : (
+                  <a className="ch-value" href={href} rel="noreferrer">
+                    {value}
+                  </a>
+                )}
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 

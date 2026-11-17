@@ -56,8 +56,6 @@ function About() {
           </>
         }
         copy="WIZ is a space for your own expression of beauty — from the smallest detail to a whole new look."
-        image={images.portrait.url}
-        alt={images.portrait.alt}
       />
 
       <section ref={reveal.ref} className={`story${reveal.revealed ? " is-revealed" : ""}`}>

@@ -132,24 +132,36 @@ the case the salon asked for.
 `09:00–10:00`. It appeared in the panel list and detail page, and cancelling it from the
 panel freed both grid cells (`booking_slots` back to 0 for that day).
 
-### 2.6 The other pages now open with the home page's photograph — **Medium** — fixed
+### 2.6 The other pages now open on the home page's photograph — **Medium** — fixed
 
 **Found:** each inner page's hero used a different photograph, so the site felt like five
-different sites.
+different sites: About and Gallery showed a portrait card beside the headline, Services
+had its own composition with a second model, Contact had a third.
 
-**Fixed:** `src/lib/hero-art.ts` is now the single import of
-`hero-wiz-purple.jpg` — the home page and the new `HeroBand` component both use it, so
-they cannot drift apart. The band is a strip 340 px tall on a 1280×900 screen and 133 px
-on a 390 px phone (the home hero is nearly a full viewport), inset inside the page
-measure, framed with a hairline and a plum veil.
+**Fixed:** those heroes are **gone**, not decorated. Every inner page now opens with one
+hero: the home page's photograph, inset inside the page measure and shorter than the home
+hero (`src/lib/hero-art.ts` is the single import, so the two cannot drift apart), with
+that page's own words — overline, headline, lede, and a call to action on Services and
+Contact — set **on** the picture, bottom-left, where the artwork is the salon's own
+purple.
+
+The copy plays in on the home hero's terms: the headline settles from a slight
+over-scale (`wiz-zoom`), the eyebrow drops in and the lede and button rise behind it
+(`wiz-rise`), staggered so the hero resolves in about 1.6 s. `prefers-reduced-motion`
+turns all of it off.
 
 **The crop was the risky part.** The photograph is 1672×941 with the tiara in the top 3 %
-and the face ending around 32 %. Covering a 5:1 strip removes height only, and the frame
-is pinned to `object-position: 50% 0%`, so the tiara, the face, the flowers and the top of
-the gown are all inside the band at every width tested (1280, 1192 band width, 390):
-nothing important is cut. Styles are in `src/styles.css` under "The shared hero band".
+and the face ending around 32 %. A wide, short band covered with a 16:9 picture loses
+height, never width, and the frame is pinned to `object-position: 50% 0%`, so the tiara,
+the face, the flowers and the top of the gown are all inside the hero at every width
+tested (1280 band 1192×486, 390 band 346×565).
 
----
+**On a phone** the words cannot sit on her face and stay readable, so the hero becomes a
+stack at 820 px and below — the top of the picture, then the copy on the salon's own void
+colour underneath — which is exactly what the home hero already does at that width.
+
+**Verified:** all four pages prerender with `hero-band-copy` and zero `page-hero-image`
+(the old hero markup), no console errors, no horizontal overflow.
 
 ## 3. The gate
 

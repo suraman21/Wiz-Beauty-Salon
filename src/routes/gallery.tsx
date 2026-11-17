@@ -134,8 +134,6 @@ function Gallery() {
           </>
         }
         copy="Recent work from the salon, shared with our clients' permission."
-        image={images.hair.url}
-        alt={images.hair.alt}
       />
 
       <section

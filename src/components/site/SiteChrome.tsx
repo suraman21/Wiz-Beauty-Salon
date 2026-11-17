@@ -209,115 +209,72 @@ export function SiteLayout({ children }: { children: ReactNode }) {
 }
 
 /**
- * The home page's photograph, cut to a narrow strip.
+ * The hero every inner page opens with.
  *
- * Every inner page opens with this: the same picture the home page uses, but
- * only the top of the frame and only as tall as a band — enough to recognise
- * the place, quiet enough that the page's own heading still leads.
+ * One photograph — the same one the home page uses, imported from one place so
+ * the two can never drift apart — and the page's own words on top of it. The
+ * band is shorter than the home hero and inset inside the page measure, so a
+ * visitor can tell the pages apart at a glance while still recognising the
+ * room.
  *
- * The crop is deliberate. Covering a 5:1 strip with a 16:9 photograph removes
- * height, never width, and the frame is pinned to the top edge: the tiara, the
- * face and the flowers all sit in the first third, so nothing that matters is
- * cut. `aria-hidden` because it repeats a picture described in full on the
- * home page.
+ * The crop is deliberate. Covering a wide, short band with a 16:9 photograph
+ * removes height, never width, and the frame is pinned to the top edge: the
+ * tiara, the face and the flowers all live in the first third, so the picture
+ * is never cut through anything that matters. The words sit bottom-left, over
+ * the salon's own purple, with a scrim under them.
+ *
+ * The copy animates in on the home hero's terms — the headline settles from a
+ * slight over-scale, everything else rises behind it — and plays immediately,
+ * because this is the first thing on the page.
  */
-export function HeroBand({ tone = "plum" }: { tone?: "plum" | "mist" }) {
-  return (
-    <div className={`hero-band hero-band-${tone}`} aria-hidden="true">
-      <img
-        src={heroArt.url}
-        alt=""
-        width={heroArt.width}
-        height={heroArt.height}
-        loading="eager"
-        decoding="async"
-        fetchPriority="high"
-      />
-      <span className="hero-band-veil" />
-    </div>
-  );
-}
-
 export function PageHero({
   overline,
   title,
   copy,
-  image,
-  alt,
   tone = "plum",
+  cta,
 }: {
   overline: string;
   title: ReactNode;
   copy: string;
-  image: string;
-  alt: string;
   tone?: "plum" | "mist";
+  cta?: ReactNode;
 }) {
   return (
-    <section className={`page-hero page-hero-${tone}`}>
-      <div className="section-wrap">
-        <HeroBand tone={tone} />
-      </div>
-      <div className="section-wrap page-hero-inner">
-        <div className="page-hero-copy reveal-up">
-          <span className="overline">{overline}</span>
-          <h1>{title}</h1>
-          <p>{copy}</p>
-        </div>
-        <figure className="page-hero-image img-frame reveal">
-          <img src={image} alt={alt} fetchPriority="high" />
-        </figure>
-      </div>
-    </section>
-  );
-}
-
-/**
- * The services page opens on its own composition: the copy on the left, the
- * portrait on the right inside a neon ring, petals in the air. Dark plum,
- * like the home page's dark rooms — the ring is the light.
- */
-export function ServicesHero({ image, alt }: { image: string; alt: string }) {
-  const reveal = useReveal<HTMLElement>();
-
-  return (
-    <section
-      ref={reveal.ref}
-      className={`svc-hero${reveal.revealed ? " is-revealed" : ""}`}
-      aria-labelledby="svc-hero-title"
-    >
+    <section className={`page-hero page-hero-${tone}`} aria-labelledby="page-hero-title">
       <noscript>
-        <style>{`.svc-hero-eyebrow,.svc-hero-line,.svc-hero-lede,.svc-hero-cta,.svc-hero-figure,.feeling-rule{opacity:1!important;animation:none!important;transform:none!important}.svc-hero-ring,.svc-hero-petal{opacity:1!important}`}</style>
+        <style>{`.hero-band-eyebrow,.hero-band-title,.hero-band-lede,.hero-band-cta{opacity:1!important;animation:none!important;transform:none!important}`}</style>
       </noscript>
+
       <div className="section-wrap">
-        <HeroBand tone="plum" />
-      </div>
-      <span className="svc-hero-ring" aria-hidden="true" />
-      <span className="svc-hero-petal svc-hero-petal-a" aria-hidden="true" />
-      <span className="svc-hero-petal svc-hero-petal-b" aria-hidden="true" />
-      <span className="svc-hero-petal svc-hero-petal-c" aria-hidden="true" />
-      <div className="section-wrap svc-hero-inner">
-        <div className="svc-hero-copy">
-          <p className="svc-hero-eyebrow">
-            <span className="feeling-rule" aria-hidden="true" />
-            <span className="svc-hero-eyebrow-text">Our services</span>
-            <span className="feeling-rule feeling-rule-end" aria-hidden="true" />
-          </p>
-          <h1 id="svc-hero-title" className="svc-hero-title">
-            <span className="feeling-line svc-hero-line">Made for</span>
-            <span className="feeling-line feeling-line-em svc-hero-line">every</span>
-            <span className="feeling-line feeling-line-em svc-hero-line">moment.</span>
-          </h1>
-          <p className="svc-hero-lede">
-            From everyday beauty to special occasions, we offer premium services tailored for you.
-          </p>
-          <a className="btn btn-blush svc-hero-cta" href="#service-list">
-            Explore Services <ArrowRight size={16} />
-          </a>
+        <div className="hero-band hero-band-hero">
+          <img
+            className="hero-band-image"
+            src={heroArt.url}
+            alt=""
+            width={heroArt.width}
+            height={heroArt.height}
+            loading="eager"
+            decoding="async"
+            fetchPriority="high"
+          />
+          <span className="hero-band-veil" aria-hidden="true" />
+
+          <div className="hero-band-copy">
+            <p className="hero-band-eyebrow">
+              <span aria-hidden="true" />
+              {overline}
+            </p>
+
+            <h1 id="page-hero-title" className="hero-band-title">
+              {title}
+            </h1>
+
+            <p className="hero-band-lede">{copy}</p>
+
+            {cta !== undefined && <div className="hero-band-cta">{cta}</div>}
+          </div>
         </div>
-        <figure className="svc-hero-figure">
-          <img src={image} alt={alt} fetchPriority="high" />
-        </figure>
       </div>
     </section>
   );
