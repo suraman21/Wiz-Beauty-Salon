@@ -19,6 +19,7 @@ The project has been live since 2026-10-23. Everything before that date is the b
 - `CONTRIBUTING.md`, `SECURITY.md`, `.editorconfig`, issue and pull-request templates.
 
 ### Changed
+- **The booking terms no longer mention money.** The salon publishes no prices and takes payment in person, so the "Prices and payment" section (3 clauses), the "Deposits for long or bridal bookings" section (3 clauses), the fee sentence in "Arriving late", the deposit consequence in "If you do not come", the "nothing is owed" clause in "Changing or cancelling" and the refund remedy in "If something is not right" are gone. The document is now 12 sections and 30 clauses, and both languages moved together — a reader is never shown an English paragraph whose Amharic counterpart was deleted.
 - **Package manager: Bun → npm.** `package-lock.json` is now committed and CI runs `npm ci` on Node 22. Two lockfiles drift; `npm ci` is reproducible and ships with Node. Bun's 24-hour supply-age guard is replaced by Dependabot plus the existing audit job.
 - `package.json` renamed from the template's `tanstack_start_ts` to `wiz-beauty-salon`, pinned `engines.node >= 22.12.0`, and gained `typecheck` and `preview:static` scripts.
 - `admin/composer.json`'s lint and PHPStan now cover `bin/`, so a deployment script cannot rot unnoticed.
@@ -38,7 +39,7 @@ The project has been live since 2026-10-23. Everything before that date is the b
 ## 2026-11-17 — `25e7af0`
 
 ### Added
-- **Booking terms in English and Amharic** at `/booking/information`: 14 sections, 38 clauses, a language switch that keeps the reader's place, and a window clause generated from the salon's actual setting rather than typed. Linked from the wizard, the confirmation screen, the recovery page, the footer and the manage page.
+- **Booking terms in English and Amharic** at `/booking/information`: 14 sections, 38 clauses (now 12 and 30 — the money sections were removed on 2026-11-17), a language switch that keeps the reader's place, and a window clause generated from the salon's actual setting rather than typed. Linked from the wizard, the confirmation screen, the recovery page, the footer and the manage page.
 
 ## 2026-11-17 — `a48a484`
 

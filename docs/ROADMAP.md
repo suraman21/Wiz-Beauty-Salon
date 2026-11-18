@@ -13,7 +13,7 @@ What is left, in the order it should be done. Everything above the line is finis
 - Lost-link recovery by phone **or** email, rate-limited and non-enumerating.
 - The panel's twelve screens, including multi-service bookings, the schedule, the email designer and the audit trail.
 - The change window as a setting, obeyed by the page, the API and the emails.
-- The booking terms at `/booking/information`: 14 sections, 38 clauses, both languages, linked from every step.
+- The booking terms at `/booking/information`: 12 sections, 30 clauses, both languages, linked from every step. Prices, deposits and fees are deliberately absent — money is settled in person.
 - Ethiopian calendar and clock across site, API and panel, with the Gregorian date always beside it.
 
 ---

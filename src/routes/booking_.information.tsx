@@ -29,13 +29,13 @@ export const Route = createFileRoute("/booking_/information")({
       {
         name: "description",
         content:
-          "Appointment terms for WIZ Beauty Salon: how bookings are confirmed, the change and cancellation window, late arrivals, no-shows, deposits, health questions, photography and privacy — in English and Amharic.",
+          "Appointment terms for WIZ Beauty Salon: how bookings are confirmed, the change and cancellation window, late arrivals, no-shows, health questions, photography and privacy — in English and Amharic.",
       },
       { property: "og:title", content: "Booking information and terms | WIZ Beauty Salon" },
       {
         property: "og:description",
         content:
-          "Read the terms before you book: confirmation, the change window, late arrivals, no-shows, deposits and privacy.",
+          "Read the terms before you book: confirmation, the change window, late arrivals, no-shows and privacy.",
       },
       { property: "og:type", content: "article" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -116,32 +116,13 @@ function sectionsFor(policy: {
       ],
     },
     {
-      id: "prices",
-      en: "Prices and payment",
-      am: "ዋጋ እና ክፍያ",
-      clauses: [
-        {
-          en: "Prices are quoted in Ethiopian birr. The price on the website is the salon's current price for that service; the final amount is confirmed when you are in the chair, and you pay at the salon after your service.",
-          am: "ዋጋዎች በኢትዮጵያ ብር ይነገራሉ። በድረ-ገጹ ላይ የሚታየው ዋጋ ሳሎኑ ለዚያ አገልግሎት ያለው የአሁኑ ዋጋ ነው፤ የመጨረሻው መጠን ወንበር ላይ ሲቀመጡ ይረጋገጣል፤ ክፍያውም አገልግሎቱ ከተጠናቀቀ በኋላ በሳሎኑ ይፈጸማል።",
-        },
-        {
-          en: "If your service takes longer than booked — extra length, a colour correction, a style that needs more time — we will tell you the new price before we start, not after.",
-          am: "አገልግሎቱ ከተያዘው ጊዜ በላይ ከፈጀ — ተጨማሪ ርዝመት፣ የቀለም ማስተካከያ፣ ተጨማሪ ጊዜ የሚፈልግ ስታይል — አዲሱን ዋጋ ከመጀመራችን በፊት እንነግርዎታለን፤ ከጨረስን በኋላ አይደለም።",
-        },
-        {
-          en: "This website does not take card payments and never asks for card details. Never send payment to a number or account you were not given by the salon directly.",
-          am: "ይህ ድረ-ገጽ በካርድ ክፍያ አይቀበልም፤ የካርድ መረጃም አይጠይቅም። ሳሎኑ በቀጥታ ካልሰጠዎት ስልክ ቁጥር ወይም አካውንት ገንዘብ አይላኩ።",
-        },
-      ],
-    },
-    {
       id: "window",
       en: "Changing or cancelling",
       am: "ቀጠሮ መለወጥ ወይም መሰረዝ",
       clauses: [
         {
-          en: `You may change or cancel your appointment yourself, free of charge, up to ${windowEn}. The salon's current rule is: “${policy.summary}”`,
-          am: `ቀጠሮዎን በራስዎ በነጻ ${windowAm} መለወጥ ወይም መሰረዝ ይችላሉ። የሳሎኑ የአሁኑ ደንብ፦ “${policy.summary}” ነው።`,
+          en: `You may change or cancel your appointment yourself, without asking us, up to ${windowEn}. The salon's current rule is: “${policy.summary}”`,
+          am: `ቀጠሮዎን በራስዎ ${windowAm} መለወጥ ወይም መሰረዝ ይችላሉ። የሳሎኑ የአሁኑ ደንብ፦ “${policy.summary}” ነው።`,
         },
         {
           en: "Use the manage link in your email. You can move the appointment as often as you need inside the window; each move releases your old time back to the salon.",
@@ -150,29 +131,6 @@ function sectionsFor(policy: {
         {
           en: "After the window closes, the appointment is the salon's to move. Call us and we will do what we can, but we cannot promise to fill a slot that is already too close.",
           am: "የጊዜ ገደቡ ካለፈ በኋላ ቀጠሮውን ማንቀሳቀስ የሳሎኑ ሥራ ይሆናል። ይደውሉልን፤ የተቻለንን እናደርጋለን፤ ሆኖም በጣም የቀረበ ሰዓት መሙላት ዋስትና ልንሰጥ አንችልም።",
-        },
-        {
-          en: "If you cancel, nothing is owed. If a deposit was paid, the deposit section below applies.",
-          am: "ከሰረዙ ምንም ዕዳ አይኖርብዎትም። ቅድሚያ ክፍያ ከፍለው ከነበረ ከዚህ በታች ያለው የቅድሚያ ክፍያ ክፍል ይመልከቱ።",
-        },
-      ],
-    },
-    {
-      id: "deposits",
-      en: "Deposits for long or bridal bookings",
-      am: "ለረጅም ወይም ለሙሽራ ቀጠሮዎች ቅድሚያ ክፍያ",
-      clauses: [
-        {
-          en: "For long services — braids, a full head of colour, bridal hair and make-up — the salon may ask for a deposit to hold the time. We will always tell you the amount and the terms before you pay it.",
-          am: "ለረጅም አገልግሎቶች — ሽሮ፣ ሙሉ ጭንቅላት ቀለም፣ የሙሽራ ጸጉርና ሜካፕ — ሳሎኑ ሰዓቱን ለመያዝ ቅድሚያ ክፍያ ሊጠይቅ ይችላል። ምን ያህል እንደሆነና ሁኔታው ምን እንደሆነ ከመክፈልዎ በፊት ሁልጊዜ እንነግርዎታለን።",
-        },
-        {
-          en: "A deposit is returned in full if you cancel inside the window, or if the salon has to move your appointment and cannot offer you a time that works.",
-          am: "በተቀመጠው ጊዜ ገደብ ውስጥ ከሰረዙ፣ ወይም ሳሎኑ ቀጠሮውን ማንቀሳቀስ ሲያስፈልገው ለእርስዎ የሚስማማ ሰዓት ማቅረብ ካልቻለ ቅድሚያ ክፍያው ሙሉ በሙሉ ይመለሳል።",
-        },
-        {
-          en: "If you do not come and do not tell us, or cancel after the window, the deposit is kept — it is what paid for the time that was held and could not be given to anyone else.",
-          am: "ካልመጡና ካላሳወቁን፣ ወይም ከጊዜ ገደቡ በኋላ ከሰረዙ ቅድሚያ ክፍያው ይቀራል — ለተያዘውና ለሌላ ሰው ሊሰጥ ለማይችል ሰዓት የተከፈለ ነው።",
         },
       ],
     },
@@ -186,8 +144,8 @@ function sectionsFor(policy: {
           am: "ከቀጠሮዎ አምስት ደቂቃ በፊት ይምጡ። ከመዘግየትዎ በፊት ይደውሉ ወይም ይጻፉልን — ሰዓትዎን ለአስራ አምስት ደቂቃ እንይዛለን።",
         },
         {
-          en: "After fifteen minutes we may need to shorten the service so the customers after you are not kept waiting, and the price may stay the same. We will always tell you what we can still do before we begin.",
-          am: "ከአስራ አምስት ደቂቃ በኋላ ከእርስዎ በኋላ ያሉ ደንበኞች እንዳይቆዩ አገልግሎቱን ማሳጠር ሊያስፈልገን ይችላል፤ ዋጋው ግን አይቀየር ይችላል። ከመጀመራችን በፊት ምን ማድረግ እንደምንችል ሁልጊዜ እንነግርዎታለን።",
+          en: "After fifteen minutes we may need to shorten the service so the customers after you are not kept waiting. We will always tell you what we can still do before we begin.",
+          am: "ከአስራ አምስት ደቂቃ በኋላ ከእርስዎ በኋላ ያሉ ደንበኞች እንዳይቆዩ አገልግሎቱን ማሳጠር ሊያስፈልገን ይችላል። ከመጀመራችን በፊት ምን ማድረግ እንደምንችል ሁልጊዜ እንነግርዎታለን።",
         },
         {
           en: "If you arrive more than thirty minutes late we may have to rebook you, because the time is no longer there to give.",
@@ -205,12 +163,8 @@ function sectionsFor(policy: {
           am: "አለመምጣት ማለት ማንም ያልመጣበትና ያልተሰረዘ ቀጠሮ ነው። ለባለሙያው ሰዓቱን፣ ለሳሎኑም ሊያገኘው የነበረውን ደንበኛ ያሳጣል።",
         },
         {
-          en: "After two no-shows we may ask for a deposit before holding another long appointment, or ask you to confirm by phone on the day.",
-          am: "ከሁለት ጊዜ አለመምጣት በኋላ ሌላ ረጅም ቀጠሮ ከመያዛችን በፊት ቅድሚያ ክፍያ ልንጠይቅ፣ ወይም በቀኑ በስልክ እንዲያረጋግጡ ልንጠይቅ እንችላለን።",
-        },
-        {
-          en: "We do not charge a fee for a missed appointment. We would rather talk to you than bill you.",
-          am: "በመቅረት ምክንያት ክፍያ አንጠይቅም። ከመክፈል ይልቅ መነጋገር እንመርጣለን።",
+          en: "After two no-shows we may ask you to confirm by phone on the day before we hold another long appointment.",
+          am: "ከሁለት ጊዜ አለመምጣት በኋላ ሌላ ረጅም ቀጠሮ ከመያዛችን በፊት በቀኑ በስልክ እንዲያረጋግጡ ልንጠይቅ እንችላለን።",
         },
       ],
     },
@@ -224,8 +178,8 @@ function sectionsFor(policy: {
           am: "አንዳንድ ጊዜ ቀጠሮ ማንቀሳቀስ ይኖርብናል፦ ባለሙያ ሲታመም፣ ውሃ ወይም መብራት ሲቋረጥ፣ የመዘጋት ማስታወቂያ ሲወጣ። በተቻለ ፍጥነት በሰጡን ቁጥር እናገኝዎታለን።",
         },
         {
-          en: "You may then take a new time, or ask for any deposit back in full. Neither choice will be held against you.",
-          am: "ከዚያ አዲስ ሰዓት መውሰድ ወይም የቅድሚያ ክፍያውን ሙሉ በሙሉ መመለስ መጠየቅ ይችላሉ። ከሁለቱም ምርጫ በኋላ ምንም ቅሬታ አናስቀምጥም።",
+          en: "You may then take a new time, or cancel without any obligation. Neither choice will be held against you.",
+          am: "ከዚያ አዲስ ሰዓት መውሰድ ወይም ያለ ምንም ግዴታ መሰረዝ ይችላሉ። ከሁለቱም ምርጫ በኋላ ምንም ቅሬታ አናስቀምጥም።",
         },
       ],
     },
@@ -307,8 +261,8 @@ function sectionsFor(policy: {
           am: "በአገልግሎት ካልተደሰቱ በሰባት ቀናት ውስጥ ይንገሩን። የማጣቀሻ ቁጥሩ ካለዎት ይዘው ይምጡ፤ የሚያሳስብዎን ያሳዩን — ለማስተካከል ሥራውን ማየት ያስፈልገናል።",
         },
         {
-          en: "We will offer a correction, an adjustment, or a refund of the service concerned where that is the fair answer. What we will not do is argue about it.",
-          am: "ማስተካከያ፣ ማሻሻያ ወይም ለተጠቀሰው አገልግሎት ገንዘብ መመለስ ፍትሐዊው መልስ ሲሆን እናቀርባለን። የማናደርገው ነገር ስለሱ መከራከር ነው።",
+          en: "We will offer a correction, or a redo of the service concerned, where that is the fair answer. What we will not do is argue about it.",
+          am: "ማስተካከያ ወይም ሥራውን እንደገና ማድረግ ፍትሐዊው መልስ ሲሆን እናቀርባለን። የማናደርገው ነገር ስለሱ መከራከር ነው።",
         },
       ],
     },

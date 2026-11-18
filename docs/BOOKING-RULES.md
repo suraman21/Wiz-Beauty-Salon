@@ -130,4 +130,4 @@ email             "we have your request" (+ manage link, + the change sentence)
 /booking/recover  "I lost my link" → new link by phone or email
 ```
 
-The terms page (`/booking/information`, 14 sections and 38 clauses in English and Amharic) states the change window in the clause that opens its "Changing or cancelling" section. That clause is **generated** from `policy.summary` / `hours_label`, not typed, so the terms cannot promise a window the server will refuse.
+The terms page (`/booking/information`, 12 sections and 30 clauses in English and Amharic, with no pricing, deposits or fees in it at all) states the change window in the clause that opens its "Changing or cancelling" section. That clause is **generated** from `policy.summary` / `hours_label`, not typed, so the terms cannot promise a window the server will refuse.
