@@ -74,6 +74,7 @@ $navItem = static function (string $key, string $href, string $label, int $badge
             <?= $navItem('team', '/admin/users', 'Team') ?>
             <?= $navItem('activity', '/admin/activity', 'Activity') ?>
             <?= $navItem('email-templates', '/admin/email-templates', 'Email designs') ?>
+            <?= $navItem('terms', '/admin/terms', 'Booking terms') ?>
             <?= $navItem('settings', '/admin/settings', 'Settings') ?>
         <?php endif; ?>
     </nav>

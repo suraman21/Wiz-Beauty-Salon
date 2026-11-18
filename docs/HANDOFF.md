@@ -56,9 +56,9 @@ Nothing else. There is no third-party API, no analytics account, no CDN with its
 
 ## State of the work
 
-**Working and in use:** the site (7 public pages + the bilingual terms page), the panel's twelve screens, the API's ten endpoints, multi-service bookings, the configurable change window obeyed by the page, the API and the emails, the Ethiopian calendar across site, panel and API, uploads with re-encoding, email design editing with revision history, the audit trail.
+**Working and in use:** the site (7 public pages + the bilingual terms page), the panel's thirteen screens, the API's eleven endpoints, multi-service bookings, the configurable change window obeyed by the page, the API and the emails, the Ethiopian calendar across site, panel and API, uploads with re-encoding, email design editing with revision history, the audit trail.
 
-**Verified how:** 104 Vitest tests, 211 PHPUnit tests / 25,354 assertions, PHPStan level 6 clean, ESLint and `tsc --noEmit` clean, CI green on all four jobs, a Playwright pass at 1280 / 768 / 390 px with zero horizontal overflow, and a manual booking made and cancelled end-to-end on a phone.
+**Verified how:** 114 Vitest tests, 228 PHPUnit tests / 25,403 assertions, PHPStan level 6 clean, ESLint and `tsc --noEmit` clean, CI green on all four jobs, a Playwright pass at 1280 / 768 / 390 px with zero horizontal overflow, and a manual booking made and cancelled end-to-end on a phone.
 
 **Not finished — honest list:**
 

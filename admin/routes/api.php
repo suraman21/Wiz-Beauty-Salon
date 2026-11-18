@@ -26,6 +26,7 @@ return static function (Router $router, App $app): void {
     $router->get('/api/v1/reviews', [ContentApiController::class, 'reviews']);
     $router->get('/api/v1/salon', [ContentApiController::class, 'salon']);
     $router->get('/api/v1/images', [ContentApiController::class, 'images']);
+    $router->get('/api/v1/terms', [ContentApiController::class, 'terms']);
     $router->get('/api/v1/availability', [BookingApiController::class, 'availability']);
     $router->get('/api/v1/calendar', [BookingApiController::class, 'calendar']);
     $router->post('/api/v1/bookings', [BookingApiController::class, 'store']);

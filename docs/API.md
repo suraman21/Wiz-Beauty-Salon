@@ -1,6 +1,6 @@
 # The JSON API
 
-Everything the public site reads or writes goes through these ten endpoints. They are served by the same PHP application as the panel (`api.php` routes, `src/Controllers/Api/`), are **public** (no authentication), and are the only part of the system a browser talks to directly.
+Everything the public site reads or writes goes through these eleven endpoints. They are served by the same PHP application as the panel (`api.php` routes, `src/Controllers/Api/`), are **public** (no authentication), and are the only part of the system a browser talks to directly.
 
 Base URL in production: `https://wiz.arkeonethiopia.com/api/v1` — same origin as the site, so no CORS preflight and no API key to leak. In development, `vite.config.ts` proxies `/api` to the PHP server.
 
@@ -82,6 +82,34 @@ Every picture slot the layout uses, keyed by the name the design knows it by. Th
 ```json
 { "images": { "hero": "https://…/uploads/1a2b….jpg", "about": null } }
 ```
+
+## GET `/api/v1/terms`
+
+The booking terms page (`/booking/information`), in both languages, with the live parts already filled in. Staff edit the document in **Administration → Booking terms**; the site renders whatever is here and keeps its bundled copy only when this endpoint says there is nothing published.
+
+```json
+{
+  "published": true,
+  "updated_on": "2026-11-17",
+  "sections": [
+    {
+      "id": "window",
+      "title": { "en": "Changing or cancelling", "am": "ቀጠሮ መለወጥ ወይም መሰረዝ" },
+      "clauses": [
+        {
+          "en": "You may change or cancel your appointment yourself, without asking us, up to 24 hours before the appointment. The salon's current rule is: “Free to change or cancel up to 24 hours before your appointment.”",
+          "am": "ቀጠሮዎን በራስዎ ከቀጠሮው በፊት 24 hours መለወጥ ወይም መሰረዝ ይችላሉ። …"
+        }
+      ]
+    }
+  ]
+}
+```
+
+- `id` is the section's anchor (`#window`, `#late`). It is generated once from the English heading and never changes, so a bookmarked or emailed contents link survives a rewording.
+- `updated_on` is the date the panel last saved, printed under the document.
+- The clauses hold `{{window}}`, `{{window_am}}` and `{{policy}}` internally; the server resolves them before answering, from `booking.change_window_hours`. A customer is never shown a placeholder, and the terms can never promise a window the booking form would refuse.
+- `"published": false` with an empty `sections` list means the panel has never saved a section — an installation that has not taken the page over. The site then uses its bundled copy rather than showing an empty legal page.
 
 ## GET `/api/v1/salon`
 

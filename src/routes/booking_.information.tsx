@@ -5,6 +5,7 @@ import { SiteLayout, PageHero } from "@/components/site/SiteChrome";
 import { useBookingPolicy } from "@/lib/site-content";
 import { useSalonInfo } from "@/lib/site-content";
 import { hasDetails, whatsappHref } from "@/lib/salon-api";
+import { formatUpdatedOn, useTermsDocument, type TermsDocument } from "@/lib/terms-api";
 
 /**
  * The booking terms, in English and in Amharic.
@@ -15,7 +16,12 @@ import { hasDetails, whatsappHref } from "@/lib/salon-api";
  *
  * 1. The change/cancel window is never typed here. It comes from the salon's
  *    own setting (Settings → Booking rules), so this page cannot promise 24
- *    hours while the salon needs 48.
+ *    hours while the salon needs 48. The same is true of the text itself: since
+ *    2026 the wording is edited in the panel (Administration → Booking terms)
+ *    and arrives from `/api/v1/terms`, with the document below kept as the
+ *    fallback for a slow connection or an installation that has not published
+ *    yet. Nothing here is a second source of truth — it is what shows while
+ *    the first one is not there.
  * 2. Both languages are complete versions of the same agreement, not a summary
  *    in one and the detail in the other. The Amharic text says what the English
  *    text says; the toggle switches the whole document, and a `?lang=am` link
@@ -61,10 +67,17 @@ type Section = {
 };
 
 /**
- * The document. Written in pairs so a reader can never be shown a clause in one
- * language without knowing its counterpart exists.
+ * The document the site shipped with — the fallback.
+ *
+ * This is what a reader sees while `/api/v1/terms` is in flight, when it fails,
+ * and on an installation whose panel has never saved a section. It is kept in
+ * step with the seeded rows in the panel's terms migration, so a salon that
+ * never opens the editor still reads the same agreement.
+ *
+ * Written in pairs so a reader can never be shown a clause in one language
+ * without knowing its counterpart exists.
  */
-function sectionsFor(policy: {
+function bundledSections(policy: {
   has_cut_off: boolean;
   hours_label: string;
   summary: string;
@@ -329,12 +342,35 @@ const COPY = {
   },
 } as const;
 
+/**
+ * The panel's version, in the shape this page renders.
+ *
+ * Returns null when nothing has been published, which is the only case where the
+ * bundled document is used — an empty answer is treated as "no answer" rather
+ * than as a page with no terms.
+ */
+function publishedSections(document: TermsDocument | null): Section[] | null {
+  if (document === null || document.sections.length === 0) return null;
+
+  return document.sections.map((section) => ({
+    id: section.id,
+    en: section.title.en,
+    am: section.title.am,
+    clauses: section.clauses,
+  }));
+}
+
 function BookingInformation() {
   const policy = useBookingPolicy();
   const salon = useSalonInfo();
   const { lang: langParam } = Route.useSearch();
   const [lang, setLang] = useState<Lang>(langParam);
-  const sections = useMemo(() => sectionsFor(policy), [policy]);
+  const published = useTermsDocument();
+  const sections = useMemo(
+    () => publishedSections(published) ?? bundledSections(policy),
+    [published, policy],
+  );
+  const updatedOn = formatUpdatedOn(published?.updatedOn ?? null, lang);
   const copy = COPY[lang];
 
   const details = salon?.contact;
@@ -421,7 +457,14 @@ function BookingInformation() {
             ))}
 
             <p className="terms-foot">
-              {copy.lastUpdated}: <time dateTime="2026-11-17">17 November 2026</time>
+              {copy.lastUpdated}:{" "}
+              {updatedOn === "" ? (
+                // No date from the panel: the bundled copy's own date, written
+                // out rather than left blank.
+                <time dateTime="2026-11-17">17 November 2026</time>
+              ) : (
+                <time dateTime={published?.updatedOn ?? undefined}>{updatedOn}</time>
+              )}
             </p>
 
             <div className="terms-actions">

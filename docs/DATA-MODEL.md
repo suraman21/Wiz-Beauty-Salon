@@ -94,6 +94,17 @@ Nothing else in the code reads `settings`; a key that is absent falls back to th
 
 The active design per email kind (confirmation, cancellation, reschedule, salon notification) plus every revision ever published, so a bad edit can be compared and rolled back. Bodies are sanitised by HTML Purifier before they are stored.
 
+### `terms_sections` / `terms_clauses` — the booking terms page
+
+The document a customer agrees to, edited in **Administration → Booking terms**.
+
+- `terms_sections` — `slug` (the page anchor, generated once from the English heading and never edited, so `#window` keeps working after a rewording), `title_en`, `title_am`, `sort_order`.
+- `terms_clauses` — `section_id` (`ON DELETE CASCADE`), `sort_order` (inside its own section), `body_en`, `body_am`.
+
+Both languages are `NOT NULL` and both are required by the panel: a clause written in one language is a gap for half the readers, so it is refused rather than stored. The text may contain three placeholders — `{{window}}`, `{{window_am}}`, `{{policy}}` — which `Services/TermsService` fills from `settings.booking.change_window_hours` when the document is served. That is deliberate: the terms cannot promise a change window the booking form would refuse.
+
+The migration seeds the 12 sections and 30 clauses the site shipped with, so the panel opens on the document customers already read. `settings.terms.updated_on` holds the date printed under the page.
+
 ### `gallery_items`, `reviews`, `contact_messages`, `migrations`
 
 Straightforward. Worth knowing: `reviews.is_approved` is what the API filters on, and `migrations` records applied filenames — `php database/migrate.php status` compares them to the files on disk.

@@ -21,6 +21,8 @@ use Wiz\Repositories\GalleryRepository;
 use Wiz\Repositories\RateLimitRepository;
 use Wiz\Repositories\ReviewRepository;
 use Wiz\Repositories\SiteImageRepository;
+use Wiz\Repositories\TermsRepository;
+use Wiz\Services\TermsService;
 use Wiz\Repositories\ServiceRepository;
 use Wiz\Repositories\SettingsRepository;
 use Wiz\Services\AvailabilityService;
@@ -166,15 +168,7 @@ final class PublicContentTest extends TestCase
             SalonDetails::ADDRESS => 'Bole, Addis Ababa',
         ]);
 
-        $controller = new ContentApiController(
-            new GalleryRepository($this->db),
-            new ReviewRepository($this->db),
-            new SiteImageRepository($this->db),
-            $this->salon,
-            new BusinessHoursRepository($this->db),
-            new ClosureRepository($this->db),
-            new ChangePolicy(new SettingsRepository($this->db)),
-        );
+        $controller = $this->contentApi();
 
         $response = $controller->salon(new Request('GET', '/api/v1/salon'));
         $body = json_decode($response->body(), true, 512, JSON_THROW_ON_ERROR);
@@ -202,15 +196,7 @@ final class PublicContentTest extends TestCase
         $this->salon->save([SalonDetails::PHONE => '  ', SalonDetails::EMAIL => '']);
 
         $body = json_decode(
-            (new ContentApiController(
-                new GalleryRepository($this->db),
-                new ReviewRepository($this->db),
-                new SiteImageRepository($this->db),
-                $this->salon,
-                new BusinessHoursRepository($this->db),
-                new ClosureRepository($this->db),
-                new ChangePolicy(new SettingsRepository($this->db)),
-            ))->salon(new Request('GET', '/api/v1/salon'))->body(),
+            $this->contentApi()->salon(new Request('GET', '/api/v1/salon'))->body(),
             true,
             512,
             JSON_THROW_ON_ERROR,
@@ -305,6 +291,11 @@ final class PublicContentTest extends TestCase
             new BusinessHoursRepository($this->db),
             new ClosureRepository($this->db),
             new ChangePolicy(new SettingsRepository($this->db)),
+            new TermsService(
+                new TermsRepository($this->db),
+                new SettingsRepository($this->db),
+                new ChangePolicy(new SettingsRepository($this->db)),
+            ),
         );
     }
 

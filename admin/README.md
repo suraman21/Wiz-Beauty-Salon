@@ -67,6 +67,7 @@ php bin/preflight.php    # is this server ready to serve?
 | `/admin/users` | Team | admin |
 | `/admin/activity` | Audit trail | admin |
 | `/admin/email-templates` | Email designs, revisions, publishing | admin |
+| `/admin/terms` | **Booking terms** — every section and clause, English and Amharic, reorderable | admin |
 | `/admin/settings` | Salon details, booking rules, email sending | admin |
 | `/admin/account` | Own profile and password | everyone |
 

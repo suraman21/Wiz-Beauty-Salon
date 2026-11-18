@@ -22,6 +22,7 @@ use Wiz\Controllers\Admin\MessageController;
 use Wiz\Controllers\Admin\ReviewController;
 use Wiz\Controllers\Admin\ScheduleController;
 use Wiz\Controllers\Admin\SettingsController;
+use Wiz\Controllers\Admin\TermsController;
 use Wiz\Controllers\Admin\UserController;
 use Wiz\Core\App;
 use Wiz\Core\Router;
@@ -159,6 +160,20 @@ return static function (Router $router, App $app): void {
     $router->get('/admin/email-templates', [EmailTemplateController::class, 'index'], ['auth', 'admin']);
     $router->post('/admin/email-templates/save', [EmailTemplateController::class, 'save'], ['auth', 'admin']);
     $router->post('/admin/email-templates/publish', [EmailTemplateController::class, 'publish'], ['auth', 'admin']);
+
+    // ---------------------------------------------------- booking terms
+    // The page a customer agrees to. One screen: every section, every clause,
+    // both languages. Placed beside Settings because it is content the salon
+    // owns, not a catalogue to manage.
+    $router->get('/admin/terms', [TermsController::class, 'index'], ['auth', 'admin']);
+    $router->post('/admin/terms/sections', [TermsController::class, 'storeSection'], ['auth', 'admin']);
+    $router->post('/admin/terms/sections/{id}', [TermsController::class, 'updateSection'], ['auth', 'admin']);
+    $router->post('/admin/terms/sections/{id}/delete', [TermsController::class, 'destroySection'], ['auth', 'admin']);
+    $router->post('/admin/terms/sections/{id}/move', [TermsController::class, 'moveSection'], ['auth', 'admin']);
+    $router->post('/admin/terms/clauses', [TermsController::class, 'storeClause'], ['auth', 'admin']);
+    $router->post('/admin/terms/clauses/{id}', [TermsController::class, 'updateClause'], ['auth', 'admin']);
+    $router->post('/admin/terms/clauses/{id}/delete', [TermsController::class, 'destroyClause'], ['auth', 'admin']);
+    $router->post('/admin/terms/clauses/{id}/move', [TermsController::class, 'moveClause'], ['auth', 'admin']);
 
     // ------------------------------------------------------------- settings
     $router->get('/admin/settings', [SettingsController::class, 'index'], ['auth', 'admin']);

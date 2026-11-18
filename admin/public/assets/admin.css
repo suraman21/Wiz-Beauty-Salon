@@ -25,6 +25,10 @@
     --radius-sm: 7px;
     --shadow: 0 1px 2px rgba(29, 26, 24, .04), 0 6px 20px rgba(29, 26, 24, .05);
     --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    /* The panel now holds Amharic the staff read and type (the booking terms,
+       service names), so the Ethiopic faces the site declares are named here
+       too. They are fallbacks: Latin glyphs still come from the system UI face. */
+    --font-am: "Noto Sans Ethiopic", "Abyssinica SIL", "Nyala", "Kefa", var(--font);
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -2328,3 +2332,131 @@ summary:focus-visible {
 .btn--danger-solid:hover { background: #7f2525; border-color: #6b1f1f; color: #fff; }
 .btn--danger-solid:active { transform: translateY(1px); box-shadow: 0 1px 0 #7f2525; }
 .btn--danger-solid:focus-visible { outline: 3px solid #9b2f2f; outline-offset: 2px; }
+
+/* Two languages side by side, but never two cramped columns: prose needs a
+   readable measure, so these rows collapse to one column on a phone. */
+.field-row--stack { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+
+/* Amharic input, in its own face when the machine has one. */
+[lang="am"], textarea[lang="am"], input[lang="am"] { font-family: var(--font-am); }
+
+/* --- booking terms --------------------------------------------------------
+   The terms editor is a long page of prose, not a table, so it borrows the
+   card and field styles and adds only what prose needs: a readable measure, a
+   clause number you can quote to a colleague, and a clear break between one
+   section and the next. Nothing here is interactive — it is text being read
+   before it is edited. */
+
+.terms-intro {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    gap: 18px;
+    margin-bottom: 18px;
+}
+.terms-intro__text { color: var(--ink-soft); max-width: 62ch; }
+.terms-intro__text + .terms-intro__text { margin-top: 10px; }
+.terms-intro__text--soft { color: var(--muted); font-size: 14px; }
+
+.terms-tokens {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    box-shadow: var(--shadow);
+}
+.terms-tokens__title {
+    font-size: 13px; font-weight: 700; letter-spacing: .06em;
+    text-transform: uppercase; color: var(--muted); margin-bottom: 10px;
+}
+.terms-tokens__list { display: grid; gap: 10px; margin-bottom: 10px; }
+.terms-tokens__item { display: grid; grid-template-columns: 130px minmax(0, 1fr); gap: 10px; align-items: start; }
+.terms-tokens dt code {
+    display: inline-block; font-size: 12px; background: var(--bg);
+    border: 1px solid var(--line); border-radius: 5px; padding: 2px 6px; color: var(--brand-dark);
+}
+.terms-tokens dd { margin: 0; display: grid; gap: 2px; }
+.terms-tokens__value { color: var(--ink); font-size: 14px; }
+
+.terms-section { margin-bottom: 16px; scroll-margin-top: 80px; }
+.terms-section:target { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.terms-section__head {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--line);
+}
+.terms-section__identity { display: flex; gap: 12px; align-items: flex-start; }
+.terms-section__index {
+    flex: 0 0 auto; width: 28px; height: 28px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--bg); border: 1px solid var(--line-strong);
+    font-size: 13px; font-weight: 700; color: var(--brand-dark);
+}
+.terms-section__anchor {
+    font-size: 12px; font-weight: 400; color: var(--muted);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    margin-left: 6px;
+}
+.terms-section__tools { display: flex; gap: 4px; }
+.terms-section__tools .order-buttons { margin: 0; }
+
+.terms-clauses { display: grid; gap: 14px; margin: 16px 0; padding: 0; list-style: none; }
+.terms-clause {
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    background: var(--bg);
+}
+.terms-clause__head {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 10px; margin-bottom: 8px;
+}
+.terms-clause__number {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12px; font-weight: 700; color: var(--brand);
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 999px; padding: 2px 9px;
+}
+.terms-clause__tools { display: flex; gap: 4px; }
+.terms-clause textarea { font-size: 14px; line-height: 1.6; }
+
+.terms-section__empty {
+    margin: 16px 0; padding: 12px 14px; border: 1px dashed var(--line-strong);
+    border-radius: var(--radius-sm); color: var(--muted); font-size: 14px;
+}
+
+.terms-section__rename,
+.terms-section__add,
+.terms-section__danger {
+    border-top: 1px solid var(--line);
+    padding-top: 10px;
+    margin-top: 10px;
+}
+.terms-section__rename > summary,
+.terms-section__add > summary,
+.terms-section__danger > summary {
+    cursor: pointer; font-size: 14px; font-weight: 600; color: var(--brand-dark);
+    list-style: none; padding: 4px 0;
+}
+.terms-section__rename > summary::-webkit-details-marker,
+.terms-section__add > summary::-webkit-details-marker,
+.terms-section__danger > summary::-webkit-details-marker { display: none; }
+.terms-section__rename > summary::before,
+.terms-section__add > summary::before,
+.terms-section__danger > summary::before { content: "+ "; font-weight: 700; }
+.terms-section__rename[open] > summary::before,
+.terms-section__add[open] > summary::before,
+.terms-section__danger[open] > summary::before { content: "– "; }
+.terms-section__rename[open] > summary,
+.terms-section__add[open] > summary,
+.terms-section__danger[open] > summary { margin-bottom: 10px; }
+.terms-section__danger > summary { color: var(--danger); }
+.terms-section__danger .btn--danger { margin-top: 8px; }
+
+.terms-new { margin-top: 22px; }
+.terms-new .card__sub { margin-bottom: 14px; }
+
+@media (max-width: 899px) {
+    .terms-intro { grid-template-columns: minmax(0, 1fr); }
+    .terms-tokens__item { grid-template-columns: minmax(0, 1fr); }
+    .terms-section__head { flex-direction: column; }
+}

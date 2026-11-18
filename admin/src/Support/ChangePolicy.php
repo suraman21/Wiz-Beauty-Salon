@@ -67,6 +67,29 @@ final class ChangePolicy
         return $this->hours() > 0;
     }
 
+    /**
+     * The window as a phrase a sentence can be built around, in English.
+     *
+     * "24 hours before the appointment", or "any time before the appointment
+     * starts" when there is no cut-off. The booking terms are stored as content
+     * now, edited in the panel, so they hold a placeholder rather than a number
+     * — this is what fills it in.
+     */
+    public function windowLabel(): string
+    {
+        return $this->hasCutOff()
+            ? $this->hoursLabel() . ' before the appointment'
+            : 'any time before the appointment starts';
+    }
+
+    /** The same phrase in Amharic, for the same reason. */
+    public function windowLabelAm(): string
+    {
+        return $this->hasCutOff()
+            ? 'ከቀጠሮው በፊት ' . $this->hoursLabel()
+            : 'ቀጠሮው ከመጀመሩ በፊት በማንኛውም ሰዓት';
+    }
+
     /** "24 hours", "1 hour", "no cut-off" — for a sentence, not for a form. */
     public function hoursLabel(): string
     {

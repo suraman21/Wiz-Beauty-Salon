@@ -27,6 +27,7 @@ use Wiz\Controllers\Admin\MessageController;
 use Wiz\Controllers\Admin\ReviewController;
 use Wiz\Controllers\Admin\ScheduleController;
 use Wiz\Controllers\Admin\SettingsController;
+use Wiz\Controllers\Admin\TermsController;
 use Wiz\Controllers\Admin\UserController;
 use Wiz\Controllers\Api\BookingApiController;
 use Wiz\Controllers\Api\ContentApiController;
@@ -56,6 +57,8 @@ use Wiz\Repositories\SiteImageRepository;
 use Wiz\Repositories\MessageRepository;
 use Wiz\Repositories\RateLimitRepository;
 use Wiz\Repositories\SettingsRepository;
+use Wiz\Repositories\TermsRepository;
+use Wiz\Services\TermsService;
 use Wiz\Repositories\GalleryRepository;
 use Wiz\Repositories\LoginAttemptRepository;
 use Wiz\Repositories\ReviewRepository;
@@ -126,6 +129,10 @@ $app->singleton(GalleryRepository::class, static fn (App $a): GalleryRepository 
 ));
 
 $app->singleton(ReviewRepository::class, static fn (App $a): ReviewRepository => new ReviewRepository(
+    $a->get(Database::class),
+));
+
+$app->singleton(TermsRepository::class, static fn (App $a): TermsRepository => new TermsRepository(
     $a->get(Database::class),
 ));
 
@@ -210,6 +217,12 @@ $app->singleton(ChangePolicy::class, static fn (App $a): ChangePolicy => new Cha
     (string) ($a->config('app.timezone') ?? 'Africa/Addis_Ababa'),
 ));
 
+$app->singleton(TermsService::class, static fn (App $a): TermsService => new TermsService(
+    $a->get(TermsRepository::class),
+    $a->get(SettingsRepository::class),
+    $a->get(ChangePolicy::class),
+));
+
 $app->singleton(MailSettings::class, static fn (App $a): MailSettings => new MailSettings(
     $a->get(SettingsRepository::class),
     is_array($a->config('mail')) ? $a->config('mail') : [],
@@ -289,6 +302,16 @@ $app->singleton(CategoryController::class, static fn (App $a): CategoryControlle
     $a->get(CategoryRepository::class),
     $a->get(Uploader::class),
     $a->get(MediaUsage::class),
+    $a->get(Session::class),
+));
+
+$app->singleton(TermsController::class, static fn (App $a): TermsController => new TermsController(
+    $a->get(View::class),
+    $a->get(TermsRepository::class),
+    $a->get(TermsService::class),
+    $a->get(ChangePolicy::class),
+    $a->get(ActivityLogRepository::class),
+    $a->get(Auth::class),
     $a->get(Session::class),
 ));
 
@@ -373,6 +396,7 @@ $app->singleton(ContentApiController::class, static fn (App $a): ContentApiContr
     $a->get(BusinessHoursRepository::class),
     $a->get(ClosureRepository::class),
     $a->get(ChangePolicy::class),
+    $a->get(TermsService::class),
     (string) ($a->config('app.upload_url') ?? '/uploads'),
 ));
 

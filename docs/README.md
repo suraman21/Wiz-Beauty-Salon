@@ -21,7 +21,7 @@ The top-level [README](../README.md) is the front door and the quick start. This
 | --- | --- |
 | [DEVELOPMENT.md](DEVELOPMENT.md) | install, run both servers, day-to-day commands, how the code is organised, gotchas |
 | [TESTING.md](TESTING.md) | both suites, what they pin down, what is *not* covered, how CI runs them |
-| [API.md](API.md) | the ten endpoints, request and response shapes, error behaviour, rate limits |
+| [API.md](API.md) | the eleven endpoints, request and response shapes, error behaviour, rate limits |
 | [DATA-MODEL.md](DATA-MODEL.md) | every table, the double-booking guard, the settings keys, conventions |
 | [BOOKING-RULES.md](BOOKING-RULES.md) | every booking rule and the one place that owns it |
 | [../CONTRIBUTING.md](../CONTRIBUTING.md) | commit style, review expectations, the rules that are not negotiable |

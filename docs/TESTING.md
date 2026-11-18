@@ -4,8 +4,8 @@ Two suites, one gate. Nothing merges to `main` unless both are green and the sit
 
 | Suite | Runner | Count today | Command |
 | --- | --- | --- | --- |
-| Site | Vitest (jsdom) | **104 tests** | `npm run test` |
-| Panel / API | PHPUnit 11 | **211 tests, 25,354 assertions** | `DB_NAME=wiz_test php vendor/bin/phpunit` |
+| Site | Vitest (jsdom) | **114 tests** | `npm run test` |
+| Panel / API | PHPUnit 11 | **228 tests, 25,403 assertions** | `DB_NAME=wiz_test php vendor/bin/phpunit` |
 
 Plus three checks that are not tests but catch the same class of mistake: ESLint (`npm run lint`), `tsc --noEmit` (`npm run typecheck`), and PHPStan level 6 (`composer analyse`).
 
@@ -51,6 +51,8 @@ The suites are shaped by what has actually gone wrong, not by coverage targets.
 | `recover-manage.test.ts` | the recover form and the manage page's rules, including the refusal inside the change window |
 | `services-booking.test.ts`, `service-pages.test.ts` | the catalogue → wizard hand-off and the per-service deep links |
 | `site-content.test.ts` | the editorial copy and the Amharic strings that must not be empty |
+| `terms-api.test.ts` | the terms document as the site reads it: order kept, half-translated clauses dropped, an empty answer meaning "no answer" |
+| `terms-page.test.tsx` | the page showing the panel's wording, and keeping its own copy when the API fails or has published nothing |
 
 The calendar arithmetic is duplicated on purpose — TypeScript for the site, PHP for the panel — and `shared/` holds the test vectors both suites read. If you change one implementation, both suites fail until the other agrees.
 
@@ -61,6 +63,7 @@ The calendar arithmetic is duplicated on purpose — TypeScript for the site, PH
 | `Feature/BookingFlowTest.php` | create → confirm → cancel; double-booking rejected at the slot key; the change window enforced on cancel and reschedule |
 | `Feature/PublicContentTest.php` | the API's shapes and cache headers; unpublished things stay unpublished |
 | `Feature/ChangePolicyTest.php` | presets, free hours, the "no cut-off" case, and the sentence the customer reads |
+| `Feature/TermsTest.php` | the terms document assembled from its two tables: order, both languages, `{{window}}`/`{{window_am}}`/`{{policy}}` filled from the setting, anchors surviving a rename, a clause reordered inside its own section, a section's clauses leaving with it, and `/api/v1/terms` saying `published: false` on an installation that has never saved one |
 | `Feature/RateLimitTest.php` | limits hold, windows expire, one address cannot lock out another |
 | `Feature/BookingNotifierTest.php` | who gets an email for which transition, and what the link in it points at |
 | `Feature/TeamTest.php` | role gates: staff cannot reach admin-only screens |

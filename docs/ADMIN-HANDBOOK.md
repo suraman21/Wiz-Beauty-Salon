@@ -22,6 +22,7 @@ The sidebar shows what your role allows.
 | **Team** *(admin only)* | Add a colleague, change a password, switch someone off |
 | **Activity** *(admin only)* | Who changed what, and when |
 | **Email designs** *(admin only)* | The wording and look of the emails customers receive |
+| **Booking terms** *(admin only)* | The page a customer agrees to — every section and clause, in English and Amharic |
 | **Settings** *(admin only)* | Salon details, booking rules, email sending |
 
 ---
@@ -61,6 +62,21 @@ It decides how late a customer may move or cancel their own appointment without 
 Whatever you choose, the website, the manage page, the confirmation email and the booking terms start saying it immediately — you do not need to ask anyone to update the text. A customer who is too late sees your reason and your phone number instead of a button that would not work.
 
 The same screen holds three more rules: **how soon** a slot may be booked (default 2 hours ahead), **how far ahead** (default 60 days) and **how long a slot is** (default 30 minutes).
+
+---
+
+## The booking terms page
+
+**Booking terms** is `/booking/information` — the page a customer agrees to when they book, and the one they come back to when something has gone wrong.
+
+It is edited like a document, not a form: every section is on one page with the clauses underneath it, so you can see what a sentence sits between while you change it. Add a section, add clauses under it, reword either language, reorder with the arrows, delete what you have replaced. **A save is live** — there is no publish step and no deploy.
+
+Two things to know:
+
+- **Both languages or neither.** A clause needs its English *and* Amharic text before it will save. Half a clause is a gap for the customers who read the other language, so the editor refuses it rather than storing it.
+- **Leave the double-bracketed text alone.** `{{window}}`, `{{window_am}}` and `{{policy}}` are not words to edit — they are filled in with your change window (Settings → Booking rules) when the page is served. That is how the terms always say the same number the booking form enforces. The screen shows what each one currently reads, so you can see the sentence you are building.
+
+Renaming a section does not change its address on the page, so a link someone saved (`…#window`) keeps working.
 
 ---
 

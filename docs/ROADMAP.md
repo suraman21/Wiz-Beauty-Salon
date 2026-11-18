@@ -11,9 +11,10 @@ What is left, in the order it should be done. Everything above the line is finis
 - The catalogue and its bilingual (English / አማርኛ) labels, filters, deep links per service.
 - The customer's manage page: view, move, cancel — with the change window enforced, and the reason shown when it is closed.
 - Lost-link recovery by phone **or** email, rate-limited and non-enumerating.
-- The panel's twelve screens, including multi-service bookings, the schedule, the email designer and the audit trail.
+- The panel's thirteen screens, including multi-service bookings, the schedule, the email designer, the booking terms editor and the audit trail.
 - The change window as a setting, obeyed by the page, the API and the emails.
 - The booking terms at `/booking/information`: 12 sections, 30 clauses, both languages, linked from every step. Prices, deposits and fees are deliberately absent — money is settled in person.
+- The terms as content, not code: every heading and clause is edited in **Administration → Booking terms**, in both languages, with add/delete/reorder, and the public page and `/api/v1/terms` follow the save. The change window stays a generated phrase (`{{window}}`, `{{policy}}`) so the wording cannot drift from the booking rule.
 - Ethiopian calendar and clock across site, API and panel, with the Gregorian date always beside it.
 
 ---

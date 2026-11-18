@@ -10,6 +10,7 @@ use Wiz\Repositories\ClosureRepository;
 use Wiz\Repositories\GalleryRepository;
 use Wiz\Repositories\ReviewRepository;
 use Wiz\Repositories\SiteImageRepository;
+use Wiz\Services\TermsService;
 use Wiz\Support\ChangePolicy;
 use Wiz\Support\SalonDetails;
 
@@ -31,6 +32,7 @@ final class ContentApiController
         private readonly BusinessHoursRepository $hours,
         private readonly ClosureRepository $closures,
         private readonly ChangePolicy $policy,
+        private readonly TermsService $terms,
         private readonly string $uploadUrl = '/uploads',
     ) {
     }
@@ -194,5 +196,38 @@ final class ContentApiController
                 'chip' => $this->policy->chip(),
             ],
         ])->withHeader('Cache-Control', 'public, max-age=60');
+    }
+
+    /**
+     * GET /api/v1/terms
+     *
+     * The booking terms page, in both languages, with the live parts — the
+     * change window and the salon's own rule — already filled in. The website
+     * renders whatever is here, so the panel is the only place the text lives.
+     *
+     * `published` is false on an installation that has never saved a section;
+     * the site then keeps its own bundled copy rather than showing a blank
+     * legal page. Sections carry a `slug` so the page's contents links
+     * (`#window`) survive a heading being reworded.
+     *
+     * @param array<string, string> $params
+     */
+    public function terms(Request $request, array $params = []): Response
+    {
+        if (!$this->terms->isPublished()) {
+            return Response::json([
+                'published' => false,
+                'updated_on' => null,
+                'sections' => [],
+            ]);
+        }
+
+        $document = $this->terms->document();
+
+        return Response::json([
+            'published' => true,
+            'updated_on' => $document['updated_on'],
+            'sections' => $document['sections'],
+        ]);
     }
 }
