@@ -1,0 +1,149 @@
+<?php
+/**
+ * Services: the list on the left, the add/edit form on the right.
+ *
+ * @var list<array<string, mixed>> $categories
+ * @var array<string, mixed>|null $editing
+ * @var \Wiz\Services\Uploader $uploads
+ * @var string|null $error
+ */
+
+$isEdit = $editing !== null;
+$action = $isEdit ? '/admin/categories/' . (int) $editing['id'] : '/admin/categories';
+$currentImage = $isEdit && is_string($editing['image_path'] ?? null) ? $editing['image_path'] : null;
+?>
+
+<div class="columns columns--form">
+    <section class="card card--flush">
+        <?php if ($categories === []): ?>
+            <div class="empty-state empty-state--plain">
+                <h2 class="card__title">No services yet</h2>
+                <p class="card__sub">Add one on the right — “Hair”, “Nails”, “Makeup”, “Skin”.</p>
+            </div>
+        <?php else: ?>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th class="table__order" aria-label="Order"></th>
+                        <th>Service</th>
+                        <th>Status</th>
+                        <th class="table__actions"><span class="sr-only">Actions</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                <?php foreach ($categories as $category): ?>
+                    <?php $id = (int) $category['id']; ?>
+                    <tr>
+                        <td class="table__order">
+                            <form method="post" action="/admin/categories/<?= $id ?>/move" class="order-buttons">
+                                <?= csrf_field() ?>
+                                <input type="hidden" name="direction" value="up">
+                                <button class="icon-btn" type="submit" title="Move up" aria-label="Move <?= e($category['name']) ?> up">↑</button>
+                            </form>
+                            <form method="post" action="/admin/categories/<?= $id ?>/move" class="order-buttons">
+                                <?= csrf_field() ?>
+                                <input type="hidden" name="direction" value="down">
+                                <button class="icon-btn" type="submit" title="Move down" aria-label="Move <?= e($category['name']) ?> down">↓</button>
+                            </form>
+                        </td>
+
+                        <td>
+                            <span class="cell-title"><?= e($category['name']) ?></span>
+                            <?php if (!empty($category['amharic'])): ?>
+                                <span class="cell-sub" lang="am"><?= e($category['amharic']) ?></span>
+                            <?php endif; ?>
+                            <?php if (!empty($category['description'])): ?>
+                                <p class="cell-sub"><?= e($category['description']) ?></p>
+                            <?php endif; ?>
+                        </td>
+
+                        <td>
+                            <span class="badge <?= (int) $category['is_active'] === 1 ? 'badge--ok' : 'badge--muted' ?>">
+                                <?= (int) $category['is_active'] === 1 ? 'Visible' : 'Hidden' ?>
+                            </span>
+                            <?php if ((int) ($category['show_on_home'] ?? 0) === 1): ?>
+                                <span class="badge badge--ok">Home</span>
+                            <?php endif; ?>
+                        </td>
+
+                        <td class="table__actions">
+                            <a class="btn btn--ghost btn--sm" href="/admin/categories?edit=<?= $id ?>">Edit</a>
+                            <form method="post" action="/admin/categories/<?= $id ?>/delete"
+                                  onsubmit="return confirm('Remove “<?= e($category['name']) ?>” from the website?');">
+                                <?= csrf_field() ?>
+                                <button type="submit" class="btn btn--danger btn--sm">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+        <?php endif; ?>
+    </section>
+
+    <section class="card">
+        <h2 class="card__title"><?= $isEdit ? 'Edit service' : 'Add a service' ?></h2>
+        <p class="card__sub"><?= $isEdit ? 'Changes apply as soon as you save.' : 'The services customers choose between — “Hair”, “Nails”, “Makeup”, “Skin”.' ?></p>
+
+        <?php if (!empty($error)): ?>
+            <div class="alert alert--error" role="alert"><?= e($error) ?></div>
+        <?php endif; ?>
+
+        <form method="post" action="<?= e($action) ?>" enctype="multipart/form-data" autocomplete="off">
+            <?= csrf_field() ?>
+
+            <div class="field">
+                <label for="name">Name</label>
+                <input type="text" id="name" name="name" required maxlength="120"
+                       value="<?= e($editing['name'] ?? '') ?>" placeholder="e.g. Hair">
+            </div>
+
+            <div class="field">
+                <label for="amharic">Amharic name <span class="field__hint">optional</span></label>
+                <input type="text" id="amharic" name="amharic" maxlength="120" lang="am"
+                       value="<?= e($editing['amharic'] ?? '') ?>" placeholder="e.g. ጥፍር">
+                <p class="field__hint">Printed under the English name on the Services page.</p>
+            </div>
+
+            <div class="field">
+                <label for="description">Description <span class="field__hint">optional</span></label>
+                <input type="text" id="description" name="description" maxlength="255"
+                       value="<?= e($editing['description'] ?? '') ?>" placeholder="Shown under the service name">
+            </div>
+
+            <div class="field">
+                <label for="image">Photo <span class="field__hint">JPG, PNG or WebP · up to 5 MB</span></label>
+                <?php if ($currentImage !== null): ?>
+                    <div class="current-image">
+                        <img src="<?= e($uploads->url($currentImage)) ?>" alt="" width="72" height="72">
+                        <span class="field__hint">Shown on this service's card and page.</span>
+                    </div>
+                <?php endif; ?>
+                <input type="file" id="image" name="image" accept="image/jpeg,image/png,image/webp">
+            </div>
+
+            <label class="check">
+                <input type="checkbox" name="is_active" value="1"
+                    <?= ($editing === null || (int) ($editing['is_active'] ?? 0) === 1) ? 'checked' : '' ?>>
+                Visible on the website
+            </label>
+
+            <label class="check">
+                <input type="checkbox" name="show_on_home" value="1"
+                    <?= (int) ($editing['show_on_home'] ?? 0) === 1 ? 'checked' : '' ?>>
+                Show in “Our services” on the home page
+            </label>
+            <p class="field__hint">
+                The home page takes these services in the order set by the arrows, up to four.
+                Leave none ticked and it falls back to the first four.
+            </p>
+
+            <div class="form-actions">
+                <?php if ($isEdit): ?>
+                    <a class="btn btn--ghost" href="/admin/categories">Cancel</a>
+                <?php endif; ?>
+                <button type="submit" class="btn btn--primary"><?= $isEdit ? 'Save' : 'Add service' ?></button>
+            </div>
+        </form>
+    </section>
+</div>

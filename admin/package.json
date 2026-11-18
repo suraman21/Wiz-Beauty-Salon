@@ -1,0 +1,14 @@
+{
+  "description": "Build-only sources for self-hosted admin assets. Nothing here runs on the server.",
+  "devDependencies": {
+    "esbuild": "0.28.2",
+    "font-awesome": "4.7.0",
+    "grapesjs": "0.23.8",
+    "grapesjs-preset-newsletter": "1.0.2"
+  },
+  "name": "wiz-admin-assets",
+  "private": true,
+  "scripts": {
+    "build:email-editor": "esbuild assets-src/email-editor-entry.js --bundle --minify --legal-comments=none --target=es2020 --format=iife --outfile=public/assets/email-editor.js && cp node_modules/grapesjs/dist/css/grapes.min.css public/assets/email-editor.css && cp node_modules/font-awesome/css/font-awesome.min.css public/assets/font-awesome.min.css && sed -i \"s|url('../fonts/|url('|g\" public/assets/font-awesome.min.css && cp node_modules/font-awesome/fonts/* public/assets/"
+  }
+}

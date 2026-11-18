@@ -1,0 +1,41 @@
+<?php return array(
+    'root' => array(
+        'name' => 'wiz/admin',
+        'pretty_version' => 'dev-main',
+        'version' => 'dev-main',
+        'reference' => 'c7d9c582c8a8a41c056f7e70d43ec21112793abc',
+        'type' => 'project',
+        'install_path' => __DIR__ . '/../../',
+        'aliases' => array(),
+        'dev' => false,
+    ),
+    'versions' => array(
+        'ezyang/htmlpurifier' => array(
+            'pretty_version' => 'v4.19.1',
+            'version' => '4.19.1.0',
+            'reference' => '5e0539132d934f936fbae2c88b55d58f9438623f',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../ezyang/htmlpurifier',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+        'phpmailer/phpmailer' => array(
+            'pretty_version' => 'v6.12.0',
+            'version' => '6.12.0.0',
+            'reference' => 'd1ac35d784bf9f5e61b424901d5a014967f15b12',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../phpmailer/phpmailer',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+        'wiz/admin' => array(
+            'pretty_version' => 'dev-main',
+            'version' => 'dev-main',
+            'reference' => 'c7d9c582c8a8a41c056f7e70d43ec21112793abc',
+            'type' => 'project',
+            'install_path' => __DIR__ . '/../../',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+    ),
+);

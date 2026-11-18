@@ -1,0 +1,35 @@
+# The admin panel's webroot.
+#
+# This file used to deny everything ("Require all denied"), copied from the
+# application directory it was meant for. On any Apache that reads .htaccess it
+# would have made the whole panel a 403; on the hosts that ignore the file it
+# did nothing at all. Neither is what we want, so here is what we do want:
+# serve the panel, keep the dotfiles and the source tree out of reach, and tell
+# the browser not to guess at file types.
+
+DirectoryIndex index.php
+
+<IfModule mod_authz_core.c>
+    # Nothing beginning with a dot: .env, .git, editor backups.
+    <FilesMatch "^\.">
+        Require all denied
+    </FilesMatch>
+</IfModule>
+
+<IfModule mod_headers.c>
+    # Version disclosure helps an attacker choose an exploit; the version is
+    # still in the logs where it belongs.
+    Header always unset X-Powered-By
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
+</IfModule>
+
+# Uploads are served through PHP (see the /uploads route), so no directory here
+# needs to run code. If one ever does, refuse it.
+<IfModule mod_php.c>
+    <FilesMatch "\.(php|phtml|phar)$">
+        Require all denied
+    </FilesMatch>
+</IfModule>

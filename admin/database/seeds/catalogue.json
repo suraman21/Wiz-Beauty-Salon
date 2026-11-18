@@ -1,0 +1,178 @@
+[
+ {
+  "id": "make-up",
+  "name": "Make Up",
+  "amharic": "ሜክ አፕ",
+  "items": [
+   "Make Up"
+  ]
+ },
+ {
+  "id": "nail",
+  "name": "Nail",
+  "amharic": "ጥፍር",
+  "items": [
+   "Special Manicure",
+   "Manicure",
+   "Shellac",
+   "Shellac Off",
+   "Gel",
+   "Gel Off",
+   "Refill",
+   "Acrylic Extension",
+   "Normal Polish",
+   "Other"
+  ]
+ },
+ {
+  "id": "pedicure",
+  "name": "Pedicure",
+  "amharic": "ፔዲኪውር",
+  "items": [
+   "Special Pedicure",
+   "Pedicure"
+  ]
+ },
+ {
+  "id": "wax",
+  "name": "Wax",
+  "amharic": "ዋክስ",
+  "items": [
+   "Full Face",
+   "Eyebrows",
+   "Upper Lip",
+   "Chin",
+   "Full Arm",
+   "Half Arm",
+   "Under Arm",
+   "Full Leg",
+   "Half Leg",
+   "Full Body",
+   "Chest",
+   "Abdomen",
+   "Brazilian",
+   "Bikini",
+   "Back",
+   "Other"
+  ]
+ },
+ {
+  "id": "eye-lash",
+  "name": "Eye Lash",
+  "amharic": "ቅንድብ",
+  "items": [
+   "Brow — Wax",
+   "Brow — String",
+   "Brow — Blade",
+   "Brow — Henna",
+   "Eyelash Normal",
+   "One by One"
+  ]
+ },
+ {
+  "id": "mesh",
+  "name": "Mesh",
+  "amharic": "ሜሽ",
+  "items": [
+   "Mesh"
+  ]
+ },
+ {
+  "id": "hair-treatment",
+  "name": "Hair Treatment",
+  "amharic": "የጸጉር እንክብካቤ",
+  "items": [
+   "Wash",
+   "Blow Dry",
+   "Treatment",
+   "Oil",
+   "Fruits & Herbs",
+   "Mix",
+   "Casc",
+   "Braid off",
+   "Relaxer — Full",
+   "Relaxer — Retouch",
+   "Relaxer from customer"
+  ]
+ },
+ {
+  "id": "hair-cut",
+  "name": "Hair Cut",
+  "amharic": "የጸጉር ቁርጥ",
+  "items": [
+   "Hair Cut"
+  ]
+ },
+ {
+  "id": "hair-paint",
+  "name": "Hair Paint",
+  "amharic": "የጸጉር ቀለም",
+  "items": [
+   "Full",
+   "Half",
+   "Highlight",
+   "Retouch",
+   "Front",
+   "Color From Customer"
+  ]
+ },
+ {
+  "id": "hair-styling",
+  "name": "Hair Styling",
+  "amharic": "የጸጉር ስታይል",
+  "items": [
+   "Wave",
+   "Deep Wave",
+   "Curl",
+   "Deep Freeze",
+   "Payestra",
+   "Hair Styling",
+   "Human Hair",
+   "Publice"
+  ]
+ },
+ {
+  "id": "braids",
+  "name": "Braids",
+  "amharic": "ሹሩባ",
+  "items": [
+   "Shuruba",
+   "Kutirtir",
+   "Twist",
+   "Albaso",
+   "Wig"
+  ]
+ },
+ {
+  "id": "sewing",
+  "name": "Sewing",
+  "amharic": "ስፌት",
+  "items": [
+   "Sewing",
+   "Human Hair",
+   "Syntthetic"
+  ]
+ },
+ {
+  "id": "ponytail",
+  "name": "Ponytail",
+  "amharic": "ፖኒቴል",
+  "items": [
+   "Ponytail",
+   "Gel",
+   "Edge",
+   "Normal",
+   "Freeze"
+  ]
+ },
+ {
+  "id": "kids-braids",
+  "name": "Kids Braids",
+  "amharic": "የህጻናት ሹሩባ",
+  "items": [
+   "Shuruba",
+   "Kutirtir",
+   "Chele"
+  ]
+ }
+]
